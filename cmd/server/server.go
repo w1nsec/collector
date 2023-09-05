@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"github.com/w1nsec/collector/internal/memstorage"
 	"log"
 	"net/http"
@@ -22,9 +21,10 @@ func main() {
 }
 
 func updateMetricsHandle(rw http.ResponseWriter, r *http.Request) {
-	pieces := strings.Split(r.URL.RawPath, "/")
-	fmt.Println(pieces)
+	pieces := strings.Split(r.URL.Path, "/")
+	//log.Println(pieces)
 	if len(pieces) != 5 {
+		rw.WriteHeader(http.StatusNotFound)
 		return
 	}
 
@@ -40,6 +40,7 @@ func updateMetricsHandle(rw http.ResponseWriter, r *http.Request) {
 			return
 		}
 		store.UpdateGauges(mName, val)
+		log.Println(store)
 	case "counter":
 		val, err := strconv.ParseInt(mValue, 10, 64)
 		if err != nil {
@@ -47,6 +48,9 @@ func updateMetricsHandle(rw http.ResponseWriter, r *http.Request) {
 			return
 		}
 		store.UpdateCounters(mName, val)
+		log.Println(store)
+	default:
+		rw.WriteHeader(http.StatusBadRequest)
 	}
 
 	rw.WriteHeader(http.StatusOK)
