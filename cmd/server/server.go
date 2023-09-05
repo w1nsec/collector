@@ -21,16 +21,21 @@ func main() {
 }
 
 func updateMetricsHandle(rw http.ResponseWriter, r *http.Request) {
-	pieces := strings.Split(r.URL.Path, "/")
-	//log.Println(pieces)
-	if len(pieces) != 5 {
+	metricsInfo, found := strings.CutPrefix(r.URL.Path, "/update/")
+	if !found {
+		rw.WriteHeader(http.StatusNotFound)
+		return
+	}
+	pieces := strings.Split(metricsInfo, "/")
+	log.Println(pieces)
+	if len(pieces) != 3 {
 		rw.WriteHeader(http.StatusNotFound)
 		return
 	}
 
-	mType := pieces[2]
-	mName := pieces[3]
-	mValue := pieces[4]
+	mType := pieces[0]
+	mName := pieces[1]
+	mValue := pieces[2]
 
 	switch mType {
 	case "gauge":
