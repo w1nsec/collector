@@ -6,7 +6,7 @@ clean:
 	rm -rf cmd/server/server cmd/agent/agent
 
 server:
-	go build -o cmd/server/server cmd/server/server.go
+	go build -o cmd/server/server cmd/server/server_main.go
 
 
 
