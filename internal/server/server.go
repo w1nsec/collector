@@ -7,12 +7,14 @@ import (
 )
 
 type MetricServer struct {
-	addr  *net.TCPAddr
-	Store *memstorage.MemStorage
-	mux   *http.ServeMux
+	addr *net.TCPAddr
+	//Store *memstorage.MemStorage
+	Store memstorage.Storage
+	//mux   *http.ServeMux
+	http.Server
 }
 
-func NewMetricServer(addr string, store *memstorage.MemStorage, mux *http.ServeMux) (*MetricServer, error) {
+func NewMetricServer(addr string, store memstorage.Storage, mux *http.ServeMux) (*MetricServer, error) {
 	netAddr, err := net.ResolveTCPAddr("tcp", addr)
 	if err != nil {
 		return nil, err
@@ -27,15 +29,19 @@ func NewMetricServer(addr string, store *memstorage.MemStorage, mux *http.ServeM
 	srv := MetricServer{
 		addr:  netAddr,
 		Store: store,
-		mux:   mux,
+		Server: http.Server{
+			Addr:    netAddr.String(),
+			Handler: mux,
+		},
 	}
 	return &srv, nil
 }
 
 func (srv *MetricServer) AddMux(mux *http.ServeMux) {
-	srv.mux = mux
+	srv.Server.Handler = mux
+	//srv.mux = mux
 }
 
 func (srv *MetricServer) Start() error {
-	return http.ListenAndServe(srv.addr.String(), srv.mux)
+	return srv.ListenAndServe()
 }
