@@ -2,6 +2,7 @@ package agent
 
 import (
 	"fmt"
+	"github.com/w1nsec/collector/internal/metrics"
 	"log"
 	"math/rand"
 	"net"
@@ -42,37 +43,26 @@ var usedMemStats = []string{
 	"TotalAlloc",
 }
 
-type MyMetrics struct {
-	value    string
-	sendType string
-}
-
-func (m *MyMetrics) AddVal(n int) {
-	// TODO parse error
-	val, _ := strconv.ParseInt(m.value, 10, 64)
-	val += int64(n)
-	m.value = strconv.FormatInt(val, 10)
-}
-
-const (
-	gauge   = "gauge"
-	counter = "counter"
-)
-
 type Agent struct {
-	addr    net.Addr
-	metrics map[string]MyMetrics
+	addr           net.Addr
+	metricsPoint   string
+	metrics        map[string]metrics.MyMetrics
+	pollInterval   time.Duration
+	reportInterval time.Duration
 }
 
-func NewAgent(addr string) (*Agent, error) {
+func NewAgent(addr string, pollInterval, reportInterval time.Duration) (*Agent, error) {
 	netAddr, err := net.ResolveTCPAddr("tcp", addr)
 	if err != nil {
 		return nil, err
 	}
 
 	agent := &Agent{
-		addr:    netAddr,
-		metrics: make(map[string]MyMetrics),
+		addr:           netAddr,
+		metricsPoint:   "update",
+		metrics:        make(map[string]metrics.MyMetrics),
+		pollInterval:   pollInterval,
+		reportInterval: reportInterval,
 	}
 	return agent, nil
 }
@@ -83,22 +73,21 @@ func (agent Agent) SendMetrics() {
 	}
 
 	for mName, metric := range agent.metrics {
-		url := fmt.Sprintf("http://%s/%s/%s/%s", agent.addr.String(), metric.sendType, mName, metric.value)
+		url := fmt.Sprintf("http://%s/%s/%s/%s/%s", agent.addr.String(),
+			agent.metricsPoint, metric.SendType, mName, metric.Value)
 		fmt.Println(url)
-		req, err := http.NewRequest(http.MethodPost, url, nil)
+		_, err := http.Post(url, "text/plain", nil)
+		// TODO handle error
 		if err != nil {
 			log.Println(err)
 			continue
 		}
-
-		req.Header.Add("Content-Type", "text/plain")
-
 	}
 }
 
 func (agent Agent) GetMetrics() {
 	if agent.metrics == nil {
-		agent.metrics = make(map[string]MyMetrics)
+		agent.metrics = make(map[string]metrics.MyMetrics)
 	}
 
 	m := runtime.MemStats{}
@@ -109,21 +98,21 @@ func (agent Agent) GetMetrics() {
 	for _, name := range usedMemStats {
 		if values.FieldByName(name).IsValid() {
 			if values.FieldByName(name).CanInt() {
-				agent.metrics[name] = MyMetrics{
-					value:    strconv.FormatInt(values.FieldByName(name).Int(), 10),
-					sendType: counter,
+				agent.metrics[name] = metrics.MyMetrics{
+					Value:    strconv.FormatInt(values.FieldByName(name).Int(), 10),
+					SendType: metrics.Counter,
 				}
 			}
 			if values.FieldByName(name).CanUint() {
-				agent.metrics[name] = MyMetrics{
-					value:    strconv.FormatUint(values.FieldByName(name).Uint(), 10),
-					sendType: counter,
+				agent.metrics[name] = metrics.MyMetrics{
+					Value:    strconv.FormatUint(values.FieldByName(name).Uint(), 10),
+					SendType: metrics.Counter,
 				}
 			}
 			if values.FieldByName(name).CanFloat() {
-				agent.metrics[name] = MyMetrics{
-					value:    strconv.FormatFloat(values.FieldByName(name).Float(), 'f', -1, 64),
-					sendType: gauge,
+				agent.metrics[name] = metrics.MyMetrics{
+					Value:    strconv.FormatFloat(values.FieldByName(name).Float(), 'f', -1, 64),
+					SendType: metrics.Gauge,
 				}
 			}
 		}
@@ -132,9 +121,9 @@ func (agent Agent) GetMetrics() {
 	// Addition metrics
 	metric, ok := agent.metrics["PollCount"]
 	if !ok {
-		agent.metrics["PollCount"] = MyMetrics{
-			value:    "1",
-			sendType: counter,
+		agent.metrics["PollCount"] = metrics.MyMetrics{
+			Value:    "1",
+			SendType: metrics.Counter,
 		}
 	} else {
 		metric.AddVal(1)
@@ -143,8 +132,23 @@ func (agent Agent) GetMetrics() {
 
 	r := rand.New(rand.NewSource(time.Now().Unix()))
 	randVal := float64(r.Intn(1000)) + r.Float64()
-	agent.metrics["RandomValue"] = MyMetrics{
-		value:    strconv.FormatFloat(randVal, 'f', -1, 64),
-		sendType: gauge,
+	agent.metrics["RandomValue"] = metrics.MyMetrics{
+		Value:    strconv.FormatFloat(randVal, 'f', -1, 64),
+		SendType: metrics.Gauge,
+	}
+}
+
+func (ag Agent) Start() {
+	pollTicker := time.NewTicker(ag.pollInterval)
+	reportTicker := time.NewTicker(ag.reportInterval)
+	for {
+		select {
+		case t1 := <-pollTicker.C:
+			fmt.Println("Receiving:", t1.Format(time.TimeOnly))
+			ag.GetMetrics()
+		case t2 := <-reportTicker.C:
+			fmt.Println("- Sending:", t2.Format(time.TimeOnly))
+			ag.SendMetrics()
+		}
 	}
 }
