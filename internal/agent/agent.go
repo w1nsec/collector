@@ -77,8 +77,12 @@ func (agent Agent) SendMetrics() {
 			agent.metricsPoint, metric.SendType, mName, metric.Value)
 		fmt.Println(url)
 		resp, err := http.Post(url, "text/plain", nil)
-		defer resp.Body.Close()
 		// TODO handle error
+		if err != nil {
+			log.Println(err)
+			continue
+		}
+		err = resp.Body.Close()
 		if err != nil {
 			log.Println(err)
 			continue
