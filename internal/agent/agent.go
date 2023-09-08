@@ -76,7 +76,8 @@ func (agent Agent) SendMetrics() {
 		url := fmt.Sprintf("http://%s/%s/%s/%s/%s", agent.addr.String(),
 			agent.metricsPoint, metric.SendType, mName, metric.Value)
 		fmt.Println(url)
-		_, err := http.Post(url, "text/plain", nil)
+		resp, err := http.Post(url, "text/plain", nil)
+		defer resp.Body.Close()
 		// TODO handle error
 		if err != nil {
 			log.Println(err)
@@ -138,17 +139,17 @@ func (agent Agent) GetMetrics() {
 	}
 }
 
-func (ag Agent) Start() {
-	pollTicker := time.NewTicker(ag.pollInterval)
-	reportTicker := time.NewTicker(ag.reportInterval)
+func (agent Agent) Start() {
+	pollTicker := time.NewTicker(agent.pollInterval)
+	reportTicker := time.NewTicker(agent.reportInterval)
 	for {
 		select {
 		case t1 := <-pollTicker.C:
 			fmt.Println("Receiving:", t1.Format(time.TimeOnly))
-			ag.GetMetrics()
+			agent.GetMetrics()
 		case t2 := <-reportTicker.C:
 			fmt.Println("- Sending:", t2.Format(time.TimeOnly))
-			ag.SendMetrics()
+			agent.SendMetrics()
 		}
 	}
 }
