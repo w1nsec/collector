@@ -48,6 +48,5 @@ func UpdateMetricsHandle(store memstorage.Storage) http.HandlerFunc {
 		}
 		fmt.Println(store)
 		rw.WriteHeader(http.StatusOK)
-		return
 	}
 }

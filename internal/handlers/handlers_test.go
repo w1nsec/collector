@@ -13,7 +13,7 @@ func TestUpdateMetricsHandle(t *testing.T) {
 	tests := []struct {
 		name       string
 		store      memstorage.Storage
-		haveUrl    string
+		haveURL    string
 		statusCode int
 		//want http.HandlerFunc
 
@@ -22,50 +22,50 @@ func TestUpdateMetricsHandle(t *testing.T) {
 		{
 			name:       "Wrong url 1",
 			store:      memstorage.NewMemStorage(),
-			haveUrl:    "/aaaaa",
+			haveURL:    "/aaaaa",
 			statusCode: http.StatusNotFound,
 		},
 		{
 			name:       "Wrong url 2",
 			store:      memstorage.NewMemStorage(),
-			haveUrl:    updateURL + "/aaaaa",
+			haveURL:    updateURL + "/aaaaa",
 			statusCode: http.StatusNotFound,
 		},
 		{
 			name:       "Wrong url 3",
 			store:      memstorage.NewMemStorage(),
-			haveUrl:    updateURL + "/counter/sys",
+			haveURL:    updateURL + "/counter/sys",
 			statusCode: http.StatusNotFound,
 		},
 		{
 			name:       "Wrong Type",
 			store:      memstorage.NewMemStorage(),
-			haveUrl:    updateURL + "/aaaaa/sys/123",
+			haveURL:    updateURL + "/aaaaa/sys/123",
 			statusCode: http.StatusBadRequest,
 		},
 		{
 			name:       "Wrong Type Counter",
 			store:      memstorage.NewMemStorage(),
-			haveUrl:    updateURL + "/counter/sys/213.214",
+			haveURL:    updateURL + "/counter/sys/213.214",
 			statusCode: http.StatusBadRequest,
 		},
 		{
 			name:       "Wrong Type Gauge",
 			store:      memstorage.NewMemStorage(),
-			haveUrl:    updateURL + "/wrongtype/sys/213",
+			haveURL:    updateURL + "/wrongtype/sys/213",
 			statusCode: http.StatusBadRequest,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			r := httptest.NewRequest(http.MethodPost, tt.haveUrl, nil)
+			r := httptest.NewRequest(http.MethodPost, tt.haveURL, nil)
 			w := httptest.NewRecorder()
 			hf := UpdateMetricsHandle(tt.store)
 			hf(w, r)
 			resp := w.Result()
 			assert.Equal(t, resp.StatusCode, tt.statusCode)
-
+			resp.Body.Close()
 			// TODO write test for storage
 			//assert.Equal(t, resp.)
 		})
