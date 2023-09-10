@@ -1,11 +1,16 @@
 package memstorage
 
-import "fmt"
+import (
+	"fmt"
+	"github.com/w1nsec/collector/internal/metrics"
+	"strconv"
+)
 
 type Storage interface {
 	UpdateCounters(name string, value int64)
 	UpdateGauges(name string, value float64)
 	String() string
+	GetMetric(mType, mName string) string
 }
 
 type MemStorage struct {
@@ -50,6 +55,24 @@ func (ms *MemStorage) UpdateCounters(name string, value int64) {
 
 func (ms *MemStorage) UpdateGauges(name string, value float64) {
 	ms.dataGauges[name] = value
+}
+
+func (ms MemStorage) GetMetric(mType, mName string) string {
+	switch mType {
+	case metrics.Gauge:
+		val, ok := ms.dataGauges[mName]
+		if !ok {
+			return ""
+		}
+		return strconv.FormatFloat(val, 'f', -1, 64)
+	case metrics.Counter:
+		val, ok := ms.dataCounters[mName]
+		if !ok {
+			return ""
+		}
+		return strconv.FormatInt(val, 10)
+	}
+	return ""
 }
 
 func NewMemStorage() *MemStorage {
