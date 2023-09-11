@@ -39,7 +39,7 @@ func TestNewMetricServer(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := NewMetricServer(tt.args.addr, tt.args.store, tt.args.mux)
+			got, err := NewMetricServerWithParams(tt.args.addr, tt.args.store, tt.args.mux)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("NewMetricServer() error = %v, wantErr %v", err, tt.wantErr)
 				return
