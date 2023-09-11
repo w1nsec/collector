@@ -119,7 +119,6 @@ func GetMetric(store memstorage.Storage) http.HandlerFunc {
 
 func NotFoundHandle(rw http.ResponseWriter, r *http.Request) {
 	http.NotFound(rw, r)
-	return
 }
 
 func BadRequest(rw http.ResponseWriter, r *http.Request) {
