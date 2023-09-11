@@ -1,24 +1,32 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"github.com/w1nsec/collector/internal/agent"
-	"runtime"
 	"time"
 )
 
 const (
-	pollInterval   = 2 * time.Second
-	reportInterval = 10 * time.Second
+	defaultPollInterval   = 2 * time.Second
+	defaultReportInterval = 10 * time.Second
 )
 
 func main() {
-	runtime.GOMAXPROCS(3)
+	//runtime.GOMAXPROCS(3)
 
 	//metrics := make(map[string]interface{})
-	addr := "localhost:8080"
+	//addr := "localhost:8080"
 
-	mAgent, err := agent.NewAgent(addr, pollInterval, reportInterval)
+	addr := flag.String("a", "localhost:8080",
+		"address for metric server")
+	pollInterval := flag.Duration("r", defaultPollInterval,
+		"frequency of gathering metrics")
+	reportInterval := flag.Duration("p", defaultReportInterval,
+		"frequency of sending metrics")
+	flag.Parse()
+
+	mAgent, err := agent.NewAgent(*addr, *pollInterval, *reportInterval)
 	if err != nil {
 		fmt.Println(err)
 		return
