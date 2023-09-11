@@ -123,5 +123,6 @@ func NotFoundHandle(rw http.ResponseWriter, r *http.Request) {
 }
 
 func BadRequest(rw http.ResponseWriter, r *http.Request) {
+	fmt.Println(r.URL.Path)
 	rw.WriteHeader(http.StatusBadRequest)
 }

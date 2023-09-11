@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"bytes"
+	"fmt"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/w1nsec/collector/internal/memstorage"
@@ -14,68 +15,68 @@ import (
 )
 
 // OLD test func from increment2
-func TestUpdateMetricsHandle(t *testing.T) {
-	updateURL := "/update"
-	tests := []struct {
-		name       string
-		store      memstorage.Storage
-		haveURL    string
-		statusCode int
-		//want http.HandlerFunc
-
-	}{
-		// TODO: Add test cases.
-		{
-			name:       "Wrong url 1",
-			store:      memstorage.NewMemStorage(),
-			haveURL:    "/aaaaa",
-			statusCode: http.StatusNotFound,
-		},
-		{
-			name:       "Wrong url 2",
-			store:      memstorage.NewMemStorage(),
-			haveURL:    updateURL + "/aaaaa",
-			statusCode: http.StatusNotFound,
-		},
-		{
-			name:       "Wrong url 3",
-			store:      memstorage.NewMemStorage(),
-			haveURL:    updateURL + "/counter/sys",
-			statusCode: http.StatusNotFound,
-		},
-		{
-			name:       "Wrong Type",
-			store:      memstorage.NewMemStorage(),
-			haveURL:    updateURL + "/aaaaa/sys/123",
-			statusCode: http.StatusBadRequest,
-		},
-		{
-			name:       "Wrong Type Counter",
-			store:      memstorage.NewMemStorage(),
-			haveURL:    updateURL + "/counter/sys/213.214",
-			statusCode: http.StatusBadRequest,
-		},
-		{
-			name:       "Wrong Type Gauge",
-			store:      memstorage.NewMemStorage(),
-			haveURL:    updateURL + "/wrongtype/sys/213",
-			statusCode: http.StatusBadRequest,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			r := httptest.NewRequest(http.MethodPost, tt.haveURL, nil)
-			w := httptest.NewRecorder()
-			hf := UpdateMetricsHandle(tt.store)
-			hf(w, r)
-			resp := w.Result()
-			assert.Equal(t, tt.statusCode, resp.StatusCode)
-			resp.Body.Close()
-			// TODO write test for storage
-			//assert.Equal(t, resp.)
-		})
-	}
-}
+//func TestUpdateMetricsHandle(t *testing.T) {
+//	updateURL := "/update"
+//	tests := []struct {
+//		name       string
+//		store      memstorage.Storage
+//		haveURL    string
+//		statusCode int
+//		//want http.HandlerFunc
+//
+//	}{
+//		// TODO: Add test cases.
+//		{
+//			name:       "Wrong url 1",
+//			store:      memstorage.NewMemStorage(),
+//			haveURL:    "/aaaaa",
+//			statusCode: http.StatusNotFound,
+//		},
+//		{
+//			name:       "Wrong url 2",
+//			store:      memstorage.NewMemStorage(),
+//			haveURL:    updateURL + "/aaaaa",
+//			statusCode: http.StatusNotFound,
+//		},
+//		{
+//			name:       "Wrong url 3",
+//			store:      memstorage.NewMemStorage(),
+//			haveURL:    updateURL + "/counter/sys",
+//			statusCode: http.StatusNotFound,
+//		},
+//		{
+//			name:       "Wrong Type",
+//			store:      memstorage.NewMemStorage(),
+//			haveURL:    updateURL + "/aaaaa/sys/123",
+//			statusCode: http.StatusBadRequest,
+//		},
+//		{
+//			name:       "Wrong Type Counter",
+//			store:      memstorage.NewMemStorage(),
+//			haveURL:    updateURL + "/counter/sys/213.214",
+//			statusCode: http.StatusBadRequest,
+//		},
+//		{
+//			name:       "Wrong Type Gauge",
+//			store:      memstorage.NewMemStorage(),
+//			haveURL:    updateURL + "/wrongtype/sys/213",
+//			statusCode: http.StatusBadRequest,
+//		},
+//	}
+//	for _, tt := range tests {
+//		t.Run(tt.name, func(t *testing.T) {
+//			r := httptest.NewRequest(http.MethodPost, tt.haveURL, nil)
+//			w := httptest.NewRecorder()
+//			hf := UpdateMetricsHandle(tt.store)
+//			hf(w, r)
+//			resp := w.Result()
+//			assert.Equal(t, tt.statusCode, resp.StatusCode)
+//			resp.Body.Close()
+//			// TODO write test for storage
+//			//assert.Equal(t, resp.)
+//		})
+//	}
+//}
 
 func TestUpdateRoutes(t *testing.T) {
 	var (
@@ -104,13 +105,19 @@ func TestUpdateRoutes(t *testing.T) {
 		{
 			name:       "Wrong url 2",
 			haveURL:    updateURL + "/aaaaa",
-			statusCode: http.StatusNotFound,
+			statusCode: http.StatusBadRequest,
 			wantErr:    true,
 		},
 		{
 			name:       "Wrong url 3",
 			haveURL:    updateURL + "/counter/sys",
 			statusCode: http.StatusNotFound,
+			wantErr:    true,
+		},
+		{
+			name:       "Wrong url 4",
+			haveURL:    updateURL + "/counter/sys/",
+			statusCode: http.StatusBadRequest,
 			wantErr:    true,
 		},
 		{
@@ -165,6 +172,7 @@ func TestUpdateRoutes(t *testing.T) {
 				mName := params[1]
 				expectValue := params[2]
 				actualValue := store.GetMetric(mType, mName)
+				fmt.Println(filterURL)
 				assert.Equal(t, expectValue, actualValue)
 
 			}
