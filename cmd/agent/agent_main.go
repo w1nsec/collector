@@ -17,16 +17,20 @@ func main() {
 
 	//metrics := make(map[string]interface{})
 	//addr := "localhost:8080"
-
-	addr := flag.String("a", "localhost:8080",
+	var (
+		addr                         string
+		pollInterval, reportInterval int
+	)
+	flag.StringVar(&addr, "a", "localhost:8080",
 		"address for metric server")
-	pollInterval := flag.Duration("r", defaultPollInterval,
+
+	flag.IntVar(&pollInterval, "r", int(defaultPollInterval.Seconds()),
 		"frequency of gathering metrics")
-	reportInterval := flag.Duration("p", defaultReportInterval,
+	flag.IntVar(&reportInterval, "p", int(defaultReportInterval.Seconds()),
 		"frequency of sending metrics")
 	flag.Parse()
 
-	mAgent, err := agent.NewAgent(*addr, *pollInterval, *reportInterval)
+	mAgent, err := agent.NewAgent(addr, pollInterval, reportInterval)
 	if err != nil {
 		fmt.Println(err)
 		return
