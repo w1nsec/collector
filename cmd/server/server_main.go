@@ -2,16 +2,25 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"github.com/w1nsec/collector/internal/server"
 	"log"
 )
 
+var (
+	addr string
+)
+
+func initFlags() {
+	flag.StringVar(&addr, "a", "localhost:8080", "address for server")
+}
+
 func main() {
 
-	addr := flag.String("a", "localhost:8080", "address for server")
+	initFlags()
 	flag.Parse()
-
-	srv, err := server.NewMetricServer(*addr)
+	fmt.Println(addr)
+	srv, err := server.NewMetricServer(addr)
 	if err != nil {
 		log.Fatal(err)
 	}

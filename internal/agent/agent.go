@@ -51,7 +51,7 @@ type Agent struct {
 	reportInterval time.Duration
 }
 
-func NewAgent(addr string, pollInterval, reportInterval time.Duration) (*Agent, error) {
+func NewAgent(addr string, pollInterval, reportInterval int) (*Agent, error) {
 	netAddr, err := net.ResolveTCPAddr("tcp", addr)
 	if err != nil {
 		return nil, err
@@ -61,8 +61,8 @@ func NewAgent(addr string, pollInterval, reportInterval time.Duration) (*Agent, 
 		addr:           netAddr,
 		metricsPoint:   "update",
 		metrics:        make(map[string]metrics.MyMetrics),
-		pollInterval:   pollInterval,
-		reportInterval: reportInterval,
+		pollInterval:   time.Duration(pollInterval) * time.Second,
+		reportInterval: time.Duration(reportInterval) * time.Second,
 	}
 	return agent, nil
 }
