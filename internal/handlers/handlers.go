@@ -94,25 +94,25 @@ func UpdateCounterHandle(store memstorage.Storage) http.HandlerFunc {
 }
 
 func GetMetric(store memstorage.Storage) http.HandlerFunc {
-	return func(wr http.ResponseWriter, r *http.Request) {
+	return func(rw http.ResponseWriter, r *http.Request) {
 		mType := chi.URLParam(r, "mType")
 		mName := chi.URLParam(r, "mName")
 
 		value := store.GetMetric(mType, mName)
 		// metric not found
 		if value == "" {
-			wr.WriteHeader(http.StatusNotFound)
-			wr.Write([]byte(NotFound))
+			rw.WriteHeader(http.StatusNotFound)
+			rw.Write([]byte(NotFound))
 			return
 		}
 
-		wr.Header().Add("Content-type", "text/plain")
-		_, err := wr.Write([]byte(value))
+		rw.Header().Add("Content-type", "text/plain")
+		_, err := rw.Write([]byte(value))
 		if err != nil {
-			wr.WriteHeader(http.StatusInternalServerError)
+			rw.WriteHeader(http.StatusInternalServerError)
 			return
 		}
-		wr.WriteHeader(http.StatusOK)
+		rw.WriteHeader(http.StatusOK)
 
 	}
 }
