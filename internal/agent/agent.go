@@ -144,6 +144,12 @@ func (agent Agent) GetMetrics() {
 }
 
 func (agent Agent) Start() {
+	// Receive and send for the first time
+	fmt.Println("Receiving:", time.Now().Format(time.TimeOnly))
+	agent.GetMetrics()
+	fmt.Println("- Sending:", time.Now().Format(time.TimeOnly))
+	agent.SendMetrics()
+
 	pollTicker := time.NewTicker(agent.pollInterval)
 	reportTicker := time.NewTicker(agent.reportInterval)
 	for {
