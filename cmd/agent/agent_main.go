@@ -59,8 +59,6 @@ func main() {
 
 	selectArgs(&addr, &pollInterval, &reportInterval)
 
-	fmt.Println(addr, pollInterval, reportInterval)
-	return
 	mAgent, err := agent.NewAgent(addr, pollInterval, reportInterval)
 	if err != nil {
 		fmt.Println(err)
