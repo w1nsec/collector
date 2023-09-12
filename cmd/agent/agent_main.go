@@ -4,6 +4,8 @@ import (
 	"flag"
 	"fmt"
 	"github.com/w1nsec/collector/internal/agent"
+	"os"
+	"strconv"
 	"time"
 )
 
@@ -11,6 +13,39 @@ const (
 	defaultPollInterval   = 2 * time.Second
 	defaultReportInterval = 10 * time.Second
 )
+
+func selectArgs(addr *string, pollInterval, reportInterval *int) {
+	var (
+		flagAddr          string
+		flagPoll, flagRep int
+	)
+	flag.StringVar(&flagAddr, "a", "localhost:8080",
+		"address for metric server")
+	flag.IntVar(&flagPoll, "p", int(defaultPollInterval.Seconds()),
+		"frequency of gathering metrics")
+	flag.IntVar(&flagRep, "r", int(defaultReportInterval.Seconds()),
+		"frequency of sending metrics")
+	flag.Parse()
+
+	if *addr = os.Getenv("ADDRESS"); *addr == "" {
+		*addr = flagAddr
+	}
+
+	envPoll, err := strconv.Atoi(os.Getenv("POLL_INTERVAL"))
+	if err == nil {
+		*pollInterval = envPoll
+	} else {
+		*pollInterval = flagPoll
+	}
+
+	envRep, err := strconv.Atoi(os.Getenv("REPORT_INTERVAL"))
+	if err == nil {
+		*reportInterval = envRep
+	} else {
+		*reportInterval = flagRep
+	}
+
+}
 
 func main() {
 	//runtime.GOMAXPROCS(3)
@@ -21,15 +56,11 @@ func main() {
 		addr                         string
 		pollInterval, reportInterval int
 	)
-	flag.StringVar(&addr, "a", "localhost:8080",
-		"address for metric server")
 
-	flag.IntVar(&pollInterval, "r", int(defaultPollInterval.Seconds()),
-		"frequency of gathering metrics")
-	flag.IntVar(&reportInterval, "p", int(defaultReportInterval.Seconds()),
-		"frequency of sending metrics")
-	flag.Parse()
+	selectArgs(&addr, &pollInterval, &reportInterval)
 
+	fmt.Println(addr, pollInterval, reportInterval)
+	return
 	mAgent, err := agent.NewAgent(addr, pollInterval, reportInterval)
 	if err != nil {
 		fmt.Println(err)
