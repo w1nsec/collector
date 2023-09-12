@@ -5,20 +5,28 @@ import (
 	"fmt"
 	"github.com/w1nsec/collector/internal/server"
 	"log"
+	"os"
 )
 
-var (
-	addr string
-)
+func selectArgs(addr *string) {
+	*addr = os.Getenv("ADDRESS")
 
-func initFlags() {
-	flag.StringVar(&addr, "a", "localhost:8080", "address for server")
+	var flagAddr string
+	flag.StringVar(&flagAddr, "a", "localhost:8080", "address for server")
+	flag.Parse()
+
+	if *addr == "" {
+		*addr = flagAddr
+	}
+
 }
 
 func main() {
+	var (
+		addr string
+	)
+	selectArgs(&addr)
 
-	initFlags()
-	flag.Parse()
 	fmt.Println(addr)
 	srv, err := server.NewMetricServer(addr)
 	if err != nil {
