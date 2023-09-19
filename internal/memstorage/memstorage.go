@@ -19,8 +19,6 @@ type MemStorage struct {
 }
 
 func (ms *MemStorage) String() string {
-	//TODO implement me
-	//panic("implement me")
 	var s1 = "[counters]\n"
 	var s2 = "[gauges]\n"
 	count := 0
