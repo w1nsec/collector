@@ -15,7 +15,7 @@ func main() {
 		pollInterval, reportInterval int
 	)
 
-	config.SelectArgs(&addr, &pollInterval, &reportInterval)
+	config.AgentSelectArgs(&addr, &pollInterval, &reportInterval)
 
 	mAgent, err := agent.NewAgent(addr, pollInterval, reportInterval)
 	if err != nil {
