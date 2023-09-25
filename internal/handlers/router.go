@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/go-chi/chi/v5"
 	"github.com/w1nsec/collector/internal/memstorage"
+	"github.com/w1nsec/collector/internal/middlewares"
 	"net/http"
 )
 
@@ -36,6 +37,13 @@ func NewRouter(store memstorage.Storage) http.Handler {
 	r.Route("/value/", func(r chi.Router) {
 		r.Get("/{mType}/{mName}", GetMetric(store))
 	})
+
+	/// increment 6 testing
+	r.Route("/ping", func(r chi.Router) {
+		r.Use(middlewares.LoggingMiddleware)
+		r.Get("/", pong)
+	})
+
 	return r
 }
 
