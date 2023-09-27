@@ -1,34 +1,21 @@
 package main
 
 import (
-	"flag"
 	"fmt"
+	"github.com/w1nsec/collector/internal/config"
 	"github.com/w1nsec/collector/internal/server"
 	"log"
-	"os"
 )
-
-func selectArgs(addr *string) {
-	*addr = os.Getenv("ADDRESS")
-
-	var flagAddr string
-	flag.StringVar(&flagAddr, "a", "localhost:8080", "address for server")
-	flag.Parse()
-
-	if *addr == "" {
-		*addr = flagAddr
-	}
-
-}
 
 func main() {
 	var (
-		addr string
+		addr     string
+		logLevel string
 	)
-	selectArgs(&addr)
+	config.ServerArgsParse(&addr, &logLevel)
 
-	fmt.Println(addr)
-	srv, err := server.NewMetricServer(addr)
+	fmt.Println(addr, logLevel)
+	srv, err := server.NewServer(addr, logLevel)
 	if err != nil {
 		log.Fatal(err)
 	}

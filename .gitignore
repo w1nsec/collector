@@ -29,3 +29,5 @@ vendor/
 
 # other dirs
 increments_tasks
+bfg.jar
+*.jar
