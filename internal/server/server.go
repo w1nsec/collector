@@ -3,10 +3,24 @@ package server
 import (
 	"fmt"
 	"github.com/w1nsec/collector/internal/handlers"
+	"github.com/w1nsec/collector/internal/logger"
 	"github.com/w1nsec/collector/internal/memstorage"
 	"net"
 	"net/http"
 )
+
+type Server interface {
+	InitLogger(level string) error
+	Start() error
+}
+
+// NewServer is just a wrapper for NewMetricServerWithParams
+// with default params, return interface for server
+func NewServer(addr string, loggerLevel string) (Server, error) {
+	store := memstorage.NewMemStorage()
+	mux := handlers.NewRouter(store)
+	return NewMetricServerWithParams(addr, store, mux, loggerLevel)
+}
 
 type MetricServer struct {
 	addr *net.TCPAddr
@@ -16,12 +30,23 @@ type MetricServer struct {
 	http.Server
 }
 
+func (srv *MetricServer) InitLogger(level string) error {
+	return logger.Initialize(level)
+}
+
+// NewMetricServer is just a wrapper for NewMetricServerWithParams
+// with default params
 func NewMetricServer(addr string) (*MetricServer, error) {
 	store := memstorage.NewMemStorage()
 	mux := handlers.NewRouter(store)
-	return NewMetricServerWithParams(addr, store, mux)
+
+	return NewMetricServerWithParams(addr, store, mux, "info")
 }
-func NewMetricServerWithParams(addr string, store memstorage.Storage, mux http.Handler) (*MetricServer, error) {
+
+func NewMetricServerWithParams(addr string,
+	store memstorage.Storage,
+	mux http.Handler, loggerLevel string) (*MetricServer, error) {
+
 	netAddr, err := net.ResolveTCPAddr("tcp", addr)
 	if err != nil {
 		return nil, err
@@ -42,6 +67,11 @@ func NewMetricServerWithParams(addr string, store memstorage.Storage, mux http.H
 			Addr:    netAddr.String(),
 			Handler: mux,
 		},
+	}
+
+	err = srv.InitLogger(loggerLevel)
+	if err != nil {
+		return nil, err
 	}
 	return &srv, nil
 }
