@@ -10,5 +10,5 @@ func pong(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Redirect(w, r, "error", http.StatusInternalServerError)
 	}
-	//w.WriteHeader(http.StatusOK)
+	w.WriteHeader(http.StatusOK)
 }
