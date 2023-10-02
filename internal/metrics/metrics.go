@@ -1,20 +1,34 @@
 package metrics
 
-import "strconv"
-
-const (
-	Gauge   = "gauge"
-	Counter = "counter"
-)
-
-type MyMetrics struct {
-	Value    string
-	SendType string
+type Metrics struct {
+	ID    string   `json:"id"`              // имя метрики
+	MType string   `json:"type"`            // параметр, принимающий значение gauge или counter
+	Delta *int64   `json:"delta,omitempty"` // значение метрики в случае передачи counter
+	Value *float64 `json:"value,omitempty"` // значение метрики в случае передачи gauge
 }
 
-func (m *MyMetrics) AddVal(n int) {
-	// TODO parse error
-	val, _ := strconv.ParseInt(m.Value, 10, 64)
-	val += int64(n)
-	m.Value = strconv.FormatInt(val, 10)
+func NewCounterMetric(name, mType string, value int64) *Metrics {
+	if mType == Gauge {
+		return nil
+	}
+	metric := &Metrics{
+		ID:    name,
+		MType: mType,
+		Delta: &value,
+	}
+	return metric
+}
+
+func NewGaugeMetric(name, mType string, value float64) *Metrics {
+	if mType == Counter {
+		//return nil, fmt.Errorf("wrong metric type, got: \"counter\", need: \"gauge\"")
+		return nil
+	}
+	metric := &Metrics{
+		ID:    name,
+		MType: mType,
+		Value: &value,
+	}
+	//return metric, nil
+	return metric
 }

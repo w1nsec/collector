@@ -10,6 +10,7 @@ import (
 
 func NewRouter(store memstorage.Storage) http.Handler {
 	r := chi.NewRouter()
+	r.Use(middlewares.LoggingMiddleware)
 	r.Route("/update/", func(r chi.Router) {
 		r.Use(printMidl)
 		//r.Post("/", UpdateMetricsHandle(store))
@@ -17,7 +18,8 @@ func NewRouter(store memstorage.Storage) http.Handler {
 		r.Post("/gauge/{name}/{value}", UpdateGaugeHandle(store))
 
 		// Not Found
-		r.Post("/", NotFoundHandle)
+
+		r.Post("/", JSONUpdateHandler(store))
 		r.Post("/gauge/", NotFoundHandle)
 		r.Post("/counter/", NotFoundHandle)
 		r.Post("/gauge/{name}", NotFoundHandle)
@@ -35,12 +37,14 @@ func NewRouter(store memstorage.Storage) http.Handler {
 	})
 
 	r.Route("/value/", func(r chi.Router) {
+		//r.Use(middlewares.LoggingMiddleware)
 		r.Get("/{mType}/{mName}", GetMetric(store))
+		//r.Post("/", JSONUpdateHandler)
 	})
 
 	/// increment 6 testing
 	r.Route("/ping", func(r chi.Router) {
-		r.Use(middlewares.LoggingMiddleware)
+		//r.Use(middlewares.LoggingMiddleware)
 		r.Get("/", pong)
 	})
 

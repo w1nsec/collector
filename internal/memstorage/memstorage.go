@@ -11,6 +11,7 @@ type Storage interface {
 	UpdateGauges(name string, value float64)
 	String() string
 	GetMetric(mType, mName string) string
+	UpdateMetrics(newMetrics []*metrics.Metrics) []error
 }
 
 type MemStorage struct {
@@ -45,14 +46,6 @@ func (ms *MemStorage) String() string {
 
 	return s1 + s2
 
-}
-
-func (ms *MemStorage) UpdateCounters(name string, value int64) {
-	ms.dataCounters[name] += value
-}
-
-func (ms *MemStorage) UpdateGauges(name string, value float64) {
-	ms.dataGauges[name] = value
 }
 
 func (ms MemStorage) GetMetric(mType, mName string) string {
