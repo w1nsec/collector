@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"bytes"
 	"encoding/json"
 	"github.com/rs/zerolog/log"
 	"github.com/w1nsec/collector/internal/memstorage"
@@ -45,28 +44,36 @@ func JSONUpdateHandler(store memstorage.Storage) func(w http.ResponseWriter, r *
 
 		// All is good, return updated metrics
 		// Debug version
-		// TODO change request metrics by name to body-request -> body-response
+		// TODO change request metrics by name to:  body-request -> body-response resent
 		ids := make([]string, 0)
-		types := make([]string, 0)
 		for _, metric := range recMetrics {
 			if metric != nil {
 				ids = append(ids, metric.ID)
-				types = append(types, metric.MType)
 			}
 		}
 
-		// How to do it???
-		if len(types) != len(ids) {
-			log.Fatal().Msgf("I can't do it")
+		respMetrics := make([]*metrics.Metrics, 0)
+		for i := 0; i < len(ids); i++ {
+			metric := store.GetOneMetric(ids[i])
+			if metric != nil {
+				respMetrics = append(respMetrics, metric)
+			}
 		}
-		bodyResponse := make([]byte, 0)
-		buffer := bytes.NewBuffer(bodyResponse)
-		for i := 0; i < len(types); i++ {
-			mStr := store.GetMetric(types[i], ids[i])
-			buffer.WriteString(mStr)
+
+		bodyResponse, err := json.Marshal(respMetrics)
+		if err != nil {
+			log.Debug().Err(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
 		}
 
 		// write answer
-		w.Write(buffer.Bytes())
+		_, err = w.Write(bodyResponse)
+		if err != nil {
+			log.Debug().Err(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		w.WriteHeader(http.StatusOK)
 	}
 }

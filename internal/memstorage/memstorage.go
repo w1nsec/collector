@@ -11,12 +11,24 @@ type Storage interface {
 	UpdateGauges(name string, value float64)
 	String() string
 	GetMetric(mType, mName string) string
+	//GetOneMoreMetric(mType, mName string) string
+	GetOneMetric(mName string) *metrics.Metrics
 	UpdateMetrics(newMetrics []*metrics.Metrics) []error
+	UpdateMetric(newMetric *metrics.Metrics)
+	AddMetric(newMetric *metrics.Metrics)
 }
 
+// Storage V2
+type MetricStorage struct {
+	metrics []*metrics.Metrics
+}
+
+// for maps with counters and gauges
 type MemStorage struct {
 	dataCounters map[string]int64
 	dataGauges   map[string]float64
+	//metrics      map*metrics.Metrics
+	metrics []*metrics.Metrics
 }
 
 func (ms *MemStorage) String() string {
@@ -48,6 +60,20 @@ func (ms *MemStorage) String() string {
 
 }
 
+func (ms *MemStorage) UpdateMetric(newMetric *metrics.Metrics) {
+	switch newMetric.MType {
+	case metrics.Gauge:
+		ms.dataGauges[newMetric.ID] = *newMetric.Value
+		return
+	case metrics.Counter:
+		ms.dataCounters[newMetric.ID] = *newMetric.Delta
+		return
+	}
+}
+func (ms *MemStorage) AddMetric(newMetric *metrics.Metrics) {
+	ms.UpdateMetric(newMetric)
+}
+
 func (ms MemStorage) GetMetric(mType, mName string) string {
 	switch mType {
 	case metrics.Gauge:
@@ -64,6 +90,40 @@ func (ms MemStorage) GetMetric(mType, mName string) string {
 		return strconv.FormatInt(val, 10)
 	}
 	return ""
+}
+
+func (ms MemStorage) GetOneMetric(mName string) *metrics.Metrics {
+	//for i, metric := range ms.metrics {
+	//	if metric.MType == mName {
+	//		return ms.metrics[i]
+	//	}
+	//}
+	//return nil
+
+	// for gauges
+	for key, value := range ms.dataGauges {
+		if key == mName {
+			return &metrics.Metrics{
+				ID:    key,
+				MType: metrics.Gauge,
+				Delta: nil,
+				Value: &value,
+			}
+		}
+	}
+
+	// for counters
+	for key, value := range ms.dataCounters {
+		if key == mName {
+			return &metrics.Metrics{
+				ID:    key,
+				MType: metrics.Gauge,
+				Delta: &value,
+				Value: nil,
+			}
+		}
+	}
+	return nil
 }
 
 func NewMemStorage() *MemStorage {
