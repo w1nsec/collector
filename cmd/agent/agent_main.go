@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/w1nsec/collector/internal/agent"
 	"github.com/w1nsec/collector/internal/config"
+	"log"
 )
 
 func main() {
@@ -22,7 +23,7 @@ func main() {
 		fmt.Println(err)
 		return
 	}
-	mAgent.Start()
+	log.Fatal(mAgent.Start())
 
 	// Variant #2
 	// ======================================== //
