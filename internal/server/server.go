@@ -1,7 +1,7 @@
 package server
 
 import (
-	"fmt"
+	"github.com/rs/zerolog/log"
 	"github.com/w1nsec/collector/internal/handlers"
 	"github.com/w1nsec/collector/internal/logger"
 	"github.com/w1nsec/collector/internal/memstorage"
@@ -82,6 +82,6 @@ func (srv *MetricServer) AddMux(mux *http.ServeMux) {
 }
 
 func (srv *MetricServer) Start() error {
-	fmt.Println("[+] Started on:", srv.Addr)
+	log.Info().Msgf("[+] Started on: %s", srv.Addr)
 	return srv.ListenAndServe()
 }

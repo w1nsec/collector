@@ -70,6 +70,7 @@ func (ms *MemStorage) UpdateMetric(newMetric *metrics.Metrics) {
 		return
 	}
 }
+
 func (ms *MemStorage) AddMetric(newMetric *metrics.Metrics) {
 	ms.UpdateMetric(newMetric)
 }
@@ -117,7 +118,7 @@ func (ms MemStorage) GetOneMetric(mName string) *metrics.Metrics {
 		if key == mName {
 			return &metrics.Metrics{
 				ID:    key,
-				MType: metrics.Gauge,
+				MType: metrics.Counter,
 				Delta: &value,
 				Value: nil,
 			}

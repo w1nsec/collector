@@ -20,7 +20,8 @@ func JSONUpdateHandler(store memstorage.Storage) func(w http.ResponseWriter, r *
 	return func(w http.ResponseWriter, r *http.Request) {
 		body, err := io.ReadAll(r.Body)
 		if err != nil {
-			log.Debug().Err(err)
+			log.Err(err).Send()
+			//log.Info().Msgf("err: %v", err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
@@ -29,17 +30,19 @@ func JSONUpdateHandler(store memstorage.Storage) func(w http.ResponseWriter, r *
 		recMetrics := make([]*metrics.Metrics, 0)
 		err = json.Unmarshal(body, &recMetrics)
 		if err != nil {
-			log.Debug().Err(err)
+			log.Err(err).Send()
+			//log.Info().Msgf("err: %v", err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 
 		errs := store.UpdateMetrics(recMetrics)
-		if errs != nil {
+		if len(errs) != 0 {
 			for _, err = range errs {
-				log.Debug().Err(err)
+				log.Err(err)
 			}
 			w.WriteHeader(http.StatusInternalServerError)
+			return
 		}
 
 		// All is good, return updated metrics
@@ -62,7 +65,7 @@ func JSONUpdateHandler(store memstorage.Storage) func(w http.ResponseWriter, r *
 
 		bodyResponse, err := json.Marshal(respMetrics)
 		if err != nil {
-			log.Debug().Err(err)
+			log.Err(err).Send()
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
@@ -70,7 +73,7 @@ func JSONUpdateHandler(store memstorage.Storage) func(w http.ResponseWriter, r *
 		// write answer
 		_, err = w.Write(bodyResponse)
 		if err != nil {
-			log.Debug().Err(err)
+			log.Err(err).Send()
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
