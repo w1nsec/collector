@@ -9,7 +9,6 @@ import (
 	"io"
 	"net/http"
 	"strconv"
-	"time"
 )
 
 var (
@@ -47,17 +46,23 @@ func (agent Agent) SendMetricsJSON() error {
 		return err
 	}
 	buffer := bytes.NewBuffer(body)
-	client := http.Client{
-		Timeout: time.Duration(5),
-	}
+	//client := http.Client{
+	//	Timeout: time.Duration(5),
+	//}
 	address := fmt.Sprintf("http://%s/%s/", agent.addr.String(), "update")
-	req, err := http.NewRequest("POST", address, buffer)
-	if err != nil {
-		return err
-	}
+	//req, err := http.NewRequest("POST", address, buffer)
+	//req, err := http.Post(address, "application/json", buffer)
+	//if err != nil {
+	//	return err
+	//}
 
-	req.Header.Set("Content-type", "application/json")
-	resp, err := client.Do(req)
+	//req.Header.Set("Content-type", "application/json")
+	//resp, err := client.Do(req)
+	//if err != nil {
+	//	return err
+	//}
+
+	resp, err := http.Post(address, "application/json", buffer)
 	if err != nil {
 		return err
 	}
@@ -68,6 +73,7 @@ func (agent Agent) SendMetricsJSON() error {
 	}
 	log.Info().
 		Msg(string(body))
+	
 	return nil
 }
 

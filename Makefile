@@ -21,7 +21,13 @@ check1:
 
 
 check2:
-	metricstest -test.v -test.run=^TestIteration2$$ -binary-path=${SERVER} -agent-binary-path=${AGENT}
+	metricstest -test.v -test.run=^TestIteration2[AB]$$ -binary-path=${SERVER} -agent-binary-path=${AGENT} -source-path=./
+
+check3:
+	metricstest -test.v -test.run=^TestIteration3$$ -binary-path=${SERVER} -agent-binary-path=${AGENT} -source-path=./ -server-port=${PORT}
+
+check4:
+	metricstest -test.v -test.run=^TestIteration4$$ -binary-path=${SERVER} -agent-binary-path=${AGENT} -source-path=./ -server-port=${PORT}
 
 check5:
 	metricstest -test.v -test.run=^TestIteration5$$ -binary-path=${SERVER} -agent-binary-path=${AGENT} -source-path=./ -server-port=${PORT}
