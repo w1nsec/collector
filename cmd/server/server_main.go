@@ -1,10 +1,9 @@
 package main
 
 import (
-	"fmt"
+	"github.com/rs/zerolog/log"
 	"github.com/w1nsec/collector/internal/config"
 	"github.com/w1nsec/collector/internal/server"
-	"log"
 )
 
 func main() {
@@ -14,12 +13,16 @@ func main() {
 	)
 	config.ServerArgsParse(&addr, &logLevel)
 
-	fmt.Println(addr, logLevel)
+	log.Info().
+		Str("addr", addr).
+		Str("log", logLevel).Send()
+
 	srv, err := server.NewServer(addr, logLevel)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal().Err(err).Send()
+
 	}
 	//srv.AddMux(mux)
 
-	log.Fatal(srv.Start())
+	log.Fatal().Err(srv.Start()).Send()
 }

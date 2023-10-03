@@ -45,6 +45,9 @@ func (agent Agent) SendMetricsJSON() error {
 	if err != nil {
 		return err
 	}
+	log.Info().RawJSON("body", body).
+		Msg("Send: ")
+
 	buffer := bytes.NewBuffer(body)
 	//client := http.Client{
 	//	Timeout: time.Duration(5),
@@ -72,8 +75,10 @@ func (agent Agent) SendMetricsJSON() error {
 		return err
 	}
 	log.Info().
-		Msg(string(body))
-	
+		RawJSON("body", body).
+		Int("status", resp.StatusCode).
+		Msg("Receive:")
+
 	return nil
 }
 
@@ -110,7 +115,7 @@ func convertMetrics(agentMetric map[string]metrics.MyMetrics) ([]*metrics.Metric
 			return nil, err
 		}
 		newMetrics = append(newMetrics, metric)
-		fmt.Println(metric)
+		//fmt.Println(metric)
 	}
 	return newMetrics, nil
 }
@@ -132,8 +137,6 @@ func (agent Agent) generateRequest() ([]byte, error) {
 	//if err != nil {
 	//	return nil, err
 	//}
-	log.Info().RawJSON("body", body).
-		Msg("send")
 
 	return body, err
 }
