@@ -13,7 +13,7 @@ func ServerArgsParse(addr, logLevel *string) {
 		flagAddr     string
 		flagLogLevel string
 	)
-	flag.StringVar(&flagAddr, "a", "localhost:8080", "address for server")
+	flag.StringVar(&flagAddr, "a", "localhost:8081", "address for server")
 	flag.StringVar(&flagLogLevel, "l", "info", "log level")
 	flag.Parse()
 

@@ -1,6 +1,6 @@
 AGENT=cmd/agent/agent
 SERVER=cmd/server/server
-PORT=9000
+PORT=16738
 
 
 
@@ -21,7 +21,7 @@ check1:
 
 
 check2:
-	metricstest -test.v -test.run=^TestIteration2[AB]$$ -binary-path=${SERVER} -agent-binary-path=${AGENT} -source-path=./
+	metricstest -test.v -test.run=^TestIteration2[AB]*$$             -source-path=.             -agent-binary-path=cmd/agent/agent
 
 check3:
 	metricstest -test.v -test.run=^TestIteration3$$ -binary-path=${SERVER} -agent-binary-path=${AGENT} -source-path=./ -server-port=${PORT}
@@ -33,4 +33,15 @@ check5:
 	metricstest -test.v -test.run=^TestIteration5$$ -binary-path=${SERVER} -agent-binary-path=${AGENT} -source-path=./ -server-port=${PORT}
 
 check6:
-	metricstest -test.v -test.run=^TestIteration6$$ -binary-path=${SERVER} -agent-binary-path=${AGENT} -source-path=./ -server-port=${PORT}
+	metricstest -test.v -test.run=^TestIteration6$$ \
+                -agent-binary-path=cmd/agent/agent \
+                -binary-path=cmd/server/server \
+                -server-port=${PORT} \
+                -source-path=.
+
+check7:
+	metricstest -test.v -test.run=^TestIteration7$$ \
+                -agent-binary-path=cmd/agent/agent \
+                -binary-path=cmd/server/server \
+                -server-port=${PORT} \
+                -source-path=.
