@@ -162,7 +162,7 @@ func JSONUpdateOneMetricHandler(store memstorage.Storage) func(w http.ResponseWr
 			return
 		}
 
-		body, err = json.Marshal(metric)
+		body, err = json.Marshal(retMetric)
 		if err != nil {
 			log.Error().
 				Err(err).Send()

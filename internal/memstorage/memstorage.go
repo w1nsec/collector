@@ -71,7 +71,7 @@ func (ms *MemStorage) UpdateMetric(newMetric *metrics.Metrics) {
 		ms.dataGauges[newMetric.ID] = *newMetric.Value
 		return
 	case metrics.Counter:
-		ms.dataCounters[newMetric.ID] = *newMetric.Delta
+		ms.dataCounters[newMetric.ID] += *newMetric.Delta
 		return
 	}
 }
