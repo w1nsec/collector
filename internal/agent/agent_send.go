@@ -42,6 +42,7 @@ func (agent Agent) SendMetrics() {
 func (agent Agent) SendMetricsJSON() error {
 
 	body, err := agent.generateRequest()
+
 	if err != nil {
 		return err
 	}

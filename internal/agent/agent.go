@@ -84,14 +84,14 @@ func (agent Agent) Start() error {
 	maxErrCount = 3
 	curErrCount = 0
 	// Receive and send for the first time
-	fmt.Println("Receiving:", time.Now().Format(time.TimeOnly))
-	agent.GetMetrics()
-	fmt.Println("- Sending:", time.Now().Format(time.TimeOnly))
+	//fmt.Println("Receiving:", time.Now().Format(time.TimeOnly))
+	//agent.GetMetrics()
+	//fmt.Println("- Sending:", time.Now().Format(time.TimeOnly))
 	//agent.SendMetrics()
-	err := agent.SendMetricsJSON()
-	if err != nil {
-		return err
-	}
+	//err := agent.SendMetricsJSON()
+	//if err != nil {
+	//	return err
+	//}
 
 	pollTicker := time.NewTicker(agent.pollInterval)
 	reportTicker := time.NewTicker(agent.reportInterval)
