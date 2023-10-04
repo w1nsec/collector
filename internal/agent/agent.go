@@ -2,12 +2,13 @@ package agent
 
 import (
 	"fmt"
+	"net"
+	"time"
+
 	"github.com/rs/zerolog/log"
 	"github.com/w1nsec/collector/internal/logger"
 	"github.com/w1nsec/collector/internal/memstorage"
 	"github.com/w1nsec/collector/internal/metrics"
-	"net"
-	"time"
 )
 
 var usedMemStats = []string{
@@ -90,7 +91,8 @@ func (agent Agent) Start() error {
 	//agent.SendMetrics()
 	err := agent.SendMetricsJSON()
 	if err != nil {
-		return err
+		println("не получилось отправить и ничего страшного")
+		//return err
 	}
 
 	pollTicker := time.NewTicker(agent.pollInterval)
