@@ -17,9 +17,11 @@ func NewRouter(store memstorage.Storage) http.Handler {
 		r.Post("/counter/{name}/{value}", UpdateCounterHandle(store))
 		r.Post("/gauge/{name}/{value}", UpdateGaugeHandle(store))
 
-		// Not Found
+		// Update via JSON (only one metric by yandex TASK)
+		//r.Post("/", JSONUpdateHandler(store))
+		r.Post("/", JSONUpdateOneMetricHandler(store))
 
-		r.Post("/", JSONUpdateHandler(store))
+		// Not Found
 		r.Post("/gauge/", NotFoundHandle)
 		r.Post("/counter/", NotFoundHandle)
 		r.Post("/gauge/{name}", NotFoundHandle)
@@ -37,9 +39,10 @@ func NewRouter(store memstorage.Storage) http.Handler {
 	})
 
 	r.Route("/value/", func(r chi.Router) {
-		//r.Use(middlewares.LoggingMiddleware)
+		r.Use(middlewares.LoggingMiddleware)
+		// Get metric value
+		r.Post("/", JSONGetMetricHandler(store))
 		r.Get("/{mType}/{mName}", GetMetric(store))
-		//r.Post("/", JSONUpdateHandler)
 	})
 
 	/// increment 6 testing

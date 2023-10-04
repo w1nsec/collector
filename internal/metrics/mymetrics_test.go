@@ -1,17 +1,16 @@
-package agent
+package metrics
 
 import (
 	"fmt"
 	"github.com/stretchr/testify/require"
-	"github.com/w1nsec/collector/internal/metrics"
 	"reflect"
 	"testing"
 )
 
-func Test_convertOneMetric(t *testing.T) {
+func Test_ConvertMymetric2Metric(t *testing.T) {
 	type args struct {
 		name     string
-		mymetric metrics.MyMetrics
+		mymetric MyMetrics
 	}
 
 	var (
@@ -22,7 +21,7 @@ func Test_convertOneMetric(t *testing.T) {
 	tests := []struct {
 		name    string
 		args    args
-		want    *metrics.Metrics
+		want    *Metrics
 		wantErr bool
 	}{
 		// TODO: Add test cases.
@@ -30,12 +29,12 @@ func Test_convertOneMetric(t *testing.T) {
 			name: "test Counter",
 			args: args{
 				name: "Test-Counter-metric",
-				mymetric: metrics.MyMetrics{
+				mymetric: MyMetrics{
 					Value:    "10",
-					SendType: metrics.Counter,
+					SendType: Counter,
 				},
 			},
-			want: &metrics.Metrics{
+			want: &Metrics{
 				ID:    "Test-Counter-metric",
 				MType: "counter",
 				Delta: &test1,
@@ -46,12 +45,12 @@ func Test_convertOneMetric(t *testing.T) {
 			name: "test Gauge",
 			args: args{
 				name: "Test-Gauge-metric",
-				mymetric: metrics.MyMetrics{
+				mymetric: MyMetrics{
 					Value:    "10.1",
-					SendType: metrics.Gauge,
+					SendType: Gauge,
 				},
 			},
-			want: &metrics.Metrics{
+			want: &Metrics{
 				ID:    "Test-Gauge-metric",
 				MType: "gauge",
 				Value: &test2,
@@ -61,7 +60,7 @@ func Test_convertOneMetric(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := convertOneMetric(tt.args.name, tt.args.mymetric)
+			got, err := ConvertMymetric2Metric(tt.args.name, tt.args.mymetric)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("convertOneMetric() error = %v, wantErr %v", err, tt.wantErr)
 				return

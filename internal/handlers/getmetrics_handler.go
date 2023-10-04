@@ -11,7 +11,7 @@ func GetMetric(store memstorage.Storage) http.HandlerFunc {
 		mType := chi.URLParam(r, "mType")
 		mName := chi.URLParam(r, "mName")
 
-		value := store.GetMetric(mType, mName)
+		value := store.GetMetricString(mType, mName)
 		// metric not found
 		if value == "" {
 			rw.WriteHeader(http.StatusNotFound)

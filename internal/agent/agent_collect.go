@@ -68,7 +68,7 @@ func (agent Agent) GetMetrics() {
 // for storageV2
 func (agent Agent) CollectMetrics() {
 	//if agent.store == nil {
-	agent.store = memstorage.NewMetricStorage()
+	agent.store = memstorage.NewMemStorage()
 	//}
 
 	m := runtime.MemStats{}

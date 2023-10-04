@@ -41,7 +41,7 @@ func (m MetricStorage) String() string {
 	return string(buf)
 }
 
-func (m MetricStorage) GetMetric(mType, mName string) string {
+func (m MetricStorage) GetMetricString(mType, mName string) string {
 	for id, metric := range m.metrics {
 		if metric.ID == mName && metric.MType == mType {
 			buf, err := json.Marshal(m.metrics[id])
