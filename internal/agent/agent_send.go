@@ -4,11 +4,12 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/rs/zerolog/log"
-	"github.com/w1nsec/collector/internal/metrics"
 	"io"
 	"net/http"
 	"strconv"
+
+	"github.com/rs/zerolog/log"
+	"github.com/w1nsec/collector/internal/metrics"
 )
 
 var (
@@ -41,43 +42,46 @@ func (agent Agent) SendMetrics() {
 
 func (agent Agent) SendMetricsJSON() error {
 
-	body, err := agent.generateRequest()
+	bodies, err := agent.generateRequests()
 	if err != nil {
 		return err
 	}
-	log.Info().RawJSON("body", body).
-		Msg("Send: ")
 
-	buffer := bytes.NewBuffer(body)
-	//client := http.Client{
-	//	Timeout: time.Duration(5),
-	//}
-	address := fmt.Sprintf("http://%s/%s/", agent.addr.String(), "update")
-	//req, err := http.NewRequest("POST", address, buffer)
-	//req, err := http.Post(address, "application/json", buffer)
-	//if err != nil {
-	//	return err
-	//}
+	for _, body := range bodies {
+		log.Info().RawJSON("body", body).
+			Msg("Send: ")
 
-	//req.Header.Set("Content-type", "application/json")
-	//resp, err := client.Do(req)
-	//if err != nil {
-	//	return err
-	//}
+		buffer := bytes.NewBuffer(body)
+		//client := http.Client{
+		//	Timeout: time.Duration(5),
+		//}
+		address := fmt.Sprintf("http://%s/%s/", agent.addr.String(), "update")
+		//req, err := http.NewRequest("POST", address, buffer)
+		//req, err := http.Post(address, "application/json", buffer)
+		//if err != nil {
+		//	return err
+		//}
 
-	resp, err := http.Post(address, "application/json", buffer)
-	if err != nil {
-		return err
+		//req.Header.Set("Content-type", "application/json")
+		//resp, err := client.Do(req)
+		//if err != nil {
+		//	return err
+		//}
+
+		resp, err := http.Post(address, "application/json", buffer)
+		if err != nil {
+			return err
+		}
+		defer resp.Body.Close()
+		body, err = io.ReadAll(resp.Body)
+		if err != nil {
+			return err
+		}
+		log.Info().
+			RawJSON("body", body).
+			Int("status", resp.StatusCode).
+			Msg("Receive:")
 	}
-	defer resp.Body.Close()
-	body, err = io.ReadAll(resp.Body)
-	if err != nil {
-		return err
-	}
-	log.Info().
-		RawJSON("body", body).
-		Int("status", resp.StatusCode).
-		Msg("Receive:")
 
 	return nil
 }
@@ -139,4 +143,28 @@ func (agent Agent) generateRequest() ([]byte, error) {
 	//}
 
 	return body, err
+}
+
+func (agent Agent) generateRequests() ([][]byte, error) {
+	sendingMetrics, err := convertMetrics(agent.metrics)
+	if err != nil {
+		return nil, err
+	}
+	bodies := [][]byte{}
+	for _, v := range sendingMetrics {
+
+		body, err := json.Marshal(v)
+		if err != nil {
+			return nil, err
+		}
+		bodies = append(bodies, body)
+	}
+	//buf := make([]byte, len(body))
+	//buffer := bytes.NewBuffer(buf)
+	//err = json.Indent(buffer, body, "", "  ")
+	//if err != nil {
+	//	return nil, err
+	//}
+
+	return bodies, err
 }
