@@ -1,13 +1,14 @@
 package agent
 
 import (
-	"github.com/w1nsec/collector/internal/memstorage"
-	"github.com/w1nsec/collector/internal/metrics"
 	"math/rand"
 	"reflect"
 	"runtime"
 	"strconv"
 	"time"
+
+	"github.com/w1nsec/collector/internal/memstorage"
+	"github.com/w1nsec/collector/internal/metrics"
 )
 
 // for storeV1 (maps with counter and gauge)
@@ -23,16 +24,17 @@ func (agent Agent) GetMetrics() {
 	//metrics := make(map[string]interface{})
 	for _, name := range usedMemStats {
 		if values.FieldByName(name).IsValid() {
+			//короче только Гауж, никаких других типов
 			if values.FieldByName(name).CanInt() {
 				agent.metrics[name] = metrics.MyMetrics{
 					Value:    strconv.FormatInt(values.FieldByName(name).Int(), 10),
-					SendType: metrics.Counter,
+					SendType: metrics.Gauge,
 				}
 			}
 			if values.FieldByName(name).CanUint() {
 				agent.metrics[name] = metrics.MyMetrics{
 					Value:    strconv.FormatUint(values.FieldByName(name).Uint(), 10),
-					SendType: metrics.Counter,
+					SendType: metrics.Gauge,
 				}
 			}
 			if values.FieldByName(name).CanFloat() {
