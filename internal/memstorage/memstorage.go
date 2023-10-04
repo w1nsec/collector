@@ -10,9 +10,14 @@ type Storage interface {
 	UpdateCounters(name string, value int64)
 	UpdateGauges(name string, value float64)
 	String() string
-	GetMetric(mType, mName string) string
+	GetMetricString(mType, mName string) string
 	//GetOneMoreMetric(mType, mName string) string
+
+	// wrong if gauge and counter map have metric with the SAME name
 	GetOneMetric(mName string) *metrics.Metrics
+
+	// valid
+	GetMetric(mName string, mType string) *metrics.Metrics
 	UpdateMetrics(newMetrics []*metrics.Metrics) []error
 	UpdateMetric(newMetric *metrics.Metrics)
 	AddMetric(newMetric *metrics.Metrics)
@@ -75,7 +80,7 @@ func (ms *MemStorage) AddMetric(newMetric *metrics.Metrics) {
 	ms.UpdateMetric(newMetric)
 }
 
-func (ms MemStorage) GetMetric(mType, mName string) string {
+func (ms MemStorage) GetMetricString(mType, mName string) string {
 	switch mType {
 	case metrics.Gauge:
 		val, ok := ms.dataGauges[mName]
@@ -91,6 +96,37 @@ func (ms MemStorage) GetMetric(mType, mName string) string {
 		return strconv.FormatInt(val, 10)
 	}
 	return ""
+}
+
+func (ms MemStorage) GetMetric(mName string, mType string) *metrics.Metrics {
+	switch mType {
+	case metrics.Gauge:
+		// for gauges
+		for key, value := range ms.dataGauges {
+			if key == mName {
+				return &metrics.Metrics{
+					ID:    key,
+					MType: metrics.Gauge,
+					Delta: nil,
+					Value: &value,
+				}
+			}
+		}
+	case metrics.Counter:
+		// for counters
+		for key, value := range ms.dataCounters {
+			if key == mName {
+				return &metrics.Metrics{
+					ID:    key,
+					MType: metrics.Counter,
+					Delta: &value,
+					Value: nil,
+				}
+			}
+		}
+	}
+
+	return nil
 }
 
 func (ms MemStorage) GetOneMetric(mName string) *metrics.Metrics {

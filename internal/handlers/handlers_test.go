@@ -171,7 +171,7 @@ func TestUpdateRoutes(t *testing.T) {
 				mType := params[0]
 				mName := params[1]
 				expectValue := params[2]
-				actualValue := store.GetMetric(mType, mName)
+				actualValue := store.GetMetricString(mType, mName)
 				fmt.Println(filterURL)
 				assert.Equal(t, expectValue, actualValue)
 
