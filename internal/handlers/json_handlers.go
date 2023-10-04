@@ -110,8 +110,7 @@ func JSONUpdateOneMetricHandler(store memstorage.Storage) func(w http.ResponseWr
 			return
 		}
 
-		var metric *metrics.Metrics
-		metric = new(metrics.Metrics)
+		var metric = new(metrics.Metrics)
 
 		body, err := io.ReadAll(r.Body)
 		if err != nil {
@@ -133,6 +132,13 @@ func JSONUpdateOneMetricHandler(store memstorage.Storage) func(w http.ResponseWr
 			RawJSON("metric", body).
 			Msg("Request")
 
+		if metric == nil {
+			log.Error().
+				Err(fmt.Errorf("metric is nil")).Send()
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
 		// Check, that metric contains values
 		if (metric.Delta == nil && metric.Value == nil) ||
 			metric.ID == "" {
@@ -147,10 +153,11 @@ func JSONUpdateOneMetricHandler(store memstorage.Storage) func(w http.ResponseWr
 		// Debug version
 		// TODO change request metrics by name to:  body-request -> body-response resent (when debug done)
 
-		metric = store.GetMetric(metric.ID, metric.MType)
-		if metric == nil {
+		retMetric := store.GetMetric(metric.ID, metric.MType)
+		if retMetric == nil {
 			log.Error().
-				Err(fmt.Errorf("metric \"%s\" not found in store", metric.ID)).Send()
+				Err(fmt.Errorf("metric \"%s\" not found in store",
+					metric.ID)).Send()
 			w.WriteHeader(http.StatusNotFound)
 			return
 		}
@@ -201,14 +208,14 @@ func JSONGetMetricHandler(store memstorage.Storage) func(w http.ResponseWriter, 
 		}
 		if !valid {
 			log.Error().
-				Err(fmt.Errorf("invalid \"content-type\": %s", strings.Join(vals, ";"))).
+				Err(fmt.Errorf("invalid \"content-type\": %s",
+					strings.Join(vals, ";"))).
 				Send()
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 
-		var metric *metrics.Metrics
-		metric = new(metrics.Metrics)
+		var metric = new(metrics.Metrics)
 
 		body, err := io.ReadAll(r.Body)
 		if err != nil {
@@ -228,10 +235,26 @@ func JSONGetMetricHandler(store memstorage.Storage) func(w http.ResponseWriter, 
 		}
 		log.Info().
 			RawJSON("metric", body).
+			Str("method", r.Method).
+			Str("url", r.URL.RawPath).
 			Msg("Request")
 
 		// Debug version
 		// TODO change request metrics by name to:  body-request -> body-response resent (when debug done)
+
+		if metric == nil {
+			log.Error().
+				Err(fmt.Errorf("metric is nil")).Send()
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		if metric.ID == "" {
+			log.Error().
+				Err(fmt.Errorf("metric doesn't contain ID")).Send()
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
 
 		// Check, that metric contains values
 		if metric.ID == "" {
@@ -241,15 +264,16 @@ func JSONGetMetricHandler(store memstorage.Storage) func(w http.ResponseWriter, 
 			return
 		}
 
-		metric = store.GetMetric(metric.ID, metric.MType)
-		if metric == nil {
+		retMetric := store.GetMetric(metric.ID, metric.MType)
+		if retMetric == nil {
 			log.Error().
-				Err(fmt.Errorf("metric \"%s\" not found in store", metric.ID)).Send()
+				Err(fmt.Errorf("metric \"%s\" not found in store",
+					metric.ID)).Send()
 			w.WriteHeader(http.StatusNotFound)
 			return
 		}
 
-		body, err = json.Marshal(metric)
+		body, err = json.Marshal(retMetric)
 		if err != nil {
 			log.Error().
 				Err(err).Send()

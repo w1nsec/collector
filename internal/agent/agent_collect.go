@@ -21,25 +21,30 @@ func (agent Agent) GetMetrics() {
 	values := reflect.ValueOf(m)
 
 	//metrics := make(map[string]interface{})
+
+	// TODO Can you switch "reflect" to something other ???
 	for _, name := range usedMemStats {
 		if values.FieldByName(name).IsValid() {
-			//if values.FieldByName(name).CanInt() {
-			//	agent.metrics[name] = metrics.MyMetrics{
-			//		Value:    strconv.FormatInt(values.FieldByName(name).Int(), 10),
-			//		SendType: metrics.Counter,
-			//	}
-			//}
-			//if values.FieldByName(name).CanUint() {
-			//	agent.metrics[name] = metrics.MyMetrics{
-			//		Value:    strconv.FormatUint(values.FieldByName(name).Uint(), 10),
-			//		SendType: metrics.Counter,
-			//	}
-			//}
+			if values.FieldByName(name).CanInt() {
+				agent.metrics[name] = metrics.MyMetrics{
+					Value:    strconv.FormatInt(values.FieldByName(name).Int(), 10),
+					SendType: metrics.Gauge,
+				}
+				continue
+			}
+			if values.FieldByName(name).CanUint() {
+				agent.metrics[name] = metrics.MyMetrics{
+					Value:    strconv.FormatUint(values.FieldByName(name).Uint(), 10),
+					SendType: metrics.Gauge,
+				}
+				continue
+			}
 			if values.FieldByName(name).CanFloat() {
 				agent.metrics[name] = metrics.MyMetrics{
 					Value:    strconv.FormatFloat(values.FieldByName(name).Float(), 'f', -1, 64),
 					SendType: metrics.Gauge,
 				}
+				continue
 			}
 		}
 

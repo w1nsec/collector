@@ -35,13 +35,14 @@ func (agent Agent) SendMetrics() {
 }
 
 func (agent Agent) SendOneMetricJSON(name string, mymetric metrics.MyMetrics) error {
+	URL := "update"
 
 	metric, err := metrics.ConvertMymetric2Metric(name, mymetric)
 	if err != nil {
 		return err
 	}
 
-	address := fmt.Sprintf("http://%s/%s/", agent.addr.String(), "update")
+	address := fmt.Sprintf("http://%s/%s/", agent.addr.String(), URL)
 
 	body, err := json.Marshal(metric)
 	if err != nil {
@@ -63,6 +64,7 @@ func (agent Agent) SendOneMetricJSON(name string, mymetric metrics.MyMetrics) er
 		return err
 	}
 	log.Info().
+		Str("url", URL).
 		RawJSON("body", body).
 		Msg("Receive: ")
 
