@@ -2,16 +2,17 @@ package handlers
 
 import (
 	"fmt"
+	"net/http"
+
 	"github.com/go-chi/chi/v5"
 	"github.com/w1nsec/collector/internal/memstorage"
 	"github.com/w1nsec/collector/internal/middlewares"
-	"net/http"
 )
 
 func NewRouter(store memstorage.Storage) http.Handler {
 	r := chi.NewRouter()
 	r.Use(middlewares.LoggingMiddleware)
-	r.Route("/update/", func(r chi.Router) {
+	r.Route("/update", func(r chi.Router) {
 		r.Use(printMidl)
 		//r.Post("/", UpdateMetricsHandle(store))
 		r.Post("/counter/{name}/{value}", UpdateCounterHandle(store))
@@ -36,8 +37,9 @@ func NewRouter(store memstorage.Storage) http.Handler {
 		r.NotFound(BadRequest)
 	})
 
-	r.Route("/value/", func(r chi.Router) {
+	r.Route("/value", func(r chi.Router) {
 		//r.Use(middlewares.LoggingMiddleware)
+		r.Post("/", JSONValueHandler(store))
 		r.Get("/{mType}/{mName}", GetMetric(store))
 		//r.Post("/", JSONUpdateHandler)
 	})
