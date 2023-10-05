@@ -16,6 +16,7 @@ import (
 //}
 
 // func (h JSONUpdateHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+// }
 
 // JSON format update
 func JSONUpdateHandler(store memstorage.Storage) func(w http.ResponseWriter, r *http.Request) {
