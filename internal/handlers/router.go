@@ -16,6 +16,10 @@ func NewRouter(store memstorage.Storage) http.Handler {
 	r.Use(middlewares.GzipMiddleware)
 
 	// routing
+	r.Route("/", func(r chi.Router) {
+		r.Get("/", GetAllMetrics(store))
+	})
+
 	r.Route("/update/", func(r chi.Router) {
 		//r.Use(printMidl)
 		//r.Post("/", UpdateMetricsHandle(store))
