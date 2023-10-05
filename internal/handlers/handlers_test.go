@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/w1nsec/collector/internal/memstorage"
+	"github.com/w1nsec/collector/internal/storage/memstorage"
 	"io"
 	"net/http"
 	"net/http/httptest"

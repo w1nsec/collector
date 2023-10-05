@@ -2,9 +2,10 @@ package server
 
 import (
 	"github.com/rs/zerolog/log"
+	"github.com/w1nsec/collector/internal/config"
 	"github.com/w1nsec/collector/internal/handlers"
 	"github.com/w1nsec/collector/internal/logger"
-	"github.com/w1nsec/collector/internal/memstorage"
+	"github.com/w1nsec/collector/internal/storage/memstorage"
 	"net"
 	"net/http"
 )
@@ -16,10 +17,11 @@ type Server interface {
 
 // NewServer is just a wrapper for NewMetricServerWithParams
 // with default params, return interface for server
-func NewServer(addr string, loggerLevel string) (Server, error) {
+// func NewServer(addr string, loggerLevel string) (Server, error) {
+func NewServer(args config.Args) (Server, error) {
 	store := memstorage.NewMemStorage()
 	mux := handlers.NewRouter(store)
-	return NewMetricServerWithParams(addr, store, mux, loggerLevel)
+	return NewMetricServerWithParams(args.Addr, store, mux, args.LogLevel)
 }
 
 type MetricServer struct {
