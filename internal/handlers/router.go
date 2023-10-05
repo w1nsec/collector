@@ -10,9 +10,14 @@ import (
 
 func NewRouter(store memstorage.Storage) http.Handler {
 	r := chi.NewRouter()
+
+	// middlewares
 	r.Use(middlewares.LoggingMiddleware)
+	r.Use(middlewares.GzipMiddleware)
+
+	// routing
 	r.Route("/update/", func(r chi.Router) {
-		r.Use(printMidl)
+		//r.Use(printMidl)
 		//r.Post("/", UpdateMetricsHandle(store))
 		r.Post("/counter/{name}/{value}", UpdateCounterHandle(store))
 		r.Post("/gauge/{name}/{value}", UpdateGaugeHandle(store))
@@ -39,7 +44,8 @@ func NewRouter(store memstorage.Storage) http.Handler {
 	})
 
 	r.Route("/value/", func(r chi.Router) {
-		r.Use(middlewares.LoggingMiddleware)
+		//r.Use(middlewares.LoggingMiddleware)
+
 		// Get metric value
 		r.Post("/", JSONGetMetricHandler(store))
 		r.Get("/{mType}/{mName}", GetMetric(store))
