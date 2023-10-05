@@ -2,7 +2,7 @@ package server
 
 import (
 	"github.com/stretchr/testify/assert"
-	"github.com/w1nsec/collector/internal/memstorage"
+	"github.com/w1nsec/collector/internal/storage/memstorage"
 	"net/http"
 	"testing"
 )

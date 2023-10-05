@@ -1,8 +1,8 @@
 package agent
 
 import (
-	"github.com/w1nsec/collector/internal/memstorage"
 	"github.com/w1nsec/collector/internal/metrics"
+	"github.com/w1nsec/collector/internal/storage/memstorage"
 	"math/rand"
 	"reflect"
 	"runtime"

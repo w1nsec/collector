@@ -7,17 +7,16 @@ import (
 )
 
 func main() {
-	var (
-		addr     string
-		logLevel string
-	)
-	config.ServerArgsParse(&addr, &logLevel)
+
+	var args config.Args
+
+	config.ServerArgsParse(&args)
 
 	log.Info().
-		Str("addr", addr).
-		Str("log", logLevel).Send()
+		Str("addr", args.Addr).
+		Str("log", args.LogLevel).Send()
 
-	srv, err := server.NewServer(addr, logLevel)
+	srv, err := server.NewServer(args)
 	if err != nil {
 		log.Fatal().Err(err).Send()
 
