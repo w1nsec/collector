@@ -32,6 +32,13 @@ func (gRW gzipResponseWriter) Write(data []byte) (int, error) {
 		log.Debug().
 			Err(fmt.Errorf("content-type is wrong")).
 			Msg("response should NOT be compressed")
+
+		// TODO check, how to write default ResponseWriter,
+		// because it possible, break response body
+		// Ex:
+		// 	- want: 404 not found
+		//  - got:  404 not found 0x00 0x00 A 0x00 0x00 B 0x00 0x00
+		// check tests without "bypass line" like: internal/handlers/handlers_test.go:192
 		return gRW.ResponseWriter.Write(data)
 	}
 
