@@ -189,6 +189,8 @@ func testSendRequest(server *httptest.Server, method, url string,
 		return 0, nil, err
 	}
 
+	req.Header.Set("Accept-encoding", "deflate")
+
 	resp, err := server.Client().Do(req)
 	if err != nil {
 		return 0, nil, err
