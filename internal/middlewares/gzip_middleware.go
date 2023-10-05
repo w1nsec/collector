@@ -1,17 +1,18 @@
 package middlewares
 
 import (
-	"compress/gzip"
 	"fmt"
-	"github.com/rs/zerolog/log"
 	"io"
 	"net/http"
 	"strings"
+
+	"compress/gzip"
+	"github.com/rs/zerolog/log"
 )
 
 type gzipResponseWriter struct {
 	http.ResponseWriter
-	Writer io.Writer
+	Writer io.WriteCloser
 }
 
 func (gRW gzipResponseWriter) Write(data []byte) (int, error) {
@@ -37,6 +38,7 @@ func (gRW gzipResponseWriter) Write(data []byte) (int, error) {
 	gRW.Header().Set("Content-Encoding", "gzip")
 	log.Debug().
 		Msg("response SHOULD be compressed")
+
 	return gRW.Writer.Write(data)
 }
 
@@ -67,6 +69,7 @@ func GzipMiddleware(next http.Handler) http.Handler {
 			}
 			//defer r.Body.Close()
 			r.Body = gzReader
+			defer gzReader.Close()
 			log.Debug().
 				Msg("Client have compressed BODY")
 		}
@@ -98,6 +101,7 @@ func GzipMiddleware(next http.Handler) http.Handler {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
+		defer gzWriter.Close()
 		next.ServeHTTP(gzipResponseWriter{ResponseWriter: w, Writer: gzWriter}, r)
 
 	})
