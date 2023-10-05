@@ -98,7 +98,7 @@ func JSONUpdateOneMetricHandler(store memstorage.Storage) func(w http.ResponseWr
 		valid := false
 		vals := r.Header.Values("content-type")
 		for _, val := range vals {
-			if val == "application/json" {
+			if strings.Contains(val, "application/json") {
 				valid = true
 				break
 			}
@@ -202,7 +202,7 @@ func JSONGetMetricHandler(store memstorage.Storage) func(w http.ResponseWriter, 
 		valid := false
 		vals := r.Header.Values("content-type")
 		for _, val := range vals {
-			if val == "application/json" {
+			if strings.Contains(val, "application/json") {
 				valid = true
 				break
 			}

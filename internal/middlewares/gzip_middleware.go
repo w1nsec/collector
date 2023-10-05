@@ -6,6 +6,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"io"
 	"net/http"
+	"strings"
 )
 
 type gzipResponseWriter struct {
@@ -17,10 +18,10 @@ func (gRW gzipResponseWriter) Write(data []byte) (int, error) {
 	// should response be compressed ??
 	// checking content-type
 	shouldCompress := false
-	vals := gRW.Header().Values("")
+	vals := gRW.Header().Values("content-type")
 	for _, val := range vals {
-		if val == "application/json" ||
-			val == "text/html" {
+		if strings.Contains(val, "application/json") ||
+			strings.Contains(val, "text/html") {
 			shouldCompress = true
 			break
 		}
@@ -47,7 +48,7 @@ func GzipMiddleware(next http.Handler) http.Handler {
 		encoded := false
 		vals := r.Header.Values("Content-encoding")
 		for _, val := range vals {
-			if val == "gzip" {
+			if strings.Contains(val, "gzip") {
 				encoded = true
 				break
 			}
@@ -75,7 +76,7 @@ func GzipMiddleware(next http.Handler) http.Handler {
 		acceptEnc := false
 		vals = r.Header.Values("accept-encoding")
 		for _, val := range vals {
-			if val == "gzip" {
+			if strings.Contains(val, "gzip") {
 				acceptEnc = true
 				break
 			}
