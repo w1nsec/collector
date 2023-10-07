@@ -2,7 +2,6 @@ package middlewares
 
 import (
 	"fmt"
-	"io"
 	"net/http"
 	"strings"
 
@@ -12,9 +11,9 @@ import (
 
 type gzipResponseWriter struct {
 	http.ResponseWriter
-	Writer io.WriteCloser
 }
 
+// TODO review this func
 func (gRW gzipResponseWriter) Write(data []byte) (int, error) {
 	// should response be compressed ??
 	// checking content-type
@@ -32,14 +31,23 @@ func (gRW gzipResponseWriter) Write(data []byte) (int, error) {
 		log.Debug().
 			Err(fmt.Errorf("content-type is wrong")).
 			Msg("response should NOT be compressed")
+
 		return gRW.ResponseWriter.Write(data)
 	}
 
+	gzWriter, err := gzip.NewWriterLevel(gRW.ResponseWriter, gzip.BestSpeed)
+	if err != nil {
+		log.Error().
+			Err(err).Send()
+		http.Error(gRW.ResponseWriter, err.Error(), http.StatusInternalServerError)
+		return 0, err
+	}
+	defer gzWriter.Close()
 	gRW.Header().Set("Content-Encoding", "gzip")
 	log.Debug().
 		Msg("response SHOULD be compressed")
 
-	return gRW.Writer.Write(data)
+	return gzWriter.Write(data)
 }
 
 func GzipMiddleware(next http.Handler) http.Handler {
@@ -94,15 +102,6 @@ func GzipMiddleware(next http.Handler) http.Handler {
 		}
 
 		// prepare for compression
-		gzWriter, err := gzip.NewWriterLevel(w, gzip.BestSpeed)
-		if err != nil {
-			log.Error().
-				Err(err).Send()
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		defer gzWriter.Close()
-		next.ServeHTTP(gzipResponseWriter{ResponseWriter: w, Writer: gzWriter}, r)
-
+		next.ServeHTTP(gzipResponseWriter{ResponseWriter: w}, r)
 	})
 }
