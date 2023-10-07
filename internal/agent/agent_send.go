@@ -8,6 +8,7 @@ import (
 	"github.com/w1nsec/collector/internal/metrics"
 	"io"
 	"net/http"
+	"time"
 )
 
 func (agent Agent) SendMetrics() {
@@ -52,8 +53,22 @@ func (agent Agent) SendOneMetricJSON(name string, mymetric metrics.MyMetrics) er
 		RawJSON("body", body).
 		Msg("Send: ")
 
+	//if agent.compression {
+	//	compressed, err := gzip.Compress(body)
+	//	if err == nil {
+	//
+	//	}
+	//}
+
 	buffer := bytes.NewBuffer(body)
-	resp, err := http.Post(address, "application/json", buffer)
+	request, err := http.NewRequest(http.MethodPost, address, buffer)
+	if err != nil {
+		return err
+	}
+	request.Header.Set("content-type", "application/json")
+	client := http.Client{Timeout: time.Second * 20}
+
+	resp, err := client.Do(request)
 	if err != nil {
 		return err
 	}
