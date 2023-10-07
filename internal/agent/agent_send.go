@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/rs/zerolog/log"
 	"github.com/w1nsec/collector/internal/metrics"
+	"github.com/w1nsec/collector/internal/utils/compression/gzip"
 	"io"
 	"net/http"
 	"time"
@@ -53,21 +54,32 @@ func (agent Agent) SendOneMetricJSON(name string, mymetric metrics.MyMetrics) er
 		RawJSON("body", body).
 		Msg("Send: ")
 
-	//if agent.compression {
-	//	compressed, err := gzip.Compress(body)
-	//	if err == nil {
-	//
-	//	}
-	//}
+	// compress request body, if compression available
+	var buffer = bytes.NewBuffer(body)
+	compressionStatus := false
+	if agent.compression {
+		compressed, err := gzip.Compress(body)
+		if err == nil {
+			buffer = bytes.NewBuffer(compressed)
+			compressionStatus = true
+		}
+	}
 
-	buffer := bytes.NewBuffer(body)
 	request, err := http.NewRequest(http.MethodPost, address, buffer)
 	if err != nil {
 		return err
 	}
 	request.Header.Set("content-type", "application/json")
-	client := http.Client{Timeout: time.Second * 20}
 
+	// add compression header, if compression available
+	if agent.compression && compressionStatus {
+		request.Header.Set("content-encoding", "gzip")
+
+		// decompress ??
+		//request.Header.Set("accept-encoding", "gzip")
+	}
+
+	client := http.Client{Timeout: time.Second * 30}
 	resp, err := client.Do(request)
 	if err != nil {
 		return err
