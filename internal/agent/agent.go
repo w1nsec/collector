@@ -47,6 +47,7 @@ type Agent struct {
 	store          memstorage.Storage
 	pollInterval   time.Duration
 	reportInterval time.Duration
+	compression    bool
 	logLevel       string
 }
 
