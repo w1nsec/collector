@@ -13,19 +13,14 @@ type Storage interface {
 	GetMetricString(mType, mName string) string
 	//GetOneMoreMetric(mType, mName string) string
 
-	// wrong if gauge and counter map have metric with the SAME name
-	GetOneMetric(mName string) *metrics.Metrics
-
 	// valid
 	GetMetric(mName string, mType string) *metrics.Metrics
-	UpdateMetrics(newMetrics []*metrics.Metrics) []error
+	//UpdateMetrics(newMetrics []*metrics.Metrics) []error
 	UpdateMetric(newMetric *metrics.Metrics)
 	AddMetric(newMetric *metrics.Metrics)
-}
 
-// Storage V2
-type MetricStorage struct {
-	metrics []*metrics.Metrics
+	// add for increment9
+	GetAllMetrics() []*metrics.Metrics
 }
 
 // for maps with counters and gauges
@@ -33,7 +28,7 @@ type MemStorage struct {
 	dataCounters map[string]int64
 	dataGauges   map[string]float64
 	//metrics      map*metrics.Metrics
-	metrics []*metrics.Metrics
+	//metrics []*metrics.Metrics
 }
 
 func (ms *MemStorage) String() string {
@@ -168,4 +163,33 @@ func NewMemStorage() *MemStorage {
 	ms.dataCounters = make(map[string]int64)
 	ms.dataGauges = make(map[string]float64)
 	return ms
+}
+
+func (ms *MemStorage) GetAllMetrics() []*metrics.Metrics {
+
+	metricsSlice := make([]*metrics.Metrics, 0)
+
+	// convert Gauges
+	for key, val := range ms.dataGauges {
+		metric := &metrics.Metrics{
+			ID:    key,
+			MType: metrics.Gauge,
+			Value: &val,
+		}
+
+		metricsSlice = append(metricsSlice, metric)
+
+	}
+
+	// convert Counters
+	for key, val := range ms.dataCounters {
+		metric := &metrics.Metrics{
+			ID:    key,
+			MType: metrics.Counter,
+			Delta: &val,
+		}
+		metricsSlice = append(metricsSlice, metric)
+	}
+
+	return metricsSlice
 }
