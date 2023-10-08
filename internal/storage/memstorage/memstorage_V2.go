@@ -5,6 +5,11 @@ import (
 	"github.com/w1nsec/collector/internal/metrics"
 )
 
+// Storage V2
+type MetricStorage struct {
+	metrics []*metrics.Metrics
+}
+
 func NewMetricStorage() *MetricStorage {
 	ms := new(MetricStorage)
 	ms.metrics = make([]*metrics.Metrics, 0)
@@ -63,6 +68,7 @@ func (m MetricStorage) GetOneMetric(mName string) *metrics.Metrics {
 	return nil
 }
 
+// No usage in interface
 func (m *MetricStorage) UpdateMetrics(newMetrics []*metrics.Metrics) []error {
 
 	// TODO change this stupid and slow compare func
@@ -97,4 +103,18 @@ func (m *MetricStorage) UpdateMetric(metric *metrics.Metrics) {
 
 func (m *MetricStorage) AddMetric(newMetric *metrics.Metrics) {
 	m.metrics = append(m.metrics, newMetric)
+}
+
+func (m *MetricStorage) GetMetric(mName string, mType string) *metrics.Metrics {
+	for _, metric := range m.metrics {
+		if metric.ID == mName && metric.MType == mType {
+			return metric
+		}
+	}
+
+	return nil
+}
+
+func (m *MetricStorage) GetAllMetrics() []*metrics.Metrics {
+	return m.metrics
 }

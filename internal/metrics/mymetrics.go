@@ -50,3 +50,19 @@ func ConvertMymetric2Metric(name string, mymetric MyMetrics) (*Metrics, error) {
 	}
 	return metric, nil
 }
+
+// TODO refactor code
+func ConvertMetric2Mymetric(metric *Metrics) (name string, myMetric *MyMetrics, err error) {
+	myMetric = new(MyMetrics)
+	switch metric.MType {
+	case Gauge:
+		val := strconv.FormatFloat(*metric.Value, 'f', -1, 64)
+		myMetric.Value = val
+		return metric.ID, myMetric, nil
+	case Counter:
+		val := strconv.FormatInt(*metric.Delta, 10)
+		myMetric.Value = val
+		return metric.ID, myMetric, nil
+	}
+	return "", nil, fmt.Errorf("Wrong convert")
+}
