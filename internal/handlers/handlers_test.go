@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/w1nsec/collector/internal/service"
 	"github.com/w1nsec/collector/internal/storage/memstorage"
 	"io"
 	"net/http"
@@ -80,8 +81,9 @@ import (
 
 func TestUpdateRoutes(t *testing.T) {
 	var (
+	var (
 		store = memstorage.NewMemStorage()
-		route = NewRouter(store)
+		route = service.NewRouter(store)
 		srv   = httptest.NewServer(route)
 	)
 
@@ -214,7 +216,7 @@ type HTTPparams struct {
 func TestGetMetric(t *testing.T) {
 	var (
 		store = memstorage.NewMemStorage()
-		route = NewRouter(store)
+		route = service.NewRouter(store)
 		srv   = httptest.NewServer(route)
 	)
 	testgauge := 121.99
