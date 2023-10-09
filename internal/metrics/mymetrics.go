@@ -64,5 +64,5 @@ func ConvertMetric2Mymetric(metric *Metrics) (name string, myMetric *MyMetrics, 
 		myMetric.Value = val
 		return metric.ID, myMetric, nil
 	}
-	return "", nil, fmt.Errorf("Wrong convert")
+	return "", nil, fmt.Errorf("wrong convert")
 }

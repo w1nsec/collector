@@ -11,7 +11,6 @@ func main() {
 	var args config.Args
 
 	config.ServerArgsParse(&args)
-
 	log.Info().
 		Str("addr", args.Addr).
 		Str("log", args.LogLevel).Send()
