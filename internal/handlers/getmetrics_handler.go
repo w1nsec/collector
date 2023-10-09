@@ -14,6 +14,7 @@ func GetMetric(store memstorage.Storage) http.HandlerFunc {
 		mName := chi.URLParam(r, "mName")
 
 		value := store.GetMetricString(mType, mName)
+		//value := service.GetMetricString(mType, mName)
 		// metric not found
 		if value == "" {
 			rw.WriteHeader(http.StatusNotFound)

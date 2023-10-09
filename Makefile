@@ -1,7 +1,7 @@
 AGENT=cmd/agent/agent
 SERVER=cmd/server/server
 PORT=16738
-
+FSPATH=/tmp/temp.db
 
 
 all: clean server agent
@@ -54,4 +54,12 @@ check8:
                 -agent-binary-path=${AGENT} \
                 -binary-path=${SERVER} \
                 -server-port=${PORT} \
+                -source-path=.
+
+check9:
+	metricstest -test.v -test.run=^TestIteration9$$ \
+                -agent-binary-path=${AGENT} \
+                -binary-path=${SERVER} \
+                -server-port=${PORT} \
+                -file-storage-path=${FSPATH} \
                 -source-path=.

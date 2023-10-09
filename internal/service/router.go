@@ -1,14 +1,14 @@
-package handlers
+package service
 
 import (
 	"fmt"
 	"github.com/go-chi/chi/v5"
+	"github.com/w1nsec/collector/internal/handlers"
 	"github.com/w1nsec/collector/internal/middlewares"
-	"github.com/w1nsec/collector/internal/storage/memstorage"
 	"net/http"
 )
 
-func NewRouter(store memstorage.Storage) http.Handler {
+func NewRouter(service Service) http.Handler {
 	r := chi.NewRouter()
 
 	// middlewares
@@ -17,24 +17,24 @@ func NewRouter(store memstorage.Storage) http.Handler {
 
 	// routing
 	r.Route("/", func(r chi.Router) {
-		r.Get("/", GetAllMetrics(store))
+		r.Get("/", handlers.GetAllMetrics(service))
 	})
 
 	r.Route("/update/", func(r chi.Router) {
 		//r.Use(printMidl)
 		//r.Post("/", UpdateMetricsHandle(store))
-		r.Post("/counter/{name}/{value}", UpdateCounterHandle(store))
-		r.Post("/gauge/{name}/{value}", UpdateGaugeHandle(store))
+		r.Post("/counter/{name}/{value}", handlers.UpdateCounterHandle(service))
+		r.Post("/gauge/{name}/{value}", handlers.UpdateGaugeHandle(service))
 
 		// Update via JSON (only one metric by yandex TASK)
 		//r.Post("/", JSONUpdateHandler(store))
-		r.Post("/", JSONUpdateOneMetricHandler(store))
+		r.Post("/", handlers.JSONUpdateOneMetricHandler(service))
 
 		// Not Found
-		r.Post("/gauge/", NotFoundHandle)
-		r.Post("/counter/", NotFoundHandle)
-		r.Post("/gauge/{name}", NotFoundHandle)
-		r.Post("/counter/{name}", NotFoundHandle)
+		r.Post("/gauge/", handlers.NotFoundHandle)
+		r.Post("/counter/", handlers.NotFoundHandle)
+		r.Post("/gauge/{name}", handlers.NotFoundHandle)
+		r.Post("/counter/{name}", handlers.NotFoundHandle)
 		//r.Post("/gauge/{name}/", NotFoundHandle)
 		//r.Post("/counter/{name}/", NotFoundHandle)
 
@@ -44,21 +44,21 @@ func NewRouter(store memstorage.Storage) http.Handler {
 		// Want: /wrongtype/metricname/123 return 405
 		//       /wrongtype/ 			   return 405
 		//r.Post("/{other}", BadRequest)
-		r.NotFound(BadRequest)
+		r.NotFound(handlers.BadRequest)
 	})
 
 	r.Route("/value/", func(r chi.Router) {
 		//r.Use(middlewares.LoggingMiddleware)
 
 		// Get metric value
-		r.Post("/", JSONGetMetricHandler(store))
-		r.Get("/{mType}/{mName}", GetMetric(store))
+		r.Post("/", handlers.JSONGetMetricHandler(service))
+		r.Get("/{mType}/{mName}", handlers.GetMetric(service))
 	})
 
 	/// increment 6 testing
 	r.Route("/ping", func(r chi.Router) {
 		//r.Use(middlewares.LoggingMiddleware)
-		r.Get("/", pong)
+		r.Get("/", handlers.Pong)
 	})
 
 	return r
