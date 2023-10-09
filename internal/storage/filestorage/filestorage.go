@@ -7,10 +7,11 @@ import (
 	"github.com/w1nsec/collector/internal/metrics"
 	"github.com/w1nsec/collector/internal/storage/memstorage"
 	"os"
+	"sync"
 )
 
 type FileStorageInterface interface {
-	memstorage.Storage
+	//memstorage.Storage
 	Load() error
 	SaveAll() error
 	Close() error
@@ -18,9 +19,11 @@ type FileStorageInterface interface {
 }
 
 type FileStorage struct {
+	memstorage.Storage
+
 	filePath string
 	file     *os.File
-	memstorage.MemStorage
+	mutex    *sync.Mutex
 }
 
 func (f FileStorage) Close() error {
@@ -28,16 +31,17 @@ func (f FileStorage) Close() error {
 }
 
 func (f FileStorage) Load() error {
+	f.mutex.Lock()
+	defer f.mutex.Unlock()
 	// check that file exists, or already opened
 	if f.file == nil {
-		if _, err := os.Stat(f.filePath); err != nil {
-			return err
-		}
-		file, err := os.OpenFile(f.filePath, os.O_RDWR|os.O_APPEND, 0666)
+
+		file, err := os.OpenFile(f.filePath, os.O_RDWR|os.O_APPEND|os.O_CREATE, 0666)
 		if err != nil {
 			return err
 		}
 		f.file = file
+
 	}
 
 	sc := bufio.NewScanner(f.file)
@@ -47,7 +51,7 @@ func (f FileStorage) Load() error {
 		if err != nil {
 			return err
 		}
-		f.MemStorage.UpdateMetric(metric)
+		f.Storage.UpdateMetric(metric)
 
 		metric = nil
 	}
@@ -58,21 +62,22 @@ func (f FileStorage) Load() error {
 }
 
 func (f FileStorage) SaveAll() error {
+	f.mutex.Lock()
+	defer f.mutex.Unlock()
 	// check that file exists, or already opened
 	if f.file == nil {
-		if f.file == nil {
-			if _, err := os.Stat(f.filePath); err != nil {
-				return err
-			}
-			file, err := os.OpenFile(f.filePath, os.O_RDWR|os.O_APPEND, 0666)
-			if err != nil {
-				return err
-			}
-			f.file = file
+		if _, err := os.Stat(f.filePath); err != nil {
+			return err
 		}
+		file, err := os.OpenFile(f.filePath, os.O_WRONLY|os.O_CREATE, 0666)
+		if err != nil {
+			return err
+		}
+		f.file = file
 	}
-
-	mSlice := f.MemStorage.GetAllMetrics()
+	f.file.Truncate(0)
+	f.file.Seek(0, 0)
+	mSlice := f.Storage.GetAllMetrics()
 	for _, metric := range mSlice {
 		encoder := json.NewEncoder(f.file)
 		err := encoder.Encode(metric)
@@ -80,8 +85,25 @@ func (f FileStorage) SaveAll() error {
 			log.Error().Err(err).Send()
 			continue
 		}
+	}
+	//defer f.file.Close()
+	return nil
+}
 
+func NewFileStorage(path string, storage memstorage.Storage) (FileStorageInterface, error) {
+	file, err := os.OpenFile(path, os.O_RDWR|os.O_APPEND|os.O_CREATE, 0666)
+	if err != nil {
+		return nil, err
 	}
 
-	return nil
+	f := &FileStorage{
+		filePath: path,
+		file:     file,
+		Storage:  storage,
+		mutex:    &sync.Mutex{},
+	}
+	if f.Storage == nil {
+		f.Storage = memstorage.NewMemStorage()
+	}
+	return f, nil
 }

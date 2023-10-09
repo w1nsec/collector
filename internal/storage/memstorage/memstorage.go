@@ -171,10 +171,14 @@ func (ms *MemStorage) GetAllMetrics() []*metrics.Metrics {
 
 	// convert Gauges
 	for key, val := range ms.dataGauges {
+		// TODO what err, if I use pointer to val ???
+		newVal := val
+		/////
+
 		metric := &metrics.Metrics{
 			ID:    key,
 			MType: metrics.Gauge,
-			Value: &val,
+			Value: &newVal,
 		}
 
 		metricsSlice = append(metricsSlice, metric)
@@ -183,10 +187,14 @@ func (ms *MemStorage) GetAllMetrics() []*metrics.Metrics {
 
 	// convert Counters
 	for key, val := range ms.dataCounters {
+		// TODO what err, if I use pointer to val ???
+		newVal := val
+		/////
+
 		metric := &metrics.Metrics{
 			ID:    key,
 			MType: metrics.Counter,
-			Delta: &val,
+			Delta: &newVal,
 		}
 		metricsSlice = append(metricsSlice, metric)
 	}

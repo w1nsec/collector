@@ -38,7 +38,7 @@ func ServerArgsParse(args *Args) {
 	flag.StringVar(&flagAddr, "a", "localhost:8080", "address for server")
 	flag.StringVar(&flagLogLevel, "l", "info", "log level")
 	// increment 9, FILE_STORAGE
-	flag.Uint64Var(&flagStoreInterval, "i", 300, "interval for write store data to file")
+	flag.Uint64Var(&flagStoreInterval, "i", 300, "interval in seconds for write store data to file")
 	flag.StringVar(&flagStoragePath, "f", "/tmp/metrics-db.json", "file for saving metrics")
 	flag.BoolVar(&flagRestore, "r", true, "restore from file-db on startup")
 

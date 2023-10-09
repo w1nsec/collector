@@ -51,7 +51,7 @@ func UpdateMetricsHandle(store memstorage.Storage) http.HandlerFunc {
 		default:
 			rw.WriteHeader(http.StatusBadRequest)
 		}
-		fmt.Println(store)
+		//fmt.Println(store)
 		rw.WriteHeader(http.StatusOK)
 	}
 }
