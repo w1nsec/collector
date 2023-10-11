@@ -30,6 +30,7 @@ vendor/
 # other dirs
 increments_tasks/
 diagrams/
+diagrams/*
 tmp/
 requests/
 
