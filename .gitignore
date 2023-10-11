@@ -28,6 +28,12 @@ vendor/
 
 
 # other dirs
-increments_tasks
+increments_tasks/
+diagrams/
+diagrams/*
+tmp/
+requests/
+
+# other files
 bfg.jar
 *.jar

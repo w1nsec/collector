@@ -5,7 +5,8 @@ import (
 	"fmt"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/w1nsec/collector/internal/memstorage"
+	"github.com/w1nsec/collector/internal/service"
+	"github.com/w1nsec/collector/internal/storage/memstorage"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -80,8 +81,9 @@ import (
 
 func TestUpdateRoutes(t *testing.T) {
 	var (
+	var (
 		store = memstorage.NewMemStorage()
-		route = NewRouter(store)
+		route = service.NewRouter(store)
 		srv   = httptest.NewServer(route)
 	)
 
@@ -171,7 +173,7 @@ func TestUpdateRoutes(t *testing.T) {
 				mType := params[0]
 				mName := params[1]
 				expectValue := params[2]
-				actualValue := store.GetMetric(mType, mName)
+				actualValue := store.GetMetricString(mType, mName)
 				fmt.Println(filterURL)
 				assert.Equal(t, expectValue, actualValue)
 
@@ -189,6 +191,7 @@ func testSendRequest(server *httptest.Server, method, url string,
 		return 0, nil, err
 	}
 
+	//req.Header.Set("accept-encoding", "deflate")
 	resp, err := server.Client().Do(req)
 	if err != nil {
 		return 0, nil, err
@@ -213,7 +216,7 @@ type HTTPparams struct {
 func TestGetMetric(t *testing.T) {
 	var (
 		store = memstorage.NewMemStorage()
-		route = NewRouter(store)
+		route = service.NewRouter(store)
 		srv   = httptest.NewServer(route)
 	)
 	testgauge := 121.99

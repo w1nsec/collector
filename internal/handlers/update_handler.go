@@ -3,7 +3,7 @@ package handlers
 import (
 	"fmt"
 	"github.com/go-chi/chi/v5"
-	"github.com/w1nsec/collector/internal/memstorage"
+	"github.com/w1nsec/collector/internal/storage/memstorage"
 	"net/http"
 	"strconv"
 	"strings"
@@ -51,7 +51,7 @@ func UpdateMetricsHandle(store memstorage.Storage) http.HandlerFunc {
 		default:
 			rw.WriteHeader(http.StatusBadRequest)
 		}
-		fmt.Println(store)
+		//fmt.Println(store)
 		rw.WriteHeader(http.StatusOK)
 	}
 }
