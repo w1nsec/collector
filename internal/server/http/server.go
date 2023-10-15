@@ -3,6 +3,7 @@ package http
 import (
 	"github.com/rs/zerolog/log"
 	"github.com/w1nsec/collector/internal/config"
+	"github.com/w1nsec/collector/internal/service"
 	"net"
 	"net/http"
 )
@@ -21,16 +22,22 @@ type MetricServer struct {
 	http.Server
 }
 
+func NewServerForService(args config.Args, service service.Service) (Server, error) {
+
+	mux := NewRouter(service)
+	return NewMetricServerWithParams(args.Addr, mux)
+}
+
 // NewServer is just a wrapper for NewMetricServerWithParams
 // with default params, return interface for server
 // func NewServer(addr string, loggerLevel string) (Server, error) {
 func NewServer(args config.Args) (Server, error) {
 
 	//mux := handlers.NewRouter(service)
-	return NewMetricServerWithParams(args.Addr)
+	return NewMetricServerWithParams(args.Addr, nil)
 }
 
-func NewMetricServerWithParams(addr string) (*MetricServer, error) {
+func NewMetricServerWithParams(addr string, mux http.Handler) (*MetricServer, error) {
 
 	netAddr, err := net.ResolveTCPAddr("tcp", addr)
 	if err != nil {
@@ -40,8 +47,8 @@ func NewMetricServerWithParams(addr string) (*MetricServer, error) {
 	srv := MetricServer{
 		addr: netAddr,
 		Server: http.Server{
-			Addr: netAddr.String(),
-			//Handler: mux,
+			Addr:    netAddr.String(),
+			Handler: mux,
 		},
 	}
 

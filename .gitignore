@@ -33,6 +33,7 @@ diagrams/
 diagrams/*
 tmp/
 requests/
+Makefile
 
 # other files
 bfg.jar

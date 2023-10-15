@@ -3,7 +3,7 @@ package main
 import (
 	"github.com/rs/zerolog/log"
 	"github.com/w1nsec/collector/internal/config"
-	"github.com/w1nsec/collector/internal/service"
+	"github.com/w1nsec/collector/internal/service/metricservice"
 )
 
 func main() {
@@ -15,11 +15,11 @@ func main() {
 		Str("addr", args.Addr).
 		Str("log", args.LogLevel).Send()
 
-	Service, err := service.NewService(args)
+	service, err := metricservice.NewService(args)
 	if err != nil {
 		log.Fatal().Err(err).Send()
 
 	}
 
-	log.Fatal().Err(Service.Start()).Send()
+	log.Fatal().Err(service.Start()).Send()
 }
