@@ -26,8 +26,15 @@ type MetricService struct {
 }
 
 func (service *MetricService) CheckDB() error {
+	return service.CheckConnection()
+}
 
-	return nil
+func (service *MetricService) Close() error {
+	err := service.FileStorageInterface.Close()
+	if err != nil {
+		return err
+	}
+	return service.DBStorage.Close()
 }
 
 func (service *MetricService) SetupLogger(level string) error {
@@ -105,6 +112,6 @@ func (service MetricService) Stop() error {
 	log.Error().
 		Err(service.FileStorageInterface.Close()).
 		Msg("fs-storage closed")
-
+	defer service.DBStorage.Close()
 	return service.server.Stop()
 }

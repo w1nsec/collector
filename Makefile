@@ -70,7 +70,7 @@ check9:
 
 
 check10:
-	metricstest -test.v -test.run=^TestIteration10 \
+	metricstest -test.v -test.run=^TestIteration10[AB]$$ \
                 -agent-binary-path=${AGENT} \
                 -binary-path=${SERVER} \
                 -server-port=${PORT} \

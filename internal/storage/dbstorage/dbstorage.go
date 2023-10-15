@@ -4,10 +4,12 @@ import (
 	"database/sql"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/rs/zerolog/log"
+	"strings"
 )
 
 type DBStorage interface {
 	CheckConnection() error
+	Close() error
 }
 
 type PostgresStorage struct {
@@ -21,10 +23,17 @@ type PostgresStorage struct {
 }
 
 func NewPostgresStorage(url string) *PostgresStorage {
+	if !strings.Contains(url, "postgres://") {
+		url = "postgres://" + url
+	}
 	return &PostgresStorage{
 		db:  nil,
 		url: url,
 	}
+}
+
+func (pgStorage PostgresStorage) Close() error {
+	return pgStorage.db.Close()
 }
 
 func (pgStorage PostgresStorage) CheckConnection() error {
@@ -32,13 +41,12 @@ func (pgStorage PostgresStorage) CheckConnection() error {
 	//	pgStorage.addr, pgStorage.username, pgStorage.password, pgStorage.dbName)
 
 	var err error
-	log.Info().Str("db_url", pgStorage.url)
+	log.Info().Str("db_url", pgStorage.url).Send()
 	pgStorage.db, err = sql.Open("pgx", pgStorage.url)
 	if err != nil {
 		log.Error().Err(err).Send()
 		return err
 	}
-	defer pgStorage.db.Close()
 	err = pgStorage.db.Ping()
 	if err != nil {
 		return err

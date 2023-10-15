@@ -29,7 +29,7 @@ func ServerArgsParse(args *Args) {
 	args.Restore, _ = strconv.ParseBool(os.Getenv("RESTORE"))
 
 	// increment 10
-	args.DatabaseURL = os.Getenv("RESTORE")
+	args.DatabaseURL = os.Getenv("DATABASE_DSN")
 
 	var (
 		flagAddr     string
