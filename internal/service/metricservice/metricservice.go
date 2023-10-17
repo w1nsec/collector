@@ -1,6 +1,7 @@
 package metricservice
 
 import (
+	"context"
 	"github.com/rs/zerolog/log"
 	"github.com/w1nsec/collector/internal/config"
 	"github.com/w1nsec/collector/internal/logger"
@@ -14,6 +15,10 @@ import (
 )
 
 type MetricService struct {
+	// context
+	ctx context.Context
+
+	// web server
 	server http.Server
 
 	// storage
@@ -50,6 +55,7 @@ func NewService(args config.Args) (service.Service, error) {
 	}
 
 	service := &MetricService{
+		ctx:                  context.Background(),
 		server:               nil,
 		Storage:              store,
 		FileStorageInterface: fstore,
