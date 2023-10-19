@@ -17,26 +17,20 @@ func NewMetricStorage() *MetricStorage {
 }
 
 func (m *MetricStorage) UpdateCounters(name string, value int64) error {
-	//TODO implement me
-	newMem := metrics.Metrics{
-		ID:    name,
-		MType: metrics.Counter,
-		Delta: &value,
-		Value: nil,
+	for ind, metric := range m.metrics {
+		if metric.ID == name {
+			*m.metrics[ind].Delta += value
+		}
 	}
-	m.metrics = append(m.metrics, &newMem)
 	return nil
 }
 
 func (m *MetricStorage) UpdateGauges(name string, value float64) error {
-	//TODO implement me
-	newMem := metrics.Metrics{
-		ID:    name,
-		MType: metrics.Counter,
-		Delta: nil,
-		Value: &value,
+	for ind, metric := range m.metrics {
+		if metric.ID == name {
+			*m.metrics[ind].Value = value
+		}
 	}
-	m.metrics = append(m.metrics, &newMem)
 	return nil
 }
 
