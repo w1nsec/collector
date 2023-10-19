@@ -6,29 +6,10 @@ import (
 	"strconv"
 )
 
-type Storage interface {
-	UpdateCounters(name string, value int64)
-	UpdateGauges(name string, value float64)
-	String() string
-	GetMetricString(mType, mName string) string
-	//GetOneMoreMetric(mType, mName string) string
-
-	// valid
-	GetMetric(mName string, mType string) *metrics.Metrics
-	//UpdateMetrics(newMetrics []*metrics.Metrics) []error
-	UpdateMetric(newMetric *metrics.Metrics)
-	AddMetric(newMetric *metrics.Metrics)
-
-	// add for increment9
-	GetAllMetrics() []*metrics.Metrics
-}
-
 // for maps with counters and gauges
 type MemStorage struct {
 	dataCounters map[string]int64
 	dataGauges   map[string]float64
-	//metrics      map*metrics.Metrics
-	//metrics []*metrics.Metrics
 }
 
 func (ms *MemStorage) String() string {
@@ -60,19 +41,21 @@ func (ms *MemStorage) String() string {
 
 }
 
-func (ms *MemStorage) UpdateMetric(newMetric *metrics.Metrics) {
+func (ms *MemStorage) UpdateMetric(newMetric *metrics.Metrics) error {
 	switch newMetric.MType {
 	case metrics.Gauge:
 		ms.dataGauges[newMetric.ID] = *newMetric.Value
-		return
+		return nil
 	case metrics.Counter:
 		ms.dataCounters[newMetric.ID] += *newMetric.Delta
-		return
+		return nil
 	}
+	return nil
 }
 
-func (ms *MemStorage) AddMetric(newMetric *metrics.Metrics) {
+func (ms *MemStorage) AddMetric(newMetric *metrics.Metrics) error {
 	ms.UpdateMetric(newMetric)
+	return nil
 }
 
 func (ms MemStorage) GetMetricString(mType, mName string) string {
@@ -93,7 +76,7 @@ func (ms MemStorage) GetMetricString(mType, mName string) string {
 	return ""
 }
 
-func (ms MemStorage) GetMetric(mName string, mType string) *metrics.Metrics {
+func (ms MemStorage) GetMetric(mName string, mType string) (*metrics.Metrics, error) {
 	switch mType {
 	case metrics.Gauge:
 		// for gauges
@@ -104,7 +87,7 @@ func (ms MemStorage) GetMetric(mName string, mType string) *metrics.Metrics {
 					MType: metrics.Gauge,
 					Delta: nil,
 					Value: &value,
-				}
+				}, nil
 			}
 		}
 	case metrics.Counter:
@@ -116,12 +99,12 @@ func (ms MemStorage) GetMetric(mName string, mType string) *metrics.Metrics {
 					MType: metrics.Counter,
 					Delta: &value,
 					Value: nil,
-				}
+				}, nil
 			}
 		}
 	}
 
-	return nil
+	return nil, nil
 }
 
 func (ms MemStorage) GetOneMetric(mName string) *metrics.Metrics {
@@ -165,7 +148,7 @@ func NewMemStorage() *MemStorage {
 	return ms
 }
 
-func (ms *MemStorage) GetAllMetrics() []*metrics.Metrics {
+func (ms *MemStorage) GetAllMetrics() ([]*metrics.Metrics, error) {
 
 	metricsSlice := make([]*metrics.Metrics, 0)
 
@@ -199,5 +182,5 @@ func (ms *MemStorage) GetAllMetrics() []*metrics.Metrics {
 		metricsSlice = append(metricsSlice, metric)
 	}
 
-	return metricsSlice
+	return metricsSlice, nil
 }

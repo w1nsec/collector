@@ -1,9 +1,8 @@
 package service
 
 import (
-	"github.com/w1nsec/collector/internal/storage/dbstorage"
+	"github.com/w1nsec/collector/internal/storage"
 	"github.com/w1nsec/collector/internal/storage/filestorage"
-	"github.com/w1nsec/collector/internal/storage/memstorage"
 )
 
 type Service interface {
@@ -13,7 +12,6 @@ type Service interface {
 	SetupLogger(level string) error
 	CheckDB() error
 
-	memstorage.Storage
+	storage.Storage
 	filestorage.FileStorageInterface
-	dbstorage.DBStorage
 }

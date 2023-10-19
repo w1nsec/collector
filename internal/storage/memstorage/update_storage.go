@@ -5,12 +5,14 @@ import (
 	"github.com/w1nsec/collector/internal/metrics"
 )
 
-func (ms *MemStorage) UpdateCounters(name string, value int64) {
+func (ms *MemStorage) UpdateCounters(name string, value int64) error {
 	ms.dataCounters[name] += value
+	return nil
 }
 
-func (ms *MemStorage) UpdateGauges(name string, value float64) {
+func (ms *MemStorage) UpdateGauges(name string, value float64) error {
 	ms.dataGauges[name] = value
+	return nil
 }
 
 func (ms *MemStorage) UpdateMetrics(newMetrics []*metrics.Metrics) []error {

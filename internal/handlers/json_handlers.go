@@ -5,13 +5,13 @@ import (
 	"fmt"
 	"github.com/rs/zerolog/log"
 	"github.com/w1nsec/collector/internal/metrics"
-	"github.com/w1nsec/collector/internal/storage/memstorage"
+	"github.com/w1nsec/collector/internal/storage"
 	"io"
 	"net/http"
 	"strings"
 )
 
-func JSONUpdateOneMetricHandler(store memstorage.Storage) func(w http.ResponseWriter, r *http.Request) {
+func JSONUpdateOneMetricHandler(store storage.Storage) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		if r.Method != http.MethodPost {
@@ -76,12 +76,19 @@ func JSONUpdateOneMetricHandler(store memstorage.Storage) func(w http.ResponseWr
 			return
 		}
 
-		store.UpdateMetric(metric)
+		err = store.UpdateMetric(metric)
+		if err != nil {
+			log.Error().
+				Err(err).
+				Msg("can't update metric")
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
 
 		// Debug version
 		// TODO change request metrics by name to:  body-request -> body-response resent (when debug done)
 
-		retMetric := store.GetMetric(metric.ID, metric.MType)
+		retMetric, _ := store.GetMetric(metric.ID, metric.MType)
 		if retMetric == nil {
 			log.Error().
 				Err(fmt.Errorf("metric \"%s\" not found in store",
@@ -115,7 +122,7 @@ func JSONUpdateOneMetricHandler(store memstorage.Storage) func(w http.ResponseWr
 	}
 }
 
-func JSONGetMetricHandler(store memstorage.Storage) func(w http.ResponseWriter, r *http.Request) {
+func JSONGetMetricHandler(store storage.Storage) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		if r.Method != http.MethodPost {
@@ -192,7 +199,7 @@ func JSONGetMetricHandler(store memstorage.Storage) func(w http.ResponseWriter, 
 			return
 		}
 
-		retMetric := store.GetMetric(metric.ID, metric.MType)
+		retMetric, _ := store.GetMetric(metric.ID, metric.MType)
 		if retMetric == nil {
 			log.Error().
 				Err(fmt.Errorf("metric \"%s\" not found in store",

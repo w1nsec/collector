@@ -2,11 +2,13 @@ package metricservice
 
 import (
 	"context"
+	"fmt"
 	"github.com/rs/zerolog/log"
-	"github.com/w1nsec/collector/internal/config"
+	"github.com/w1nsec/collector/internal/config/server"
 	"github.com/w1nsec/collector/internal/logger"
 	"github.com/w1nsec/collector/internal/server/http"
 	"github.com/w1nsec/collector/internal/service"
+	"github.com/w1nsec/collector/internal/storage"
 	"github.com/w1nsec/collector/internal/storage/dbstorage"
 	"github.com/w1nsec/collector/internal/storage/filestorage"
 	"github.com/w1nsec/collector/internal/storage/memstorage"
@@ -22,16 +24,19 @@ type MetricService struct {
 	server http.Server
 
 	// storage
-	memstorage.Storage
+	storage.Storage
 	filestorage.FileStorageInterface
-	dbstorage.DBStorage
+	db dbstorage.DBStorage
 
 	StoreInterval time.Duration
 	Restore       bool
 }
 
 func (service *MetricService) CheckDB() error {
-	return service.CheckConnection()
+	if service.db == nil {
+		return fmt.Errorf("db not used")
+	}
+	return service.db.CheckConnection()
 }
 
 func (service *MetricService) Close() error {
@@ -39,28 +44,37 @@ func (service *MetricService) Close() error {
 	if err != nil {
 		return err
 	}
-	return service.DBStorage.Close()
+	return service.db.Close()
 }
 
 func (service *MetricService) SetupLogger(level string) error {
 	return logger.Initialize(level)
 }
 
-func NewService(args config.Args) (service.Service, error) {
+func NewService(args server.Args) (service.Service, error) {
 	// initialise storages
-	store := memstorage.NewMemStorage()
-	fstore, err := filestorage.NewFileStorage(args.StoragePath, store)
-	if err != nil {
-		return nil, err
+	var (
+		store   storage.Storage
+		fstore  filestorage.FileStorageInterface
+		dbstore dbstorage.DBStorage
+	)
+
+	// create service
+	service := &MetricService{
+		ctx:           context.Background(),
+		StoreInterval: time.Duration(args.StoreInterval) * time.Second,
+		Restore:       args.Restore,
 	}
 
-	service := &MetricService{
-		ctx:                  context.Background(),
-		server:               nil,
-		Storage:              store,
-		FileStorageInterface: fstore,
-		StoreInterval:        time.Duration(args.StoreInterval) * time.Second,
-		Restore:              args.Restore,
+	if args.DatabaseURL != "" {
+		dbstore = dbstorage.NewPostgresStorage(args.DatabaseURL)
+	} else {
+		store = memstorage.NewMemStorage()
+		var err error
+		fstore, err = filestorage.NewFileStorage(args.StoragePath, store)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	// initialise server
@@ -75,19 +89,35 @@ func NewService(args config.Args) (service.Service, error) {
 	service.server = server
 
 	// init db storage
-	service.DBStorage = dbstorage.NewPostgresStorage(args.DatabaseURL)
+	//service.db = args.DatabaseURL)
+	if dbstore == nil {
+		service.Storage = store
+		service.FileStorageInterface = fstore
+		service.db = nil
+	} else {
+		service.Storage = dbstore
+		service.db = dbstore
+	}
 
 	return service, nil
 }
 
 func (service MetricService) Start() error {
 	// restore DB
-	if service.Restore {
-		service.FileStorageInterface.Load()
-	}
 	wg := &sync.WaitGroup{}
-	wg.Add(1)
-	go service.BackupLoop(wg)
+	if service.Restore {
+		if service.FileStorageInterface != nil {
+			service.FileStorageInterface.Load()
+			wg.Add(1)
+			go service.BackupLoop(wg)
+		}
+		if service.db != nil {
+			err := service.db.CreateTables()
+			if err != nil {
+				return err
+			}
+		}
+	}
 
 	// start server
 	err := service.server.Start()
@@ -118,6 +148,6 @@ func (service MetricService) Stop() error {
 	log.Error().
 		Err(service.FileStorageInterface.Close()).
 		Msg("fs-storage closed")
-	defer service.DBStorage.Close()
+	defer service.db.Close()
 	return service.server.Stop()
 }

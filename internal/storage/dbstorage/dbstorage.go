@@ -7,7 +7,7 @@ import (
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/rs/zerolog/log"
 	"github.com/w1nsec/collector/internal/metrics"
-	"github.com/w1nsec/collector/internal/storage/memstorage"
+	"github.com/w1nsec/collector/internal/storage"
 	"strconv"
 	"strings"
 )
@@ -19,7 +19,7 @@ type DBStorage interface {
 	// check if tables created
 	CreateTables() error
 
-	memstorage.Storage
+	storage.Storage
 }
 
 const (
@@ -73,54 +73,62 @@ func (pgStorage PostgresStorage) CreateTables() error {
 }
 
 // interface Storage
-func (pgStorage PostgresStorage) UpdateCounters(name string, value int64) {
+func (pgStorage PostgresStorage) UpdateCounters(name string, value int64) error {
 	query := fmt.Sprintf("update %s set value = $1 where id = $2", Counters)
 	result, err := pgStorage.db.ExecContext(pgStorage.dbCtx, query, value, name)
 	if err != nil {
-		log.Error().Err(err).Send()
-		return
+		return err
 	}
 	if result != nil {
 		num, err := result.RowsAffected()
 		if err != nil {
-			log.Error().Err(err).Send()
-			return
+			return err
 		}
 		if num != 1 {
-			log.Error().
-				Err(fmt.Errorf("expected to affect 1 row, affected %d", num)).
-				Send()
-			return
+			return fmt.Errorf("expected to affect 1 row, affected %d", num)
 		}
 	}
+	return nil
 }
 
-func (pgStorage PostgresStorage) UpdateGauges(name string, value float64) {
+func (pgStorage PostgresStorage) UpdateGauges(name string, value float64) error {
 	query := fmt.Sprintf("update %s set value = $1 where id = $2", Gauges)
 	result, err := pgStorage.db.ExecContext(pgStorage.dbCtx, query, value, name)
 	if err != nil {
-		log.Error().Err(err).Send()
-		return
+		return err
 	}
 	if result != nil {
 		num, err := result.RowsAffected()
 		if err != nil {
-			log.Error().Err(err).Send()
-			return
+			return err
 		}
 		if num != 1 {
-			log.Error().
-				Err(fmt.Errorf("expected to affect 1 row, affected %d", num)).
-				Send()
-			return
+			return fmt.Errorf("expected to affect 1 row, affected %d", num)
 		}
 	}
 
+	return nil
 }
 
 func (pgStorage PostgresStorage) String() string {
-	//TODO implement me
-	panic("implement me")
+	ms, err := pgStorage.GetAllMetrics()
+	if err != nil {
+		return ""
+	}
+	res := ""
+	for _, m := range ms {
+		var val float64
+		switch m.MType {
+		case metrics.Counter:
+			val = float64(*m.Delta)
+		case metrics.Gauge:
+			val = *m.Value
+		}
+		mStr := fmt.Sprintf("Type: %s,\tID: %s,\tVal: %f<br>\n", m.MType, m.ID, val)
+		res += mStr
+	}
+
+	return res
 }
 
 func (pgStorage PostgresStorage) GetMetricString(mType, mName string) string {
@@ -146,7 +154,7 @@ func (pgStorage PostgresStorage) GetMetricString(mType, mName string) string {
 
 }
 
-func (pgStorage PostgresStorage) GetMetric(mName string, mType string) *metrics.Metrics {
+func (pgStorage PostgresStorage) GetMetric(mName string, mType string) (*metrics.Metrics, error) {
 	tbName := Counters
 	if mType == metrics.Gauge {
 		tbName = Gauges
@@ -158,11 +166,11 @@ func (pgStorage PostgresStorage) GetMetric(mName string, mType string) *metrics.
 	err := row.Scan(result)
 	if err != nil {
 		log.Error().Err(err).Send()
-		return nil
+		return nil, nil
 	}
 	if row.Err() != nil {
 		log.Error().Err(err).Send()
-		return nil
+		return nil, nil
 	}
 
 	m := &metrics.Metrics{}
@@ -171,7 +179,7 @@ func (pgStorage PostgresStorage) GetMetric(mName string, mType string) *metrics.
 		val, err := strconv.ParseFloat(*result, 64)
 		if err != nil {
 			fmt.Println(err)
-			return nil
+			return nil, nil
 		}
 		m.ID = mName
 		m.Value = &val
@@ -179,82 +187,80 @@ func (pgStorage PostgresStorage) GetMetric(mName string, mType string) *metrics.
 		val, err := strconv.ParseInt(*result, 10, 64)
 		if err != nil {
 			fmt.Println(err)
-			return nil
+			return nil, nil
 		}
 		m.ID = mName
 		m.Delta = &val
 	}
-	return m
+	return m, nil
 
 }
 
-func (pgStorage PostgresStorage) UpdateMetric(newMetric *metrics.Metrics) {
+func (pgStorage PostgresStorage) UpdateMetric(newMetric *metrics.Metrics) error {
 	var result sql.Result
 	var err error
-	switch newMetric.ID {
+	switch newMetric.MType {
 	case metrics.Gauge:
 		query := fmt.Sprintf("update %s set value = $1 where id = $2", Gauges)
 		result, err = pgStorage.db.ExecContext(pgStorage.dbCtx, query, newMetric.Value, newMetric.ID)
 	case metrics.Counter:
-		query := fmt.Sprintf("update %s set value = $1 where id = $2", Counters)
+		query := fmt.Sprintf("update %s set value = value + $1 where id = $2", Counters)
 		result, err = pgStorage.db.ExecContext(pgStorage.dbCtx, query, newMetric.Delta, newMetric.ID)
 	}
 	if err != nil {
-		log.Error().Err(err).Send()
-		return
+		return err
 	}
 
 	if result != nil {
 		num, err := result.RowsAffected()
 		if err != nil {
-			log.Error().Err(err).Send()
-			return
+			return err
 		}
 		if num != 1 {
-			log.Error().
-				Err(fmt.Errorf("expected to affect 1 row, affected %d", num)).
-				Send()
-			return
+			//return fmt.Errorf("expected to affect 1 row, affected %d", num)
+
+			// try to add metric
+			err = pgStorage.AddMetric(newMetric)
+			return err
 		}
 	}
+	return nil
 }
 
-func (pgStorage PostgresStorage) AddMetric(newMetric *metrics.Metrics) {
+func (pgStorage PostgresStorage) AddMetric(newMetric *metrics.Metrics) error {
 	var result sql.Result
 	var err error
-	switch newMetric.ID {
+	var query = "INSERT into %s (id, value) values ($1, $2)"
+	switch newMetric.MType {
 	case metrics.Gauge:
-		query := fmt.Sprintf("INSERT %s (id, value) values ($1, $2)", Gauges)
+		query = fmt.Sprintf(query, Gauges)
 		result, err = pgStorage.db.ExecContext(pgStorage.dbCtx, query, newMetric.ID, newMetric.Value)
 	case metrics.Counter:
-		query := fmt.Sprintf("INSERT %s (id, value) values ($1, $2)", Counters)
+		query = fmt.Sprintf(query, Counters)
 		result, err = pgStorage.db.ExecContext(pgStorage.dbCtx, query, newMetric.ID, newMetric.Delta)
 	}
+	log.Info().Msgf(query)
 	if err != nil {
-		log.Error().Err(err).Send()
-		return
+		return err
 	}
 	if result != nil {
 		num, err := result.RowsAffected()
 		if err != nil {
-			log.Error().Err(err).Send()
-			return
+			return err
 		}
 		if num != 1 {
-			log.Error().
-				Err(fmt.Errorf("expected to affect 1 row, affected %d", num)).
-				Send()
-			return
+			return fmt.Errorf("expected to affect 1 row, affected %d", num)
 		}
 	}
+	return nil
 }
 
-func (pgStorage PostgresStorage) GetAllMetrics() []*metrics.Metrics {
+func (pgStorage PostgresStorage) GetAllMetrics() ([]*metrics.Metrics, error) {
 	// Gauges
 	query := fmt.Sprintf("SELECT id, value from %s", Gauges)
 	rows, err := pgStorage.db.QueryContext(pgStorage.dbCtx, query)
 	if err != nil {
-		return nil
+		return nil, nil
 	}
 	defer rows.Close()
 	var ms = make([]*metrics.Metrics, 0)
@@ -276,14 +282,14 @@ func (pgStorage PostgresStorage) GetAllMetrics() []*metrics.Metrics {
 	}
 
 	if rows.Err() != nil {
-		return nil
+		return nil, nil
 	}
 
 	// Counters
 	query = fmt.Sprintf("SELECT id, value from %s", Counters)
 	rows, err = pgStorage.db.QueryContext(pgStorage.dbCtx, query)
 	if err != nil {
-		return nil
+		return nil, nil
 	}
 	defer rows.Close()
 
@@ -302,20 +308,25 @@ func (pgStorage PostgresStorage) GetAllMetrics() []*metrics.Metrics {
 	}
 
 	if rows.Err() != nil {
-		return nil
+		return nil, rows.Err()
 	}
 
-	return ms
+	return ms, nil
 }
 
 func NewPostgresStorage(url string) *PostgresStorage {
 	if !strings.Contains(url, "postgres://") {
 		url = "postgres://" + url
 	}
+	db, err := sql.Open("pgx", url)
+	if err != nil {
+		log.Error().Err(err).Send()
+		return nil
+	}
 	return &PostgresStorage{
 		// TODO set context to DB Storage as child context from Service
 		dbCtx: context.Background(),
-		db:    nil,
+		db:    db,
 		url:   url,
 	}
 }

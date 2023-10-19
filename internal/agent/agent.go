@@ -5,7 +5,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/w1nsec/collector/internal/logger"
 	"github.com/w1nsec/collector/internal/metrics"
-	"github.com/w1nsec/collector/internal/storage/memstorage"
+	"github.com/w1nsec/collector/internal/storage"
 	"net"
 	"time"
 )
@@ -44,7 +44,7 @@ type Agent struct {
 	addr           net.Addr
 	metricsPoint   string
 	metrics        map[string]metrics.MyMetrics
-	store          memstorage.Storage
+	store          storage.Storage
 	pollInterval   time.Duration
 	reportInterval time.Duration
 	compression    bool

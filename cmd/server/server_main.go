@@ -2,15 +2,15 @@ package main
 
 import (
 	"github.com/rs/zerolog/log"
-	"github.com/w1nsec/collector/internal/config"
+	"github.com/w1nsec/collector/internal/config/server"
 	"github.com/w1nsec/collector/internal/service/metricservice"
 )
 
 func main() {
 
-	var args config.Args
+	var args server.Args
 
-	config.ServerArgsParse(&args)
+	server.ServerArgsParse(&args)
 	log.Info().
 		Str("addr", args.Addr).
 		Str("log", args.LogLevel).Send()

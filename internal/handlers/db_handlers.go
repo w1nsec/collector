@@ -9,7 +9,7 @@ import (
 func CheckDBConnectionHandler(service service.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
-		err := service.CheckConnection()
+		err := service.CheckDB()
 		if err != nil {
 			http.Error(w, "Can't connect to DB", http.StatusInternalServerError)
 			log.Error().Err(err).Send()

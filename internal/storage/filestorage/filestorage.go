@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"github.com/rs/zerolog/log"
 	"github.com/w1nsec/collector/internal/metrics"
+	"github.com/w1nsec/collector/internal/storage"
 	"github.com/w1nsec/collector/internal/storage/memstorage"
 	"os"
 	"sync"
@@ -19,7 +20,7 @@ type FileStorageInterface interface {
 }
 
 type FileStorage struct {
-	memstorage.Storage
+	storage.Storage
 
 	filePath string
 	file     *os.File
@@ -77,7 +78,7 @@ func (f FileStorage) SaveAll() error {
 	}
 	f.file.Truncate(0)
 	f.file.Seek(0, 0)
-	mSlice := f.Storage.GetAllMetrics()
+	mSlice, _ := f.Storage.GetAllMetrics()
 	for _, metric := range mSlice {
 		encoder := json.NewEncoder(f.file)
 		err := encoder.Encode(metric)
@@ -90,7 +91,7 @@ func (f FileStorage) SaveAll() error {
 	return nil
 }
 
-func NewFileStorage(path string, storage memstorage.Storage) (FileStorageInterface, error) {
+func NewFileStorage(path string, storage storage.Storage) (FileStorageInterface, error) {
 	file, err := os.OpenFile(path, os.O_RDWR|os.O_APPEND|os.O_CREATE, 0666)
 	if err != nil {
 		return nil, err

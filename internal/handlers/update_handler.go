@@ -3,14 +3,14 @@ package handlers
 import (
 	"fmt"
 	"github.com/go-chi/chi/v5"
-	"github.com/w1nsec/collector/internal/storage/memstorage"
+	"github.com/w1nsec/collector/internal/storage"
 	"net/http"
 	"strconv"
 	"strings"
 )
 
 // UpdateMetricsHandle is handler for "/update/" (for http.NewServeMux())
-func UpdateMetricsHandle(store memstorage.Storage) http.HandlerFunc {
+func UpdateMetricsHandle(store storage.Storage) http.HandlerFunc {
 	return func(rw http.ResponseWriter, r *http.Request) {
 		metricsInfo, found := strings.CutPrefix(r.URL.Path, "/update/")
 
@@ -56,7 +56,7 @@ func UpdateMetricsHandle(store memstorage.Storage) http.HandlerFunc {
 	}
 }
 
-func UpdateGaugeHandle(store memstorage.Storage) http.HandlerFunc {
+func UpdateGaugeHandle(store storage.Storage) http.HandlerFunc {
 	return func(rw http.ResponseWriter, r *http.Request) {
 		name := chi.URLParam(r, "name")
 		value := chi.URLParam(r, "value")
@@ -74,7 +74,7 @@ func UpdateGaugeHandle(store memstorage.Storage) http.HandlerFunc {
 	}
 }
 
-func UpdateCounterHandle(store memstorage.Storage) http.HandlerFunc {
+func UpdateCounterHandle(store storage.Storage) http.HandlerFunc {
 	return func(rw http.ResponseWriter, r *http.Request) {
 		name := chi.URLParam(r, "name")
 		value := chi.URLParam(r, "value")

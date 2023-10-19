@@ -16,7 +16,7 @@ func NewMetricStorage() *MetricStorage {
 	return ms
 }
 
-func (m *MetricStorage) UpdateCounters(name string, value int64) {
+func (m *MetricStorage) UpdateCounters(name string, value int64) error {
 	//TODO implement me
 	newMem := metrics.Metrics{
 		ID:    name,
@@ -25,9 +25,10 @@ func (m *MetricStorage) UpdateCounters(name string, value int64) {
 		Value: nil,
 	}
 	m.metrics = append(m.metrics, &newMem)
+	return nil
 }
 
-func (m *MetricStorage) UpdateGauges(name string, value float64) {
+func (m *MetricStorage) UpdateGauges(name string, value float64) error {
 	//TODO implement me
 	newMem := metrics.Metrics{
 		ID:    name,
@@ -36,6 +37,7 @@ func (m *MetricStorage) UpdateGauges(name string, value float64) {
 		Value: &value,
 	}
 	m.metrics = append(m.metrics, &newMem)
+	return nil
 }
 
 func (m MetricStorage) String() string {
@@ -88,33 +90,35 @@ func (m *MetricStorage) UpdateMetrics(newMetrics []*metrics.Metrics) []error {
 	return nil
 }
 
-func (m *MetricStorage) UpdateMetric(metric *metrics.Metrics) {
+func (m *MetricStorage) UpdateMetric(newMetric *metrics.Metrics) error {
 
 	for i, locMetric := range m.metrics {
-		if locMetric.ID == metric.ID {
-			m.metrics[i] = metric
-			return
+		if locMetric.ID == newMetric.ID {
+			m.metrics[i] = newMetric
+			return nil
 		}
 	}
 
 	// metric not found yet
-	m.metrics = append(m.metrics, metric)
-}
-
-func (m *MetricStorage) AddMetric(newMetric *metrics.Metrics) {
 	m.metrics = append(m.metrics, newMetric)
-}
-
-func (m *MetricStorage) GetMetric(mName string, mType string) *metrics.Metrics {
-	for _, metric := range m.metrics {
-		if metric.ID == mName && metric.MType == mType {
-			return metric
-		}
-	}
-
 	return nil
 }
 
-func (m *MetricStorage) GetAllMetrics() []*metrics.Metrics {
-	return m.metrics
+func (m *MetricStorage) AddMetric(newMetric *metrics.Metrics) error {
+	m.metrics = append(m.metrics, newMetric)
+	return nil
+}
+
+func (m *MetricStorage) GetMetric(mName string, mType string) (*metrics.Metrics, error) {
+	for _, metric := range m.metrics {
+		if metric.ID == mName && metric.MType == mType {
+			return metric, nil
+		}
+	}
+
+	return nil, nil
+}
+
+func (m *MetricStorage) GetAllMetrics() ([]*metrics.Metrics, error) {
+	return m.metrics, nil
 }
