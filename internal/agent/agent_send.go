@@ -9,7 +9,6 @@ import (
 	"github.com/w1nsec/collector/internal/utils/compression/gzip"
 	"io"
 	"net/http"
-	"time"
 )
 
 func (agent Agent) SendMetrics() {
@@ -79,8 +78,7 @@ func (agent Agent) SendOneMetricJSON(name string, mymetric metrics.MyMetrics) er
 		//request.Header.Set("accept-encoding", "gzip")
 	}
 
-	client := http.Client{Timeout: time.Second * 30}
-	resp, err := client.Do(request)
+	resp, err := agent.httpClient.Do(request)
 	if err != nil {
 		return err
 	}
