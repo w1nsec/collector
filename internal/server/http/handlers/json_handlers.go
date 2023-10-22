@@ -171,7 +171,7 @@ func JSONGetMetricHandler(store *service.MetricService) func(w http.ResponseWrit
 		log.Info().
 			RawJSON("metric", body).
 			Str("method", r.Method).
-			Str("url", r.URL.RawPath).
+			Str("url", r.URL.RequestURI()).
 			Msg("Request")
 
 		// Debug version

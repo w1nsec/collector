@@ -87,3 +87,13 @@ check11:
                 -file-storage-path=${FSPATH} \
                 -source-path=. \
                 -database-dsn="postgres://${DB_USER}:${DB_PASS}@${DB_ADDR}/${DB}"
+
+
+check12:
+	metricstest -test.v -test.run=^TestIteration12$$ \
+                -agent-binary-path=${AGENT} \
+                -binary-path=${SERVER} \
+                -server-port=${PORT} \
+                -file-storage-path=${FSPATH} \
+                -source-path=. \
+                -database-dsn="postgres://${DB_USER}:${DB_PASS}@${DB_ADDR}/${DB}"
