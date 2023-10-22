@@ -1,6 +1,9 @@
 package storage
 
-import "github.com/w1nsec/collector/internal/metrics"
+import (
+	"context"
+	"github.com/w1nsec/collector/internal/metrics"
+)
 
 type Storage interface {
 	UpdateCounters(name string, value int64) error
@@ -14,6 +17,9 @@ type Storage interface {
 	UpdateMetric(newMetric *metrics.Metrics) error
 	AddMetric(newMetric *metrics.Metrics) error
 
+	// increment 12 many insert in DB
+	UpdateMetrics(ctx context.Context, newMetrics []*metrics.Metrics) error
+
 	// add for increment9 / increment3
 	GetAllMetrics() ([]*metrics.Metrics, error)
 
@@ -22,6 +28,5 @@ type Storage interface {
 	CheckStorage() error
 
 	// for shutdown
-
 	Close() error
 }

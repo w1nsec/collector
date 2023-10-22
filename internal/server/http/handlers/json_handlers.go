@@ -122,7 +122,7 @@ func JSONUpdateOneMetricHandler(store *service.MetricService) func(w http.Respon
 	}
 }
 
-func JSONGetMetricHandler(store *service.MetricService) func(w http.ResponseWriter, r *http.Request) {
+func JSONGetMetricHandler(service *service.MetricService) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		if r.Method != http.MethodPost {
@@ -199,10 +199,10 @@ func JSONGetMetricHandler(store *service.MetricService) func(w http.ResponseWrit
 			return
 		}
 
-		retMetric, _ := store.GetMetric(metric.ID, metric.MType)
+		retMetric, _ := service.GetMetric(metric.ID, metric.MType)
 		if retMetric == nil {
 			log.Error().
-				Err(fmt.Errorf("metric \"%s\" not found in store",
+				Err(fmt.Errorf("metric \"%s\" not found in service",
 					metric.ID)).Send()
 			w.WriteHeader(http.StatusNotFound)
 			return
@@ -234,7 +234,7 @@ func JSONGetMetricHandler(store *service.MetricService) func(w http.ResponseWrit
 }
 
 // increment 12
-func JSONUpdateMetricsHandler(store *service.MetricService) func(w http.ResponseWriter, r *http.Request) {
+func JSONUpdateMetricsHandler(service *service.MetricService) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		if r.Method != http.MethodPost {
@@ -278,32 +278,25 @@ func JSONUpdateMetricsHandler(store *service.MetricService) func(w http.Response
 
 		// Check, that metric contains values
 		errors := make([]string, 0)
-		for _, m := range newMetrics {
+		for id, m := range newMetrics {
 			if (m.Delta == nil && m.Value == nil) ||
 				m.ID == "" {
 				err := fmt.Errorf("metric \"%s\"doesn't contain any value", m.ID)
 				log.Error().
 					Err(err).Send()
-				//w.WriteHeader(http.StatusInternalServerError)
-				//return
+
+				// delete wrong metric
+				newMetrics[id] = newMetrics[len(newMetrics)-1]
+				//newMetrics[len(newMetrics)-1] = nil
+				newMetrics = newMetrics[:len(newMetrics)-1]
+
 				errors = append(errors, err.Error())
 				continue
 			}
-
-			err = store.UpdateMetric(m)
-			if err != nil {
-				log.Error().
-					Err(err).
-					Msgf("can't update metric \"%s\"", m.ID)
-				err = fmt.Errorf("can't update metric \"%s\"", m.ID)
-				errors = append(errors, err.Error())
-				continue
-			}
-
 		}
 
-		// If no one metric is saved
-		if len(errors) == len(newMetrics) {
+		err = service.UpdateMetrics(r.Context(), newMetrics)
+		if err != nil {
 			io.WriteString(w, "Don't save any metric")
 			w.WriteHeader(http.StatusInternalServerError)
 			return

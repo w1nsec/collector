@@ -1,8 +1,10 @@
 package memstorage
 
 import (
+	"context"
 	"fmt"
 	"github.com/w1nsec/collector/internal/metrics"
+	"strings"
 )
 
 func (ms *MemStorage) UpdateCounters(name string, value int64) error {
@@ -15,17 +17,17 @@ func (ms *MemStorage) UpdateGauges(name string, value float64) error {
 	return nil
 }
 
-func (ms *MemStorage) UpdateMetrics(newMetrics []*metrics.Metrics) []error {
-	errors := make([]error, 0)
+func (ms *MemStorage) UpdateMetrics(ctx context.Context, newMetrics []*metrics.Metrics) error {
+	errors := make([]string, 0)
 	for _, metric := range newMetrics {
 
 		err := ms.updateMetric(metric)
 		if err != nil {
 			//log.Debug().Err(err)
-			errors = append(errors, err)
+			errors = append(errors, err.Error())
 		}
 	}
-	return errors
+	return fmt.Errorf(strings.Join(errors, " | "))
 }
 
 func (ms *MemStorage) updateMetric(metric *metrics.Metrics) error {

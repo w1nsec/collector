@@ -10,12 +10,12 @@ import (
 func TestNewMetricServer(t *testing.T) {
 	type args struct {
 		addr  string
-		store memstorage.Storage
+		service memstorage.Storage
 		mux   *http.ServeMux
 	}
 	defaultArgs := args{
 		addr:  "127.0.0.1:8080",
-		store: memstorage.NewMemStorage(),
+		service: memstorage.NewMemStorage(),
 		mux:   http.NewServeMux(),
 	}
 
@@ -48,7 +48,7 @@ func TestNewMetricServer(t *testing.T) {
 				return
 			}
 			assert.Equal(t, got.Addr, tt.args.addr)
-			//assert.Equal(t, got.Store, tt.args.store)
+			//assert.Equal(t, got.Store, tt.args.service)
 			assert.Equal(t, got.Handler, tt.args.mux)
 
 		})

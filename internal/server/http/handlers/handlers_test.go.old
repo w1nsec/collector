@@ -20,7 +20,7 @@ import (
 //	updateURL := "/update"
 //	tests := []struct {
 //		name       string
-//		store      memstorage.Storage
+//		service      memstorage.Storage
 //		haveURL    string
 //		statusCode int
 //		//want http.HandlerFunc
@@ -29,37 +29,37 @@ import (
 //		// TODO: Add test cases.
 //		{
 //			name:       "Wrong url 1",
-//			store:      memstorage.NewMemStorage(),
+//			service:      memstorage.NewMemStorage(),
 //			haveURL:    "/aaaaa",
 //			statusCode: http.StatusNotFound,
 //		},
 //		{
 //			name:       "Wrong url 2",
-//			store:      memstorage.NewMemStorage(),
+//			service:      memstorage.NewMemStorage(),
 //			haveURL:    updateURL + "/aaaaa",
 //			statusCode: http.StatusNotFound,
 //		},
 //		{
 //			name:       "Wrong url 3",
-//			store:      memstorage.NewMemStorage(),
+//			service:      memstorage.NewMemStorage(),
 //			haveURL:    updateURL + "/counter/sys",
 //			statusCode: http.StatusNotFound,
 //		},
 //		{
 //			name:       "Wrong Type",
-//			store:      memstorage.NewMemStorage(),
+//			service:      memstorage.NewMemStorage(),
 //			haveURL:    updateURL + "/aaaaa/sys/123",
 //			statusCode: http.StatusBadRequest,
 //		},
 //		{
 //			name:       "Wrong Type Counter",
-//			store:      memstorage.NewMemStorage(),
+//			service:      memstorage.NewMemStorage(),
 //			haveURL:    updateURL + "/counter/sys/213.214",
 //			statusCode: http.StatusBadRequest,
 //		},
 //		{
 //			name:       "Wrong Type Gauge",
-//			store:      memstorage.NewMemStorage(),
+//			service:      memstorage.NewMemStorage(),
 //			haveURL:    updateURL + "/wrongtype/sys/213",
 //			statusCode: http.StatusBadRequest,
 //		},
@@ -68,7 +68,7 @@ import (
 //		t.Run(tt.name, func(t *testing.T) {
 //			r := httptest.NewRequest(http.MethodPost, tt.haveURL, nil)
 //			w := httptest.NewRecorder()
-//			hf := UpdateMetricsHandle(tt.store)
+//			hf := UpdateMetricsHandle(tt.service)
 //			hf(w, r)
 //			resp := w.Result()
 //			assert.Equal(t, tt.statusCode, resp.StatusCode)
@@ -82,15 +82,15 @@ import (
 func TestUpdateRoutes(t *testing.T) {
 	var (
 	var (
-		store = memstorage.NewMemStorage()
-		route = service.NewRouter(store)
+		service = memstorage.NewMemStorage()
+		route = service.NewRouter(service)
 		srv   = httptest.NewServer(route)
 	)
 
 	updateURL := "/update"
 	tests := []struct {
 		name       string
-		store      memstorage.Storage
+		service      memstorage.Storage
 		haveURL    string
 		statusCode int
 		wantErr    bool
@@ -173,7 +173,7 @@ func TestUpdateRoutes(t *testing.T) {
 				mType := params[0]
 				mName := params[1]
 				expectValue := params[2]
-				actualValue := store.GetMetricString(mType, mName)
+				actualValue := service.GetMetricString(mType, mName)
 				fmt.Println(filterURL)
 				assert.Equal(t, expectValue, actualValue)
 
@@ -215,17 +215,17 @@ type HTTPparams struct {
 
 func TestGetMetric(t *testing.T) {
 	var (
-		store = memstorage.NewMemStorage()
-		route = service.NewRouter(store)
+		service = memstorage.NewMemStorage()
+		route = service.NewRouter(service)
 		srv   = httptest.NewServer(route)
 	)
 	testgauge := 121.99
 	testcounter := 122
 
 	strtestgauge := strconv.FormatFloat(testgauge, 'f', -1, 64)
-	store.UpdateGauges("testgauge", testgauge)
+	service.UpdateGauges("testgauge", testgauge)
 	strtestcounter := strconv.Itoa(testcounter)
-	store.UpdateCounters("testcounter", int64(testcounter))
+	service.UpdateCounters("testcounter", int64(testcounter))
 
 	defaultURL := "/value"
 
