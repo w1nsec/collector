@@ -5,13 +5,13 @@ import (
 	"fmt"
 	"github.com/rs/zerolog/log"
 	"github.com/w1nsec/collector/internal/metrics"
-	"github.com/w1nsec/collector/internal/storage"
+	"github.com/w1nsec/collector/internal/service"
 	"io"
 	"net/http"
 	"strings"
 )
 
-func JSONUpdateOneMetricHandler(store storage.Storage) func(w http.ResponseWriter, r *http.Request) {
+func JSONUpdateOneMetricHandler(store *service.MetricService) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		if r.Method != http.MethodPost {
@@ -122,7 +122,7 @@ func JSONUpdateOneMetricHandler(store storage.Storage) func(w http.ResponseWrite
 	}
 }
 
-func JSONGetMetricHandler(store storage.Storage) func(w http.ResponseWriter, r *http.Request) {
+func JSONGetMetricHandler(store *service.MetricService) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		if r.Method != http.MethodPost {
@@ -234,7 +234,7 @@ func JSONGetMetricHandler(store storage.Storage) func(w http.ResponseWriter, r *
 }
 
 // increment 12
-func JSONUpdateMetricsHandler(store storage.Storage) func(w http.ResponseWriter, r *http.Request) {
+func JSONUpdateMetricsHandler(store *service.MetricService) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		if r.Method != http.MethodPost {
