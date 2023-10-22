@@ -109,3 +109,25 @@ func (agent Agent) SendMetricsJSON() error {
 	}
 	return nil
 }
+
+func (agent Agent) SendAllMetricsJSON() error {
+	data := make([]byte, 0)
+	buf := bytes.NewBuffer(data)
+	encoder := json.NewEncoder(buf)
+	all, err := agent.store.GetAllMetrics()
+	if err != nil {
+		return err
+	}
+	err = encoder.Encode(all)
+	if err != nil {
+		return err
+	}
+	log.Info()
+	agent.Send(buf.Bytes(), nil)
+	return nil
+}
+
+func (agent Agent) Send(data []byte, headers map[string]string) error {
+
+	return nil
+}

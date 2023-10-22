@@ -7,6 +7,7 @@ import (
 	"github.com/w1nsec/collector/internal/metrics"
 	"github.com/w1nsec/collector/internal/storage"
 	"net"
+	"net/http"
 	"time"
 )
 
@@ -40,6 +41,10 @@ var usedMemStats = []string{
 	"TotalAlloc",
 }
 
+var (
+	timeout = 10 * time.Second
+)
+
 type Agent struct {
 	addr           net.Addr
 	metricsPoint   string
@@ -49,6 +54,8 @@ type Agent struct {
 	reportInterval time.Duration
 	compression    bool
 	logLevel       string
+
+	httpClient *http.Client
 }
 
 func (agent Agent) InitLogger(loggerLevel string) error {
@@ -68,6 +75,8 @@ func NewAgent(addr string, pollInterval, reportInterval int) (*Agent, error) {
 		pollInterval:   time.Duration(pollInterval) * time.Second,
 		reportInterval: time.Duration(reportInterval) * time.Second,
 		logLevel:       "debug",
+
+		httpClient: &http.Client{Timeout: timeout},
 	}
 	err = agent.InitLogger(agent.logLevel)
 	if err != nil {
@@ -82,7 +91,7 @@ func (agent Agent) Start() error {
 		maxErrCount int
 		curErrCount int
 	)
-	maxErrCount = 3
+	maxErrCount = 10
 	curErrCount = 0
 	// Receive and send for the first time
 	//fmt.Println("Receiving:", time.Now().Format(time.TimeOnly))
@@ -113,6 +122,19 @@ func (agent Agent) Start() error {
 					return err
 				}
 			}
+			curErrCount = 0
+
+			// send all metrics together
+			err = agent.SendAllMetricsJSON()
+			if err != nil {
+				log.Debug().
+					Msgf("%v error, while send all metrics together", err)
+				curErrCount += 1
+				if curErrCount > maxErrCount {
+					return err
+				}
+			}
+			curErrCount = 0
 		}
 	}
 }
