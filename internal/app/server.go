@@ -68,9 +68,12 @@ func (app appServer) Run() error {
 
 	// restore DB
 	wg := &sync.WaitGroup{}
-
+	err := app.service.Setup(wg)
+	if err != nil {
+		return err
+	}
 	// start server
-	err := app.server.Start()
+	err = app.server.Start()
 	wg.Wait()
 	return err
 }
