@@ -6,6 +6,7 @@ import (
 	"github.com/w1nsec/collector/internal/logger"
 	"github.com/w1nsec/collector/internal/metrics"
 	"github.com/w1nsec/collector/internal/storage"
+	"github.com/w1nsec/collector/internal/storage/memstorage"
 	"net"
 	"net/http"
 	"time"
@@ -76,8 +77,10 @@ func NewAgent(addr string, pollInterval, reportInterval int) (*Agent, error) {
 		reportInterval: time.Duration(reportInterval) * time.Second,
 		logLevel:       "debug",
 
+		store:      memstorage.NewMemStorage(),
 		httpClient: &http.Client{Timeout: timeout},
 	}
+
 	err = agent.InitLogger(agent.logLevel)
 	if err != nil {
 		return nil, err
@@ -102,6 +105,13 @@ func (agent Agent) Start() error {
 	//if err != nil {
 	//	return err
 	//}
+
+	//pollTicker1 := time.NewTicker(time.Second * 4)
+	//for range pollTicker1.C {
+	//	agent.CollectMetrics()
+	//	fmt.Println(agent.store)
+	//}
+	//return nil
 
 	pollTicker := time.NewTicker(agent.pollInterval)
 	reportTicker := time.NewTicker(agent.reportInterval)

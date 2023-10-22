@@ -6,6 +6,10 @@ import (
 	"strconv"
 )
 
+var (
+	errNotFound = fmt.Errorf("metric not found")
+)
+
 // for maps with counters and gauges
 type MemStorage struct {
 	dataCounters map[string]int64
@@ -124,7 +128,7 @@ func (ms MemStorage) GetMetric(mName string, mType string) (*metrics.Metrics, er
 		}
 	}
 
-	return nil, nil
+	return nil, errNotFound
 }
 
 func (ms MemStorage) GetOneMetric(mName string) *metrics.Metrics {
