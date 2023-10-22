@@ -119,23 +119,24 @@ func (agent Agent) Start() error {
 		select {
 		case t1 := <-pollTicker.C:
 			fmt.Println("Receiving:", t1.Format(time.TimeOnly))
-			agent.GetMetrics()
+			//agent.GetMetrics()
+			agent.CollectMetrics()
 		case t2 := <-reportTicker.C:
 			fmt.Println("- Sending:", t2.Format(time.TimeOnly))
 			//agent.SendMetrics()
-			err := agent.SendMetricsJSON()
-			if err != nil {
-				log.Debug().
-					Msgf("%v error, while send metrics", err)
-				curErrCount += 1
-				if curErrCount > maxErrCount {
-					return err
-				}
-			}
+			//err := agent.SendMetricsJSON()
+			//if err != nil {
+			//	log.Debug().
+			//		Msgf("%v error, while send metrics", err)
+			//	curErrCount += 1
+			//	if curErrCount > maxErrCount {
+			//		return err
+			//	}
+			//}
 			curErrCount = 0
 
 			// send all metrics together
-			err = agent.SendAllMetricsJSON()
+			err := agent.SendAllMetricsJSON()
 			if err != nil {
 				log.Debug().
 					Msgf("%v error, while send all metrics together", err)
