@@ -22,19 +22,10 @@ type MetricServer struct {
 	http.Server
 }
 
-func NewServerForService(args server.Args, service service.Service) (Server, error) {
+func NewServerForService(args server.Args, service *service.MetricService) (Server, error) {
 
 	mux := NewRouter(service)
 	return NewMetricServerWithParams(args.Addr, mux)
-}
-
-// NewServer is just a wrapper for NewMetricServerWithParams
-// with default params, return interface for server
-// func NewServer(addr string, loggerLevel string) (Server, error) {
-func NewServer(args server.Args) (Server, error) {
-
-	//mux := handlers.NewRouter(service)
-	return NewMetricServerWithParams(args.Addr, nil)
 }
 
 func NewMetricServerWithParams(addr string, mux http.Handler) (*MetricServer, error) {

@@ -27,7 +27,7 @@ const (
 	Gauges   = "gauges"
 )
 
-type PostgresStorage struct {
+type postgresStorage struct {
 	db  *sql.DB
 	url string
 
@@ -39,7 +39,15 @@ type PostgresStorage struct {
 	dbName   string
 }
 
-func (pgStorage PostgresStorage) CreateTables() error {
+func (pgStorage postgresStorage) Init() error {
+	return pgStorage.CreateTables()
+}
+
+func (pgStorage postgresStorage) CheckStorage() error {
+	return pgStorage.CheckConnection()
+}
+
+func (pgStorage postgresStorage) CreateTables() error {
 	if pgStorage.db == nil {
 		return fmt.Errorf("db not connected")
 	}
@@ -73,7 +81,7 @@ func (pgStorage PostgresStorage) CreateTables() error {
 }
 
 // interface Storage
-func (pgStorage PostgresStorage) UpdateCounters(name string, value int64) error {
+func (pgStorage postgresStorage) UpdateCounters(name string, value int64) error {
 	query := fmt.Sprintf("update %s set value = $1 where id = $2", Counters)
 	result, err := pgStorage.db.ExecContext(pgStorage.dbCtx, query, value, name)
 	if err != nil {
@@ -91,7 +99,7 @@ func (pgStorage PostgresStorage) UpdateCounters(name string, value int64) error 
 	return nil
 }
 
-func (pgStorage PostgresStorage) UpdateGauges(name string, value float64) error {
+func (pgStorage postgresStorage) UpdateGauges(name string, value float64) error {
 	query := fmt.Sprintf("update %s set value = $1 where id = $2", Gauges)
 	result, err := pgStorage.db.ExecContext(pgStorage.dbCtx, query, value, name)
 	if err != nil {
@@ -110,7 +118,7 @@ func (pgStorage PostgresStorage) UpdateGauges(name string, value float64) error 
 	return nil
 }
 
-func (pgStorage PostgresStorage) String() string {
+func (pgStorage postgresStorage) String() string {
 	ms, err := pgStorage.GetAllMetrics()
 	if err != nil {
 		return ""
@@ -131,7 +139,7 @@ func (pgStorage PostgresStorage) String() string {
 	return res
 }
 
-func (pgStorage PostgresStorage) GetMetricString(mType, mName string) string {
+func (pgStorage postgresStorage) GetMetricString(mType, mName string) string {
 	tbName := Counters
 	if mType == metrics.Gauge {
 		tbName = Gauges
@@ -154,7 +162,7 @@ func (pgStorage PostgresStorage) GetMetricString(mType, mName string) string {
 
 }
 
-func (pgStorage PostgresStorage) GetMetric(mName string, mType string) (*metrics.Metrics, error) {
+func (pgStorage postgresStorage) GetMetric(mName string, mType string) (*metrics.Metrics, error) {
 	tbName := Counters
 	if mType == metrics.Gauge {
 		tbName = Gauges
@@ -196,7 +204,7 @@ func (pgStorage PostgresStorage) GetMetric(mName string, mType string) (*metrics
 
 }
 
-func (pgStorage PostgresStorage) UpdateMetric(newMetric *metrics.Metrics) error {
+func (pgStorage postgresStorage) UpdateMetric(newMetric *metrics.Metrics) error {
 	var result sql.Result
 	var err error
 	switch newMetric.MType {
@@ -227,7 +235,7 @@ func (pgStorage PostgresStorage) UpdateMetric(newMetric *metrics.Metrics) error 
 	return nil
 }
 
-func (pgStorage PostgresStorage) AddMetric(newMetric *metrics.Metrics) error {
+func (pgStorage postgresStorage) AddMetric(newMetric *metrics.Metrics) error {
 	var result sql.Result
 	var err error
 	var query = "INSERT into %s (id, value) values ($1, $2)"
@@ -255,7 +263,7 @@ func (pgStorage PostgresStorage) AddMetric(newMetric *metrics.Metrics) error {
 	return nil
 }
 
-func (pgStorage PostgresStorage) GetAllMetrics() ([]*metrics.Metrics, error) {
+func (pgStorage postgresStorage) GetAllMetrics() ([]*metrics.Metrics, error) {
 	// Gauges
 	query := fmt.Sprintf("SELECT id, value from %s", Gauges)
 	rows, err := pgStorage.db.QueryContext(pgStorage.dbCtx, query)
@@ -314,7 +322,7 @@ func (pgStorage PostgresStorage) GetAllMetrics() ([]*metrics.Metrics, error) {
 	return ms, nil
 }
 
-func NewPostgresStorage(url string) *PostgresStorage {
+func NewStorage(url string) *postgresStorage {
 	if !strings.Contains(url, "postgres://") {
 		url = "postgres://" + url
 	}
@@ -323,7 +331,7 @@ func NewPostgresStorage(url string) *PostgresStorage {
 		log.Error().Err(err).Send()
 		return nil
 	}
-	return &PostgresStorage{
+	return &postgresStorage{
 		// TODO set context to DB Storage as child context from Service
 		dbCtx: context.Background(),
 		db:    db,
@@ -331,11 +339,11 @@ func NewPostgresStorage(url string) *PostgresStorage {
 	}
 }
 
-func (pgStorage PostgresStorage) Close() error {
+func (pgStorage postgresStorage) Close() error {
 	return pgStorage.db.Close()
 }
 
-func (pgStorage PostgresStorage) CheckConnection() error {
+func (pgStorage postgresStorage) CheckConnection() error {
 	//connectString := fmt.Sprintf("host=%s user=%s password=%s dbname=%s sslmode=disable",
 	//	pgStorage.addr, pgStorage.username, pgStorage.password, pgStorage.dbName)
 

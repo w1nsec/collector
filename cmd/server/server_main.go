@@ -2,24 +2,13 @@ package main
 
 import (
 	"github.com/rs/zerolog/log"
-	"github.com/w1nsec/collector/internal/config/server"
-	"github.com/w1nsec/collector/internal/service/metricservice"
+	"github.com/w1nsec/collector/internal/app"
 )
 
 func main() {
-
-	var args server.Args
-
-	server.ServerArgsParse(&args)
-	log.Info().
-		Str("addr", args.Addr).
-		Str("log", args.LogLevel).Send()
-
-	service, err := metricservice.NewService(args)
+	serverApp, err := app.NewAppServer()
 	if err != nil {
 		log.Fatal().Err(err).Send()
-
 	}
-
-	log.Fatal().Err(service.Start()).Send()
+	log.Fatal().Err(serverApp.Run()).Send()
 }

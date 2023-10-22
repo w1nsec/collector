@@ -12,6 +12,26 @@ type MemStorage struct {
 	dataGauges   map[string]float64
 }
 
+func (ms *MemStorage) Close() error {
+	ms.dataGauges = nil
+	ms.dataCounters = nil
+	return nil
+}
+
+func (ms *MemStorage) Init() error {
+	if ms.dataGauges == nil {
+		ms.dataGauges = make(map[string]float64)
+	}
+	if ms.dataCounters == nil {
+		ms.dataCounters = make(map[string]int64)
+	}
+	return nil
+}
+
+func (ms *MemStorage) CheckStorage() error {
+	return ms.Init()
+}
+
 func (ms *MemStorage) String() string {
 	var s1 = "[counters]\n"
 	var s2 = "[gauges]\n"

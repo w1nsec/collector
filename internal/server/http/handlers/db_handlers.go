@@ -6,10 +6,10 @@ import (
 	"net/http"
 )
 
-func CheckDBConnectionHandler(service service.Service) http.HandlerFunc {
+func CheckDBConnectionHandler(service *service.MetricService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
-		err := service.CheckDB()
+		err := service.CheckStorage()
 		if err != nil {
 			http.Error(w, "Can't connect to DB", http.StatusInternalServerError)
 			log.Error().Err(err).Send()

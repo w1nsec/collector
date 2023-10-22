@@ -16,4 +16,12 @@ type Storage interface {
 
 	// add for increment9 / increment3
 	GetAllMetrics() ([]*metrics.Metrics, error)
+
+	// for merging DBStorage and MemStorage
+	Init() error
+	CheckStorage() error
+
+	// for shutdown
+
+	Close() error
 }
