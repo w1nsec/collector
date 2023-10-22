@@ -261,9 +261,9 @@ func JSONUpdateMetricsHandler(store storage.Storage) func(w http.ResponseWriter,
 			return
 		}
 
-		var metric = new(metrics.Metrics)
+		var newMetrics = make([]*metrics.Metrics, 0)
 
-		body, err := io.ReadAll(r.Body)
+		err := json.NewDecoder(r.Body).Decode(&newMetrics)
 		if err != nil {
 			log.Error().
 				Err(err).Send()
@@ -272,68 +272,45 @@ func JSONUpdateMetricsHandler(store storage.Storage) func(w http.ResponseWriter,
 		}
 		defer r.Body.Close()
 
-		err = json.Unmarshal(body, &metric)
-		if err != nil {
-			log.Error().
-				Err(err).Send()
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-		log.Info().
-			RawJSON("metric", body).
-			Msg("Request")
-
-		if metric == nil {
-			log.Error().
-				Err(fmt.Errorf("metric is nil")).Send()
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
+		//log.Info().
+		//	RawJSON("metric", body).
+		//	Msg("Request")
 
 		// Check, that metric contains values
-		if (metric.Delta == nil && metric.Value == nil) ||
-			metric.ID == "" {
-			log.Error().
-				Err(fmt.Errorf("metric doesn't contain any value")).Send()
+		errors := make([]string, 0)
+		for _, m := range newMetrics {
+			if (m.Delta == nil && m.Value == nil) ||
+				m.ID == "" {
+				err := fmt.Errorf("metric \"%s\"doesn't contain any value", m.ID)
+				log.Error().
+					Err(err).Send()
+				//w.WriteHeader(http.StatusInternalServerError)
+				//return
+				errors = append(errors, err.Error())
+				continue
+			}
+
+			err = store.UpdateMetric(m)
+			if err != nil {
+				log.Error().
+					Err(err).
+					Msgf("can't update metric \"%s\"", m.ID)
+				err = fmt.Errorf("can't update metric \"%s\"", m.ID)
+				errors = append(errors, err.Error())
+				continue
+			}
+
+		}
+
+		// If no one metric is saved
+		if len(errors) == len(newMetrics) {
+			io.WriteString(w, "Don't save any metric")
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
-
-		err = store.UpdateMetric(metric)
-		if err != nil {
-			log.Error().
-				Err(err).
-				Msg("can't update metric")
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-
-		// Debug version
-		// TODO change request metrics by name to:  body-request -> body-response resent (when debug done)
-
-		retMetric, _ := store.GetMetric(metric.ID, metric.MType)
-		if retMetric == nil {
-			log.Error().
-				Err(fmt.Errorf("metric \"%s\" not found in store",
-					metric.ID)).Send()
-			w.WriteHeader(http.StatusNotFound)
-			return
-		}
-
-		body, err = json.Marshal(retMetric)
-		if err != nil {
-			log.Error().
-				Err(err).Send()
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-
-		log.Info().
-			RawJSON("metric", body).
-			Msg("Response")
 
 		w.Header().Set("content-type", "application/json")
-		_, err = w.Write(body)
+		_, err = io.WriteString(w, strings.Join(errors, " | "))
 		if err != nil {
 			log.Error().
 				Err(err).Send()

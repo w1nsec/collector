@@ -107,6 +107,5 @@ func (agent Agent) SendMetricsJSON() error {
 				Err(err).Send()
 		}
 	}
-
 	return nil
 }
