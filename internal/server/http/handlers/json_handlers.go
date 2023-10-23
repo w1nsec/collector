@@ -295,19 +295,6 @@ func JSONUpdateMetricsHandler(service *service.MetricService) func(w http.Respon
 				continue
 			}
 			mNames[m.ID] = m.MType
-			//log.Info().
-			//	Str("ID", m.ID).
-			//	Str("type", m.MType).
-			//	Float64("val", *m.Value).
-			//	Int64("delta", *m.Delta).Send()
-			// delete repeated metrics
-			//if _, ok := mNames[m.ID]; ok {
-			//	// already exist -->> delete
-			//	newMetrics = metrics.Delete(newMetrics, ind-delta)
-			//	delta++
-			//} else {
-			//	mNames[m.ID] = true
-			//}
 
 		}
 
@@ -340,7 +327,7 @@ func JSONUpdateMetricsHandler(service *service.MetricService) func(w http.Respon
 		}
 
 		w.Header().Set("content-type", "application/json")
-		body, err := json.Marshal(updatedMetrics)
+		err = json.NewEncoder(w).Encode(updatedMetrics)
 		if err != nil {
 			log.Error().
 				Err(err).Send()
@@ -348,13 +335,6 @@ func JSONUpdateMetricsHandler(service *service.MetricService) func(w http.Respon
 			return
 		}
 
-		_, err = w.Write(body)
-		if err != nil {
-			log.Error().
-				Err(err).Send()
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
 		w.WriteHeader(http.StatusOK)
 	}
 }
