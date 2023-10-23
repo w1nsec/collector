@@ -1,6 +1,7 @@
 package agent
 
 import (
+	"errors"
 	"fmt"
 	"github.com/rs/zerolog/log"
 	"github.com/w1nsec/collector/internal/logger"
@@ -9,6 +10,7 @@ import (
 	"github.com/w1nsec/collector/internal/storage/memstorage"
 	"net"
 	"net/http"
+	"syscall"
 	"time"
 )
 
@@ -43,7 +45,9 @@ var usedMemStats = []string{
 }
 
 var (
-	timeout = 10 * time.Second
+	timeout       = 10 * time.Second
+	retryStep     = uint(2) // 2 seconds
+	maxRetryCount = uint(3)
 )
 
 type Agent struct {
@@ -55,8 +59,11 @@ type Agent struct {
 	reportInterval time.Duration
 	compression    bool
 	logLevel       string
+	httpClient     *http.Client
 
-	httpClient *http.Client
+	// increment 13
+	retryCount uint
+	retryStep  uint
 }
 
 func (agent Agent) InitLogger(loggerLevel string) error {
@@ -79,6 +86,10 @@ func NewAgent(addr string, pollInterval, reportInterval int) (*Agent, error) {
 
 		store:      memstorage.NewMemStorage(),
 		httpClient: &http.Client{Timeout: timeout},
+
+		// increment 13
+		retryCount: maxRetryCount,
+		retryStep:  retryStep,
 	}
 
 	err = agent.InitLogger(agent.logLevel)
@@ -91,11 +102,9 @@ func NewAgent(addr string, pollInterval, reportInterval int) (*Agent, error) {
 func (agent Agent) Start() error {
 
 	var (
-		maxErrCount int
-		curErrCount int
+		curErrCount = uint(0)
 	)
-	maxErrCount = 10
-	curErrCount = 0
+
 	// Receive and send for the first time
 	//fmt.Println("Receiving:", time.Now().Format(time.TimeOnly))
 	//agent.GetMetrics()
@@ -105,13 +114,6 @@ func (agent Agent) Start() error {
 	//if err != nil {
 	//	return err
 	//}
-
-	//pollTicker1 := time.NewTicker(time.Second * 4)
-	//for range pollTicker1.C {
-	//	agent.CollectMetrics()
-	//	fmt.Println(agent.store)
-	//}
-	//return nil
 
 	pollTicker := time.NewTicker(agent.pollInterval)
 	reportTicker := time.NewTicker(agent.reportInterval)
@@ -123,17 +125,6 @@ func (agent Agent) Start() error {
 			agent.CollectMetrics()
 		case t2 := <-reportTicker.C:
 			fmt.Println("- Sending:", t2.Format(time.TimeOnly))
-			//agent.SendMetrics()
-			//err := agent.SendMetricsJSON()
-			//if err != nil {
-			//	log.Debug().
-			//		Msgf("%v error, while send metrics", err)
-			//	curErrCount += 1
-			//	if curErrCount > maxErrCount {
-			//		return err
-			//	}
-			//}
-			curErrCount = 0
 
 			// send all metrics together
 			err := agent.SendAllMetricsJSON()
@@ -141,7 +132,21 @@ func (agent Agent) Start() error {
 				log.Debug().
 					Msgf("%v error, while send all metrics together", err)
 				curErrCount += 1
-				if curErrCount > maxErrCount {
+				if errors.Is(err, syscall.ECONNREFUSED) {
+					// agent can't connect to server, let's try again
+					sleep := 1 * time.Second
+					for i := uint(0); i < agent.retryCount; i++ {
+						time.Sleep(sleep)
+						err := agent.SendAllMetricsJSON()
+						// continue if success
+						if err == nil {
+							break
+						}
+						// update sleep time
+						sleep = time.Duration(sleep.Seconds() + float64(agent.retryStep))
+					}
+				}
+				if curErrCount > agent.retryCount {
 					return err
 				}
 			}
