@@ -277,10 +277,10 @@ func JSONUpdateMetricsHandler(service *service.MetricService) func(w http.Respon
 		//	Msg("Request")
 
 		// check repeats
-		mNames := make(map[string]bool, 0)
+		mNames := make(map[string]string, 0)
+
 		// Check, that metric contains values
 		errors := make([]string, 0)
-		delta := 0
 		for ind, m := range newMetrics {
 			if (m.Delta == nil && m.Value == nil) ||
 				m.ID == "" {
@@ -294,19 +294,20 @@ func JSONUpdateMetricsHandler(service *service.MetricService) func(w http.Respon
 				errors = append(errors, err.Error())
 				continue
 			}
+			mNames[m.ID] = m.MType
 			//log.Info().
 			//	Str("ID", m.ID).
 			//	Str("type", m.MType).
 			//	Float64("val", *m.Value).
 			//	Int64("delta", *m.Delta).Send()
 			// delete repeated metrics
-			if _, ok := mNames[m.ID]; ok {
-				// already exist -->> delete
-				newMetrics = metrics.Delete(newMetrics, ind-delta)
-				delta++
-			} else {
-				mNames[m.ID] = true
-			}
+			//if _, ok := mNames[m.ID]; ok {
+			//	// already exist -->> delete
+			//	newMetrics = metrics.Delete(newMetrics, ind-delta)
+			//	delta++
+			//} else {
+			//	mNames[m.ID] = true
+			//}
 
 		}
 
@@ -327,9 +328,19 @@ func JSONUpdateMetricsHandler(service *service.MetricService) func(w http.Respon
 			return
 		}
 
-		w.Header().Set("content-type", "application/json")
+		// Get updated metrics
+		updatedMetrics := make([]*metrics.Metrics, 0)
+		for mName, mType := range mNames {
+			metric, err := service.GetMetric(mName, mType)
+			if err != nil {
+				log.Error().Err(err).Send()
+				continue
+			}
+			updatedMetrics = append(updatedMetrics, metric)
+		}
 
-		err = json.NewEncoder(w).Encode(newMetrics)
+		w.Header().Set("content-type", "application/json")
+		body, err := json.Marshal(updatedMetrics)
 		if err != nil {
 			log.Error().
 				Err(err).Send()
@@ -337,6 +348,13 @@ func JSONUpdateMetricsHandler(service *service.MetricService) func(w http.Respon
 			return
 		}
 
+		_, err = w.Write(body)
+		if err != nil {
+			log.Error().
+				Err(err).Send()
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
 		w.WriteHeader(http.StatusOK)
 	}
 }

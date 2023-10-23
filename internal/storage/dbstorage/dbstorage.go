@@ -58,7 +58,7 @@ func (pgStorage postgresStorage) CreateTables() error {
 
 	queryTb1 := fmt.Sprintf(`CREATE TABLE IF NOT EXISTS %s (
 		id varchar NOT NULL UNIQUE PRIMARY KEY,
-		value integer NULL
+		value int8 NULL
 	);`, Counters)
 
 	queryTb2 := fmt.Sprintf(`
