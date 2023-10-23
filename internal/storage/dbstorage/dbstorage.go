@@ -153,6 +153,7 @@ func (pgStorage postgresStorage) GetMetric(mName string, mType string) (*metrics
 			return nil, nil
 		}
 		m.ID = mName
+		m.MType = metrics.Gauge
 		m.Value = &val
 	case metrics.Counter:
 		val, err := strconv.ParseInt(*result, 10, 64)
@@ -161,6 +162,7 @@ func (pgStorage postgresStorage) GetMetric(mName string, mType string) (*metrics
 			return nil, nil
 		}
 		m.ID = mName
+		m.MType = metrics.Counter
 		m.Delta = &val
 	}
 	return m, nil

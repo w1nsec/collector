@@ -276,9 +276,12 @@ func JSONUpdateMetricsHandler(service *service.MetricService) func(w http.Respon
 		//	RawJSON("metric", body).
 		//	Msg("Request")
 
+		// check repeats
+		mNames := make(map[string]bool, 0)
 		// Check, that metric contains values
 		errors := make([]string, 0)
-		for id, m := range newMetrics {
+		delta := 0
+		for ind, m := range newMetrics {
 			if (m.Delta == nil && m.Value == nil) ||
 				m.ID == "" {
 				err := fmt.Errorf("metric \"%s\"doesn't contain any value", m.ID)
@@ -286,24 +289,47 @@ func JSONUpdateMetricsHandler(service *service.MetricService) func(w http.Respon
 					Err(err).Send()
 
 				// delete wrong metric
-				newMetrics[id] = newMetrics[len(newMetrics)-1]
-				//newMetrics[len(newMetrics)-1] = nil
-				newMetrics = newMetrics[:len(newMetrics)-1]
+				newMetrics = metrics.Delete(newMetrics, ind)
 
 				errors = append(errors, err.Error())
 				continue
 			}
+			//log.Info().
+			//	Str("ID", m.ID).
+			//	Str("type", m.MType).
+			//	Float64("val", *m.Value).
+			//	Int64("delta", *m.Delta).Send()
+			// delete repeated metrics
+			if _, ok := mNames[m.ID]; ok {
+				// already exist -->> delete
+				newMetrics = metrics.Delete(newMetrics, ind-delta)
+				delta++
+			} else {
+				mNames[m.ID] = true
+			}
+
+		}
+
+		// log errors
+		if len(errors) != 0 {
+			log.Error().
+				Err(fmt.Errorf(strings.Join(errors, " | "))).
+				Send()
 		}
 
 		err = service.UpdateMetrics(r.Context(), newMetrics)
 		if err != nil {
+			log.Error().
+				Err(err).
+				Send()
 			io.WriteString(w, "Don't save any metric")
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 
 		w.Header().Set("content-type", "application/json")
-		_, err = io.WriteString(w, strings.Join(errors, " | "))
+
+		err = json.NewEncoder(w).Encode(newMetrics)
 		if err != nil {
 			log.Error().
 				Err(err).Send()

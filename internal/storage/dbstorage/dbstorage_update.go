@@ -9,7 +9,7 @@ import (
 )
 
 func (pgStorage postgresStorage) UpdateCounters(name string, value int64) error {
-	query := fmt.Sprintf("update %s set value = $1 where id = $2", Counters)
+	query := fmt.Sprintf("update %s set value = value + $1 where id = $2", Counters)
 	result, err := pgStorage.db.ExecContext(pgStorage.dbCtx, query, value, name)
 	if err != nil {
 		return err
@@ -79,7 +79,7 @@ func (pgStorage postgresStorage) UpdateMetric(newMetric *metrics.Metrics) error 
 func (pgStorage postgresStorage) UpdateMetrics(ctx context.Context, newMetrics []*metrics.Metrics) error {
 	var (
 		queryGauge   = fmt.Sprintf("insert into %s(id, value) values ($1, $2) on conflict (id) do update set value = $2", Gauges)
-		queryCounter = fmt.Sprintf("insert into %s(id, value) values ($1, $2) on conflict (id) do update set value = $2", Counters)
+		queryCounter = fmt.Sprintf("insert into %s(id, value) values ($1, $2) on conflict (id) do update set value = %s.value + $2", Counters, Counters)
 	)
 
 	// start transaction

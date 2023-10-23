@@ -32,3 +32,18 @@ func NewGaugeMetric(name, mType string, value float64) *Metrics {
 	//return metric, nil
 	return metric
 }
+
+func Delete(metrics []*Metrics, ind int) []*Metrics {
+	l := len(metrics)
+	if ind >= l {
+		return metrics
+	}
+
+	// delete metric
+	metrics[ind] = metrics[l-1]
+
+	// TODO need this ?
+	//newMetrics[len(newMetrics)-1] = nil
+
+	return metrics[:l-1]
+}
