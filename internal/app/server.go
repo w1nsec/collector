@@ -1,6 +1,8 @@
 package app
 
 import (
+	"context"
+	"fmt"
 	"github.com/rs/zerolog/log"
 	"github.com/w1nsec/collector/internal/config/server"
 	"github.com/w1nsec/collector/internal/server/http"
@@ -9,7 +11,7 @@ import (
 	"github.com/w1nsec/collector/internal/storage/dbstorage"
 	"github.com/w1nsec/collector/internal/storage/filestorage"
 	"github.com/w1nsec/collector/internal/storage/memstorage"
-	"sync"
+	"time"
 )
 
 type appServer struct {
@@ -63,29 +65,63 @@ func NewAppServer() (*appServer, error) {
 	return app, nil
 }
 
-func (app appServer) Run() error {
+func (app appServer) Run(ctx context.Context) error {
 	// initialise storages
 
 	// restore DB
-	wg := &sync.WaitGroup{}
-	wg.Add(1)
-	go app.service.Setup(wg)
+	go app.service.Setup(ctx)
 
 	// start server
-	err := app.server.Start()
-	wg.Wait()
-	return err
+	go func() {
+		err := app.server.Start()
+		if err != nil {
+			log.Error().Err(err).
+				Msg("Error starting server")
+		}
+	}()
+
+	// get signal to exit
+	<-ctx.Done()
+
+	log.Info().Str("signal", "Ctlr+C").Send()
+	shutdownCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	longShutdown := make(chan struct{}, 1)
+	go func() {
+		time.Sleep(10 * time.Second)
+		longShutdown <- struct{}{}
+	}()
+
+	// if shutdown too long
+	select {
+	case <-shutdownCtx.Done():
+		err := fmt.Errorf("server shutdown: %v", ctx.Err())
+		log.Error().Err(err).Send()
+		err = app.Stop(ctx)
+		return err
+	case <-longShutdown:
+		err := fmt.Errorf("force finishing")
+		log.Error().Err(err).Send()
+		return err
+	}
 }
 
-func (app *appServer) Stop() error {
+func (app *appServer) Stop(ctx context.Context) error {
+	if app.service.FileStorageInterface != nil {
+		log.Error().
+			Err(app.service.FileStorageInterface.SaveAll()).
+			Msg("fs-storage saving status")
+		log.Error().
+			Err(app.service.FileStorageInterface.Close(ctx)).
+			Msg("fs-storage closing status")
+	}
 
-	log.Error().
-		Err(app.service.FileStorageInterface.SaveAll()).
-		Msg("fs-storage saving status")
-	log.Error().
-		Err(app.service.FileStorageInterface.Close()).
-		Msg("fs-storage closing status")
-	defer app.service.Close()
+	err := app.service.Close(ctx)
+	if err != nil {
+		log.Error().Err(err).Send()
+	}
+
 	return app.server.Stop()
 }
 

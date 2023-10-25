@@ -7,7 +7,6 @@ import (
 	"github.com/w1nsec/collector/internal/logger"
 	"github.com/w1nsec/collector/internal/storage"
 	"github.com/w1nsec/collector/internal/storage/filestorage"
-	"sync"
 	"time"
 )
 
@@ -27,12 +26,17 @@ func (service *MetricService) CheckStorage() error {
 	return service.Storage.CheckStorage()
 }
 
-func (service *MetricService) Close() error {
-	err := service.FileStorageInterface.Close()
-	if err != nil {
-		return err
+func (service *MetricService) Close(ctx context.Context) error {
+	if service.FileStorageInterface != nil {
+		err := service.FileStorageInterface.Close(ctx)
+		if err != nil {
+			defer service.Storage.Close(ctx)
+			return err
+		}
+
 	}
-	return service.Storage.Close()
+
+	return service.Storage.Close(ctx)
 }
 
 func (service *MetricService) SetupLogger(level string) error {
@@ -57,28 +61,29 @@ func NewService(args server.Args, store storage.Storage,
 	return service, err
 }
 
-func (service *MetricService) BackupLoop(wg *sync.WaitGroup, storeInterval time.Duration) error {
+func (service *MetricService) BackupLoop(ctx context.Context, storeInterval time.Duration) error {
 	timer := time.NewTicker(storeInterval)
-	for t := range timer.C {
-		err := service.FileStorageInterface.SaveAll()
-		if err != nil {
-			log.Info().
-				Str("time", t.Format(time.DateTime)).
-				Msg("DB saved")
-			continue
+	for {
+		select {
+		case t := <-timer.C:
+			err := service.FileStorageInterface.SaveAll()
+			if err != nil {
+				log.Info().
+					Str("time", t.Format(time.DateTime)).
+					Msg("DB saved")
+				continue
+			}
+		case <-ctx.Done():
+			return nil
 		}
-
 	}
-	wg.Done()
-	return nil
 }
 
-func (service *MetricService) Setup(wg *sync.WaitGroup) error {
+func (service *MetricService) Setup(ctx context.Context) error {
 	if service.Restore {
 		if service.FileStorageInterface != nil {
 			service.FileStorageInterface.Load()
-			wg.Add(1)
-			go service.BackupLoop(wg, service.StoreInterval)
+			go service.BackupLoop(ctx, service.StoreInterval)
 		}
 		return service.Storage.Init()
 	}

@@ -14,7 +14,7 @@ import (
 
 type DBStorage interface {
 	CheckConnection() error
-	Close() error
+	Close(context.Context) error
 
 	// check if tables created
 	CreateTables() error
@@ -206,7 +206,7 @@ func NewStorage(url string) *postgresStorage {
 	}
 }
 
-func (pgStorage postgresStorage) Close() error {
+func (pgStorage postgresStorage) Close(context.Context) error {
 	return pgStorage.db.Close()
 }
 

@@ -2,6 +2,7 @@ package filestorage
 
 import (
 	"bufio"
+	"context"
 	"encoding/json"
 	"github.com/rs/zerolog/log"
 	"github.com/w1nsec/collector/internal/metrics"
@@ -15,7 +16,7 @@ type FileStorageInterface interface {
 	//memstorage.Storage
 	Load() error
 	SaveAll() error
-	Close() error
+	Close(context.Context) error
 	//Save(myMetrics metrics.MyMetrics) err
 }
 
@@ -27,7 +28,7 @@ type FileStorage struct {
 	mutex    *sync.Mutex
 }
 
-func (f FileStorage) Close() error {
+func (f FileStorage) Close(context.Context) error {
 	return f.file.Close()
 }
 

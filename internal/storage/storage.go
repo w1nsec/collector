@@ -28,5 +28,5 @@ type Storage interface {
 	CheckStorage() error
 
 	// for shutdown
-	Close() error
+	Close(ctx context.Context) error
 }

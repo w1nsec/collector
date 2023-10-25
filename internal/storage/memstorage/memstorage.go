@@ -1,6 +1,7 @@
 package memstorage
 
 import (
+	"context"
 	"fmt"
 	"github.com/w1nsec/collector/internal/metrics"
 	"strconv"
@@ -16,7 +17,7 @@ type MemStorage struct {
 	dataGauges   map[string]float64
 }
 
-func (ms *MemStorage) Close() error {
+func (ms *MemStorage) Close(context.Context) error {
 	ms.dataGauges = nil
 	ms.dataCounters = nil
 	return nil
