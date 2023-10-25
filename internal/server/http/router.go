@@ -1,7 +1,6 @@
 package http
 
 import (
-	"fmt"
 	"github.com/go-chi/chi/v5"
 	"github.com/w1nsec/collector/internal/server/http/handlers"
 	"github.com/w1nsec/collector/internal/server/http/middlewares"
@@ -75,7 +74,7 @@ func NewRouter(service *service.MetricService) http.Handler {
 
 func printMidl(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println(r.URL.Path)
+		//fmt.Println(r.URL.Path)
 		next.ServeHTTP(w, r)
 	})
 }

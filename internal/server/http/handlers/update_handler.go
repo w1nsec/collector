@@ -3,6 +3,7 @@ package handlers
 import (
 	"fmt"
 	"github.com/go-chi/chi/v5"
+	"github.com/rs/zerolog/log"
 	"github.com/w1nsec/collector/internal/storage"
 	"net/http"
 	"strconv"
@@ -57,20 +58,23 @@ func UpdateMetricsHandle(store storage.Storage) http.HandlerFunc {
 }
 
 func UpdateGaugeHandle(store storage.Storage) http.HandlerFunc {
-	return func(rw http.ResponseWriter, r *http.Request) {
+	return func(wr http.ResponseWriter, r *http.Request) {
 		name := chi.URLParam(r, "name")
 		value := chi.URLParam(r, "value")
 
 		val, err := strconv.ParseFloat(value, 64)
 		if err != nil {
-			rw.WriteHeader(http.StatusBadRequest)
+			wr.WriteHeader(http.StatusBadRequest)
 			return
 		}
-		store.UpdateGauges(name, val)
-		//fmt.Println(store)
-
-		fmt.Println(store)
-		rw.WriteHeader(http.StatusOK)
+		err = store.UpdateGauges(name, val)
+		if err != nil {
+			wr.WriteHeader(http.StatusInternalServerError)
+			log.Error().
+				Err(err).Send()
+			return
+		}
+		wr.WriteHeader(http.StatusOK)
 	}
 }
 

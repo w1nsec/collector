@@ -149,7 +149,7 @@ func (pgStorage postgresStorage) GetMetric(mName string, mType string) (*metrics
 	case metrics.Gauge:
 		val, err := strconv.ParseFloat(*result, 64)
 		if err != nil {
-			fmt.Println(err)
+			log.Error().Err(err).Send()
 			return nil, nil
 		}
 		m.ID = mName
@@ -158,7 +158,7 @@ func (pgStorage postgresStorage) GetMetric(mName string, mType string) (*metrics
 	case metrics.Counter:
 		val, err := strconv.ParseInt(*result, 10, 64)
 		if err != nil {
-			fmt.Println(err)
+			log.Error().Err(err).Send()
 			return nil, nil
 		}
 		m.ID = mName
@@ -170,62 +170,23 @@ func (pgStorage postgresStorage) GetMetric(mName string, mType string) (*metrics
 }
 
 func (pgStorage postgresStorage) GetAllMetrics() ([]*metrics.Metrics, error) {
-	// Gauges
-	query := fmt.Sprintf("SELECT id, value from %s", Gauges)
-	rows, err := pgStorage.db.QueryContext(pgStorage.dbCtx, query)
+	var (
+		ms = make([]*metrics.Metrics, 0)
+	)
+
+	msCounters, err := pgStorage.getCounters()
 	if err != nil {
-		return nil, nil
-	}
-	defer rows.Close()
-	var ms = make([]*metrics.Metrics, 0)
-
-	id := new(string)
-	valGauge := new(float64)
-
-	for rows.Next() {
-		err := rows.Scan(id, valGauge)
-		if err != nil {
-			fmt.Println(err)
-			continue
-		}
-		m := &metrics.Metrics{
-			ID:    *id,
-			Value: valGauge,
-		}
-		ms = append(ms, m)
+		log.Error().Err(err).Send()
 	}
 
-	if rows.Err() != nil {
-		return nil, nil
-	}
-
-	// Counters
-	query = fmt.Sprintf("SELECT id, value from %s", Counters)
-	rows, err = pgStorage.db.QueryContext(pgStorage.dbCtx, query)
+	msGauges, err := pgStorage.getGauges()
 	if err != nil {
-		return nil, nil
-	}
-	defer rows.Close()
-
-	valCounter := new(int64)
-	for rows.Next() {
-		err := rows.Scan(id, valCounter)
-		if err != nil {
-			fmt.Println(err)
-			continue
-		}
-		m := &metrics.Metrics{
-			ID:    *id,
-			Delta: valCounter,
-		}
-		ms = append(ms, m)
+		log.Error().Err(err).Send()
 	}
 
-	if rows.Err() != nil {
-		return nil, rows.Err()
-	}
-
+	ms = append(msCounters, msGauges...)
 	return ms, nil
+
 }
 
 func NewStorage(url string) *postgresStorage {
@@ -265,4 +226,73 @@ func (pgStorage postgresStorage) CheckConnection() error {
 		return err
 	}
 	return nil
+}
+
+func (pgStorage postgresStorage) getGauges() ([]*metrics.Metrics, error) {
+	// Gauges
+	query := fmt.Sprintf("SELECT id, value from %s", Gauges)
+	rows, err := pgStorage.db.QueryContext(pgStorage.dbCtx, query)
+	if err != nil {
+		return nil, nil
+	}
+	defer rows.Close()
+
+	var (
+		ms       = make([]*metrics.Metrics, 0)
+		id       = new(string)
+		valGauge = new(float64)
+	)
+
+	for rows.Next() {
+		err := rows.Scan(id, valGauge)
+		if err != nil {
+			fmt.Println(err)
+			continue
+		}
+		m := &metrics.Metrics{
+			ID:    *id,
+			Value: valGauge,
+		}
+		ms = append(ms, m)
+	}
+
+	if rows.Err() != nil {
+		return nil, rows.Err()
+	}
+	return ms, nil
+}
+
+func (pgStorage postgresStorage) getCounters() ([]*metrics.Metrics, error) {
+	// Counters
+	query := fmt.Sprintf("SELECT id, value from %s", Counters)
+	rows, err := pgStorage.db.QueryContext(pgStorage.dbCtx, query)
+	if err != nil {
+		return nil, nil
+	}
+	defer rows.Close()
+
+	var (
+		ms         = make([]*metrics.Metrics, 0)
+		id         = new(string)
+		valCounter = new(int64)
+	)
+
+	for rows.Next() {
+		err := rows.Scan(id, valCounter)
+		if err != nil {
+			fmt.Println(err)
+			continue
+		}
+		m := &metrics.Metrics{
+			ID:    *id,
+			Delta: valCounter,
+		}
+		ms = append(ms, m)
+	}
+
+	if rows.Err() != nil {
+		return nil, rows.Err()
+	}
+
+	return ms, nil
 }
