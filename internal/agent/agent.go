@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/rs/zerolog/log"
-	"github.com/w1nsec/collector/internal/logger"
 	"github.com/w1nsec/collector/internal/metrics"
 	"github.com/w1nsec/collector/internal/storage"
 	"github.com/w1nsec/collector/internal/storage/memstorage"
@@ -58,16 +57,11 @@ type Agent struct {
 	pollInterval   time.Duration
 	reportInterval time.Duration
 	compression    bool
-	logLevel       string
 	httpClient     *http.Client
 
 	// increment 13
 	retryCount uint
 	retryStep  uint
-}
-
-func (agent Agent) InitLogger(loggerLevel string) error {
-	return logger.Initialize(loggerLevel)
 }
 
 func NewAgent(addr string, pollInterval, reportInterval int) (*Agent, error) {
@@ -82,7 +76,6 @@ func NewAgent(addr string, pollInterval, reportInterval int) (*Agent, error) {
 		metrics:        make(map[string]metrics.MyMetrics),
 		pollInterval:   time.Duration(pollInterval) * time.Second,
 		reportInterval: time.Duration(reportInterval) * time.Second,
-		logLevel:       "debug",
 
 		store:      memstorage.NewMemStorage(),
 		httpClient: &http.Client{Timeout: timeout},
@@ -92,10 +85,6 @@ func NewAgent(addr string, pollInterval, reportInterval int) (*Agent, error) {
 		retryStep:  retryStep,
 	}
 
-	err = agent.InitLogger(agent.logLevel)
-	if err != nil {
-		return nil, err
-	}
 	return agent, nil
 }
 

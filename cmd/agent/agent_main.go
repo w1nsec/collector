@@ -1,10 +1,10 @@
 package main
 
 import (
-	"fmt"
+	"github.com/rs/zerolog/log"
 	"github.com/w1nsec/collector/internal/agent"
 	config "github.com/w1nsec/collector/internal/config/agent"
-	"log"
+	"github.com/w1nsec/collector/internal/logger"
 )
 
 func main() {
@@ -12,15 +12,21 @@ func main() {
 	var (
 		addr                         string
 		pollInterval, reportInterval int
+		loggerLevel                  = "info"
 	)
 
 	config.AgentSelectArgs(&addr, &pollInterval, &reportInterval)
-
-	mAgent, err := agent.NewAgent(addr, pollInterval, reportInterval)
+	err := logger.Initialize(loggerLevel)
 	if err != nil {
-		fmt.Println(err)
+		log.Error().Err(err).Send()
 		return
 	}
-	log.Fatal(mAgent.Start())
+	mAgent, err := agent.NewAgent(addr, pollInterval, reportInterval)
+	if err != nil {
+		log.Error().Err(err).Send()
+		return
+	}
+	err = mAgent.Start()
+	log.Fatal().Err(err).Send()
 
 }
