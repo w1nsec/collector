@@ -3,14 +3,15 @@ package handlers
 import (
 	"fmt"
 	"github.com/go-chi/chi/v5"
-	"github.com/w1nsec/collector/internal/storage/memstorage"
+	"github.com/rs/zerolog/log"
+	"github.com/w1nsec/collector/internal/storage"
 	"net/http"
 	"strconv"
 	"strings"
 )
 
 // UpdateMetricsHandle is handler for "/update/" (for http.NewServeMux())
-func UpdateMetricsHandle(store memstorage.Storage) http.HandlerFunc {
+func UpdateMetricsHandle(store storage.Storage) http.HandlerFunc {
 	return func(rw http.ResponseWriter, r *http.Request) {
 		metricsInfo, found := strings.CutPrefix(r.URL.Path, "/update/")
 
@@ -56,25 +57,28 @@ func UpdateMetricsHandle(store memstorage.Storage) http.HandlerFunc {
 	}
 }
 
-func UpdateGaugeHandle(store memstorage.Storage) http.HandlerFunc {
-	return func(rw http.ResponseWriter, r *http.Request) {
+func UpdateGaugeHandle(store storage.Storage) http.HandlerFunc {
+	return func(wr http.ResponseWriter, r *http.Request) {
 		name := chi.URLParam(r, "name")
 		value := chi.URLParam(r, "value")
 
 		val, err := strconv.ParseFloat(value, 64)
 		if err != nil {
-			rw.WriteHeader(http.StatusBadRequest)
+			wr.WriteHeader(http.StatusBadRequest)
 			return
 		}
-		store.UpdateGauges(name, val)
-		//fmt.Println(store)
-
-		fmt.Println(store)
-		rw.WriteHeader(http.StatusOK)
+		err = store.UpdateGauges(name, val)
+		if err != nil {
+			wr.WriteHeader(http.StatusInternalServerError)
+			log.Error().
+				Err(err).Send()
+			return
+		}
+		wr.WriteHeader(http.StatusOK)
 	}
 }
 
-func UpdateCounterHandle(store memstorage.Storage) http.HandlerFunc {
+func UpdateCounterHandle(store storage.Storage) http.HandlerFunc {
 	return func(rw http.ResponseWriter, r *http.Request) {
 		name := chi.URLParam(r, "name")
 		value := chi.URLParam(r, "value")

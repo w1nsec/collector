@@ -5,13 +5,13 @@ import (
 	"fmt"
 	"github.com/rs/zerolog/log"
 	"github.com/w1nsec/collector/internal/metrics"
-	"github.com/w1nsec/collector/internal/storage/memstorage"
+	"github.com/w1nsec/collector/internal/service"
 	"io"
 	"net/http"
 	"strings"
 )
 
-func JSONUpdateOneMetricHandler(store memstorage.Storage) func(w http.ResponseWriter, r *http.Request) {
+func JSONUpdateOneMetricHandler(store *service.MetricService) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		if r.Method != http.MethodPost {
@@ -76,12 +76,19 @@ func JSONUpdateOneMetricHandler(store memstorage.Storage) func(w http.ResponseWr
 			return
 		}
 
-		store.UpdateMetric(metric)
+		err = store.UpdateMetric(metric)
+		if err != nil {
+			log.Error().
+				Err(err).
+				Msg("can't update metric")
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
 
 		// Debug version
 		// TODO change request metrics by name to:  body-request -> body-response resent (when debug done)
 
-		retMetric := store.GetMetric(metric.ID, metric.MType)
+		retMetric, _ := store.GetMetric(metric.ID, metric.MType)
 		if retMetric == nil {
 			log.Error().
 				Err(fmt.Errorf("metric \"%s\" not found in store",
@@ -115,7 +122,7 @@ func JSONUpdateOneMetricHandler(store memstorage.Storage) func(w http.ResponseWr
 	}
 }
 
-func JSONGetMetricHandler(store memstorage.Storage) func(w http.ResponseWriter, r *http.Request) {
+func JSONGetMetricHandler(service *service.MetricService) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		if r.Method != http.MethodPost {
@@ -164,7 +171,7 @@ func JSONGetMetricHandler(store memstorage.Storage) func(w http.ResponseWriter, 
 		log.Info().
 			RawJSON("metric", body).
 			Str("method", r.Method).
-			Str("url", r.URL.RawPath).
+			Str("url", r.URL.RequestURI()).
 			Msg("Request")
 
 		// Debug version
@@ -192,10 +199,10 @@ func JSONGetMetricHandler(store memstorage.Storage) func(w http.ResponseWriter, 
 			return
 		}
 
-		retMetric := store.GetMetric(metric.ID, metric.MType)
+		retMetric, _ := service.GetMetric(metric.ID, metric.MType)
 		if retMetric == nil {
 			log.Error().
-				Err(fmt.Errorf("metric \"%s\" not found in store",
+				Err(fmt.Errorf("metric \"%s\" not found in service",
 					metric.ID)).Send()
 			w.WriteHeader(http.StatusNotFound)
 			return
@@ -215,6 +222,112 @@ func JSONGetMetricHandler(store memstorage.Storage) func(w http.ResponseWriter, 
 
 		w.Header().Set("content-type", "application/json")
 		_, err = w.Write(body)
+		if err != nil {
+			log.Error().
+				Err(err).Send()
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		w.WriteHeader(http.StatusOK)
+	}
+}
+
+// increment 12
+func JSONUpdateMetricsHandler(service *service.MetricService) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		if r.Method != http.MethodPost {
+			log.Error().
+				Err(fmt.Errorf("wrong method for %s", r.URL.RawPath)).
+				Send()
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		valid := false
+		vals := r.Header.Values("content-type")
+		for _, val := range vals {
+			if strings.Contains(val, "application/json") {
+				valid = true
+				break
+			}
+		}
+		if !valid {
+			log.Error().
+				Err(fmt.Errorf("invalid \"content-type\": %s", strings.Join(vals, ";"))).
+				Send()
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		var newMetrics = make([]*metrics.Metrics, 0)
+
+		err := json.NewDecoder(r.Body).Decode(&newMetrics)
+		if err != nil {
+			log.Error().
+				Err(err).Send()
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		defer r.Body.Close()
+
+		//log.Info().
+		//	RawJSON("metric", body).
+		//	Msg("Request")
+
+		// check repeats
+		mNames := make(map[string]string, 0)
+
+		// Check, that metric contains values
+		errors := make([]string, 0)
+		for ind, m := range newMetrics {
+			if (m.Delta == nil && m.Value == nil) ||
+				m.ID == "" {
+				err := fmt.Errorf("metric \"%s\"doesn't contain any value", m.ID)
+				log.Error().
+					Err(err).Send()
+
+				// delete wrong metric
+				newMetrics = metrics.Delete(newMetrics, ind)
+
+				errors = append(errors, err.Error())
+				continue
+			}
+			mNames[m.ID] = m.MType
+
+		}
+
+		// log errors
+		if len(errors) != 0 {
+			log.Error().
+				Err(fmt.Errorf(strings.Join(errors, " | "))).
+				Send()
+		}
+
+		err = service.UpdateMetrics(r.Context(), newMetrics)
+		if err != nil {
+			log.Error().
+				Err(err).
+				Send()
+			io.WriteString(w, "Don't save any metric")
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		// Get updated metrics
+		updatedMetrics := make([]*metrics.Metrics, 0)
+		for mName, mType := range mNames {
+			metric, err := service.GetMetric(mName, mType)
+			if err != nil {
+				log.Error().Err(err).Send()
+				continue
+			}
+			updatedMetrics = append(updatedMetrics, metric)
+		}
+
+		w.Header().Set("content-type", "application/json")
+		err = json.NewEncoder(w).Encode(updatedMetrics)
 		if err != nil {
 			log.Error().
 				Err(err).Send()

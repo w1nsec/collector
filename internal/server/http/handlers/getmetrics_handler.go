@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"github.com/go-chi/chi/v5"
 	"github.com/rs/zerolog/log"
-	"github.com/w1nsec/collector/internal/storage/memstorage"
+	"github.com/w1nsec/collector/internal/storage"
 	"net/http"
 )
 
-func GetMetric(store memstorage.Storage) http.HandlerFunc {
+func GetMetric(store storage.Storage) http.HandlerFunc {
 	return func(rw http.ResponseWriter, r *http.Request) {
 		mType := chi.URLParam(r, "mType")
 		mName := chi.URLParam(r, "mName")
@@ -33,7 +33,7 @@ func GetMetric(store memstorage.Storage) http.HandlerFunc {
 	}
 }
 
-func GetAllMetrics(store memstorage.Storage) http.HandlerFunc {
+func GetAllMetrics(store storage.Storage) http.HandlerFunc {
 	return func(rw http.ResponseWriter, r *http.Request) {
 		page := fmt.Sprintf("<html><body>%s</body></html>", store.String())
 		rw.Header().Set("content-type", "text/html")

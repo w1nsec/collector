@@ -3,6 +3,10 @@ SERVER=cmd/server/server
 PORT=16738
 FSPATH=/tmp/temp.db
 
+DB_ADDR=localhost
+DB_USER=user
+DB_PASS=password
+DB=mydb
 
 all: clean server agent
 
@@ -63,3 +67,43 @@ check9:
                 -server-port=${PORT} \
                 -file-storage-path=${FSPATH} \
                 -source-path=.
+
+
+check10:
+	metricstest -test.v -test.run=^TestIteration10[AB]$$ \
+                -agent-binary-path=${AGENT} \
+                -binary-path=${SERVER} \
+                -server-port=${PORT} \
+                -file-storage-path=${FSPATH} \
+                -source-path=. \
+                -database-dsn="${DB_USER}:${DB_PASS}@${DB_ADDR}/${DB}"
+
+
+check11:
+	metricstest -test.v -test.run=^TestIteration11$$ \
+                -agent-binary-path=${AGENT} \
+                -binary-path=${SERVER} \
+                -server-port=${PORT} \
+                -file-storage-path=${FSPATH} \
+                -source-path=. \
+                -database-dsn="postgres://${DB_USER}:${DB_PASS}@${DB_ADDR}/${DB}"
+
+
+check12:
+	metricstest -test.v -test.run=^TestIteration12$$ \
+                -agent-binary-path=${AGENT} \
+                -binary-path=${SERVER} \
+                -server-port=${PORT} \
+                -file-storage-path=${FSPATH} \
+                -source-path=. \
+                -database-dsn="postgres://${DB_USER}:${DB_PASS}@${DB_ADDR}/${DB}"
+
+check13:
+	metricstest -test.v -test.run=^TestIteration13$$ \
+                -agent-binary-path=${AGENT} \
+                -binary-path=${SERVER} \
+                -server-port=${PORT} \
+                -file-storage-path=${FSPATH} \
+                -source-path=. \
+                -database-dsn="postgres://${DB_USER}:${DB_PASS}@${DB_ADDR}/${DB}"
+

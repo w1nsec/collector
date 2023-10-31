@@ -2,9 +2,11 @@ package filestorage
 
 import (
 	"bufio"
+	"context"
 	"encoding/json"
 	"github.com/rs/zerolog/log"
 	"github.com/w1nsec/collector/internal/metrics"
+	"github.com/w1nsec/collector/internal/storage"
 	"github.com/w1nsec/collector/internal/storage/memstorage"
 	"os"
 	"sync"
@@ -14,19 +16,19 @@ type FileStorageInterface interface {
 	//memstorage.Storage
 	Load() error
 	SaveAll() error
-	Close() error
+	Close(context.Context) error
 	//Save(myMetrics metrics.MyMetrics) err
 }
 
 type FileStorage struct {
-	memstorage.Storage
+	storage.Storage
 
 	filePath string
 	file     *os.File
 	mutex    *sync.Mutex
 }
 
-func (f FileStorage) Close() error {
+func (f FileStorage) Close(context.Context) error {
 	return f.file.Close()
 }
 
@@ -77,7 +79,7 @@ func (f FileStorage) SaveAll() error {
 	}
 	f.file.Truncate(0)
 	f.file.Seek(0, 0)
-	mSlice := f.Storage.GetAllMetrics()
+	mSlice, _ := f.Storage.GetAllMetrics()
 	for _, metric := range mSlice {
 		encoder := json.NewEncoder(f.file)
 		err := encoder.Encode(metric)
@@ -90,7 +92,7 @@ func (f FileStorage) SaveAll() error {
 	return nil
 }
 
-func NewFileStorage(path string, storage memstorage.Storage) (FileStorageInterface, error) {
+func NewFileStorage(path string, storage storage.Storage) (FileStorageInterface, error) {
 	file, err := os.OpenFile(path, os.O_RDWR|os.O_APPEND|os.O_CREATE, 0666)
 	if err != nil {
 		return nil, err

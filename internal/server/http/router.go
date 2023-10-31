@@ -1,14 +1,14 @@
-package service
+package http
 
 import (
-	"fmt"
 	"github.com/go-chi/chi/v5"
-	"github.com/w1nsec/collector/internal/handlers"
-	"github.com/w1nsec/collector/internal/middlewares"
+	"github.com/w1nsec/collector/internal/server/http/handlers"
+	"github.com/w1nsec/collector/internal/server/http/middlewares"
+	"github.com/w1nsec/collector/internal/service"
 	"net/http"
 )
 
-func NewRouter(service Service) http.Handler {
+func NewRouter(service *service.MetricService) http.Handler {
 	r := chi.NewRouter()
 
 	// middlewares
@@ -47,6 +47,8 @@ func NewRouter(service Service) http.Handler {
 		r.NotFound(handlers.BadRequest)
 	})
 
+	r.Post("/updates/", handlers.JSONUpdateMetricsHandler(service))
+
 	r.Route("/value/", func(r chi.Router) {
 		//r.Use(middlewares.LoggingMiddleware)
 
@@ -56,9 +58,15 @@ func NewRouter(service Service) http.Handler {
 	})
 
 	/// increment 6 testing
-	r.Route("/ping", func(r chi.Router) {
+	r.Route("/echoping", func(r chi.Router) {
 		//r.Use(middlewares.LoggingMiddleware)
 		r.Get("/", handlers.Pong)
+	})
+
+	/// increment 10
+	r.Route("/ping", func(r chi.Router) {
+		//r.Use(middlewares.LoggingMiddleware)
+		r.Get("/", handlers.CheckDBConnectionHandler(service))
 	})
 
 	return r
@@ -66,7 +74,7 @@ func NewRouter(service Service) http.Handler {
 
 func printMidl(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println(r.URL.Path)
+		//fmt.Println(r.URL.Path)
 		next.ServeHTTP(w, r)
 	})
 }

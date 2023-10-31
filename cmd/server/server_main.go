@@ -1,25 +1,23 @@
 package main
 
 import (
+	"context"
 	"github.com/rs/zerolog/log"
-	"github.com/w1nsec/collector/internal/config"
-	"github.com/w1nsec/collector/internal/service"
+	"github.com/w1nsec/collector/internal/app"
+	"os"
+	"os/signal"
+	"syscall"
 )
 
 func main() {
 
-	var args config.Args
+	ctx, stop := signal.NotifyContext(context.Background(),
+		syscall.SIGINT, syscall.SIGTERM, syscall.SIGKILL, os.Interrupt)
+	defer stop()
 
-	config.ServerArgsParse(&args)
-	log.Info().
-		Str("addr", args.Addr).
-		Str("log", args.LogLevel).Send()
-
-	Service, err := service.NewService(args)
+	serverApp, err := app.NewAppServer()
 	if err != nil {
 		log.Fatal().Err(err).Send()
-
 	}
-
-	log.Fatal().Err(Service.Start()).Send()
+	log.Fatal().Err(serverApp.Run(ctx)).Send()
 }
