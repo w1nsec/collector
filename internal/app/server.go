@@ -110,7 +110,7 @@ func (app appServer) Run(ctx context.Context) error {
 func (app *appServer) Stop(ctx context.Context) error {
 	if app.service.FileStorageInterface != nil {
 		log.Error().
-			Err(app.service.FileStorageInterface.SaveAll()).
+			Err(app.service.FileStorageInterface.SaveAll(ctx)).
 			Msg("fs-storage saving status")
 		log.Error().
 			Err(app.service.FileStorageInterface.Close(ctx)).

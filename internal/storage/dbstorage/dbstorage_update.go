@@ -8,7 +8,7 @@ import (
 	"github.com/w1nsec/collector/internal/metrics"
 )
 
-func (pgStorage postgresStorage) UpdateCounters(name string, value int64) error {
+func (pgStorage postgresStorage) UpdateCounters(ctx context.Context, name string, value int64) error {
 	query := fmt.Sprintf("update %s set value = value + $1 where id = $2", Counters)
 	result, err := pgStorage.db.ExecContext(pgStorage.dbCtx, query, value, name)
 	if err != nil {
@@ -26,7 +26,7 @@ func (pgStorage postgresStorage) UpdateCounters(name string, value int64) error 
 	return nil
 }
 
-func (pgStorage postgresStorage) UpdateGauges(name string, value float64) error {
+func (pgStorage postgresStorage) UpdateGauges(ctx context.Context, name string, value float64) error {
 	query := fmt.Sprintf("update %s set value = $1 where id = $2", Gauges)
 	result, err := pgStorage.db.ExecContext(pgStorage.dbCtx, query, value, name)
 	if err != nil {
@@ -45,7 +45,7 @@ func (pgStorage postgresStorage) UpdateGauges(name string, value float64) error 
 	return nil
 }
 
-func (pgStorage postgresStorage) UpdateMetric(newMetric *metrics.Metrics) error {
+func (pgStorage postgresStorage) UpdateMetric(ctx context.Context, newMetric *metrics.Metrics) error {
 	var result sql.Result
 	var err error
 	switch newMetric.MType {
@@ -69,7 +69,7 @@ func (pgStorage postgresStorage) UpdateMetric(newMetric *metrics.Metrics) error 
 			//return fmt.Errorf("expected to affect 1 row, affected %d", num)
 
 			// try to add metric
-			err = pgStorage.AddMetric(newMetric)
+			err = pgStorage.AddMetric(ctx, newMetric)
 			return err
 		}
 	}
@@ -106,7 +106,7 @@ func (pgStorage postgresStorage) UpdateMetrics(ctx context.Context, newMetrics [
 	return tx.Commit()
 }
 
-func (pgStorage postgresStorage) AddMetric(newMetric *metrics.Metrics) error {
+func (pgStorage postgresStorage) AddMetric(ctx context.Context, newMetric *metrics.Metrics) error {
 	var result sql.Result
 	var err error
 	var query = "INSERT into %s (id, value) values ($1, $2)"

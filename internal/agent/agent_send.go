@@ -2,6 +2,7 @@ package agent
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"github.com/rs/zerolog/log"
@@ -83,7 +84,7 @@ func (agent Agent) SendAllMetricsJSON() error {
 	data := make([]byte, 0)
 	buf := bytes.NewBuffer(data)
 	encoder := json.NewEncoder(buf)
-	all, err := agent.store.GetAllMetrics()
+	all, err := agent.store.GetAllMetrics(context.TODO())
 	if err != nil {
 		return err
 	}

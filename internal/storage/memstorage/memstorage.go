@@ -23,7 +23,7 @@ func (ms *MemStorage) Close(context.Context) error {
 	return nil
 }
 
-func (ms *MemStorage) Init() error {
+func (ms *MemStorage) Init(ctx context.Context) error {
 	if ms.dataGauges == nil {
 		ms.dataGauges = make(map[string]float64)
 	}
@@ -33,11 +33,11 @@ func (ms *MemStorage) Init() error {
 	return nil
 }
 
-func (ms *MemStorage) CheckStorage() error {
-	return ms.Init()
+func (ms *MemStorage) CheckStorage(ctx context.Context) error {
+	return ms.Init(ctx)
 }
 
-func (ms *MemStorage) String() string {
+func (ms *MemStorage) String(ctx context.Context) string {
 	var s1 = "[counters]\n"
 	var s2 = "[gauges]\n"
 	count := 0
@@ -66,7 +66,7 @@ func (ms *MemStorage) String() string {
 
 }
 
-func (ms *MemStorage) UpdateMetric(newMetric *metrics.Metrics) error {
+func (ms *MemStorage) UpdateMetric(ctx context.Context, newMetric *metrics.Metrics) error {
 	switch newMetric.MType {
 	case metrics.Gauge:
 		ms.dataGauges[newMetric.ID] = *newMetric.Value
@@ -78,12 +78,12 @@ func (ms *MemStorage) UpdateMetric(newMetric *metrics.Metrics) error {
 	return nil
 }
 
-func (ms *MemStorage) AddMetric(newMetric *metrics.Metrics) error {
-	ms.UpdateMetric(newMetric)
+func (ms *MemStorage) AddMetric(ctx context.Context, newMetric *metrics.Metrics) error {
+	ms.UpdateMetric(ctx, newMetric)
 	return nil
 }
 
-func (ms MemStorage) GetMetricString(mType, mName string) string {
+func (ms MemStorage) GetMetricString(ctx context.Context, mType, mName string) string {
 	switch mType {
 	case metrics.Gauge:
 		val, ok := ms.dataGauges[mName]
@@ -101,7 +101,7 @@ func (ms MemStorage) GetMetricString(mType, mName string) string {
 	return ""
 }
 
-func (ms MemStorage) GetMetric(mName string, mType string) (*metrics.Metrics, error) {
+func (ms MemStorage) GetMetric(ctx context.Context, mName string, mType string) (*metrics.Metrics, error) {
 	switch mType {
 	case metrics.Gauge:
 		// for gauges
@@ -132,7 +132,7 @@ func (ms MemStorage) GetMetric(mName string, mType string) (*metrics.Metrics, er
 	return nil, errNotFound
 }
 
-func (ms MemStorage) GetOneMetric(mName string) *metrics.Metrics {
+func (ms MemStorage) GetOneMetric(ctx context.Context, mName string) *metrics.Metrics {
 	//for i, metric := range ms.metrics {
 	//	if metric.MType == mName {
 	//		return ms.metrics[i]
@@ -173,7 +173,7 @@ func NewMemStorage() *MemStorage {
 	return ms
 }
 
-func (ms *MemStorage) GetAllMetrics() ([]*metrics.Metrics, error) {
+func (ms *MemStorage) GetAllMetrics(ctx context.Context) ([]*metrics.Metrics, error) {
 
 	metricsSlice := make([]*metrics.Metrics, 0)
 

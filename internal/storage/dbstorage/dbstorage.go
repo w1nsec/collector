@@ -39,19 +39,19 @@ type postgresStorage struct {
 	dbName   string
 }
 
-func (pgStorage postgresStorage) Init() error {
-	return pgStorage.CreateTables()
+func (pgStorage postgresStorage) Init(ctx context.Context) error {
+	return pgStorage.CreateTables(ctx)
 }
 
-func (pgStorage postgresStorage) CheckStorage() error {
-	return pgStorage.CheckConnection()
+func (pgStorage postgresStorage) CheckStorage(ctx context.Context) error {
+	return pgStorage.CheckConnection(ctx)
 }
 
-func (pgStorage postgresStorage) CreateTables() error {
+func (pgStorage postgresStorage) CreateTables(ctx context.Context) error {
 	if pgStorage.db == nil {
 		return fmt.Errorf("db not connected")
 	}
-	err := pgStorage.CheckConnection()
+	err := pgStorage.CheckConnection(ctx)
 	if err != nil {
 		return err
 	}
@@ -81,8 +81,8 @@ func (pgStorage postgresStorage) CreateTables() error {
 }
 
 // interface Storage
-func (pgStorage postgresStorage) String() string {
-	ms, err := pgStorage.GetAllMetrics()
+func (pgStorage postgresStorage) String(ctx context.Context) string {
+	ms, err := pgStorage.GetAllMetrics(ctx)
 	if err != nil {
 		return ""
 	}
@@ -102,7 +102,7 @@ func (pgStorage postgresStorage) String() string {
 	return res
 }
 
-func (pgStorage postgresStorage) GetMetricString(mType, mName string) string {
+func (pgStorage postgresStorage) GetMetricString(ctx context.Context, mType, mName string) string {
 	tbName := Counters
 	if mType == metrics.Gauge {
 		tbName = Gauges
@@ -125,7 +125,7 @@ func (pgStorage postgresStorage) GetMetricString(mType, mName string) string {
 
 }
 
-func (pgStorage postgresStorage) GetMetric(mName string, mType string) (*metrics.Metrics, error) {
+func (pgStorage postgresStorage) GetMetric(ctx context.Context, mName string, mType string) (*metrics.Metrics, error) {
 	tbName := Counters
 	if mType == metrics.Gauge {
 		tbName = Gauges
@@ -169,7 +169,7 @@ func (pgStorage postgresStorage) GetMetric(mName string, mType string) (*metrics
 
 }
 
-func (pgStorage postgresStorage) GetAllMetrics() ([]*metrics.Metrics, error) {
+func (pgStorage postgresStorage) GetAllMetrics(ctx context.Context) ([]*metrics.Metrics, error) {
 	var (
 		ms = make([]*metrics.Metrics, 0)
 	)
@@ -210,7 +210,7 @@ func (pgStorage postgresStorage) Close(context.Context) error {
 	return pgStorage.db.Close()
 }
 
-func (pgStorage postgresStorage) CheckConnection() error {
+func (pgStorage postgresStorage) CheckConnection(ctx context.Context) error {
 	//connectString := fmt.Sprintf("host=%s user=%s password=%s dbname=%s sslmode=disable",
 	//	pgStorage.addr, pgStorage.username, pgStorage.password, pgStorage.dbName)
 

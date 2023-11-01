@@ -1,6 +1,7 @@
 package agent
 
 import (
+	"context"
 	"github.com/rs/zerolog/log"
 	"github.com/w1nsec/collector/internal/metrics"
 	"math/rand"
@@ -72,6 +73,7 @@ func (agent Agent) GetMetrics() {
 
 // using storage in collection
 func (agent Agent) CollectMetrics() {
+	ctx := context.TODO()
 
 	m := runtime.MemStats{}
 	runtime.ReadMemStats(&m)
@@ -92,7 +94,7 @@ func (agent Agent) CollectMetrics() {
 		if structVal.CanFloat() {
 			val = structVal.Float()
 		}
-		err := agent.store.UpdateMetric(&metrics.Metrics{
+		err := agent.store.UpdateMetric(ctx, &metrics.Metrics{
 			ID:    name,
 			MType: metrics.Gauge,
 			Delta: nil,
@@ -108,7 +110,7 @@ func (agent Agent) CollectMetrics() {
 	// Addition metrics
 	// increase poll counter
 	val := int64(1)
-	err := agent.store.UpdateMetric(&metrics.Metrics{
+	err := agent.store.UpdateMetric(ctx, &metrics.Metrics{
 		ID:    "PollCount",
 		Delta: &val,
 		MType: metrics.Counter,
@@ -120,7 +122,7 @@ func (agent Agent) CollectMetrics() {
 	// random value
 	r := rand.New(rand.NewSource(time.Now().Unix()))
 	randVal := float64(r.Intn(1000)) + r.Float64()
-	err = agent.store.UpdateMetric(&metrics.Metrics{
+	err = agent.store.UpdateMetric(ctx, &metrics.Metrics{
 		ID:    "RandomValue",
 		Value: &randVal,
 		MType: metrics.Gauge,

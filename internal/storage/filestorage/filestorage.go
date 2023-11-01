@@ -14,9 +14,9 @@ import (
 
 type FileStorageInterface interface {
 	//memstorage.Storage
-	Load() error
-	SaveAll() error
-	Close(context.Context) error
+	Load(ctx context.Context) error
+	SaveAll(ctx context.Context) error
+	Close(ctx context.Context) error
 	//Save(myMetrics metrics.MyMetrics) err
 }
 
@@ -32,7 +32,7 @@ func (f FileStorage) Close(context.Context) error {
 	return f.file.Close()
 }
 
-func (f FileStorage) Load() error {
+func (f FileStorage) Load(ctx context.Context) error {
 	f.mutex.Lock()
 	defer f.mutex.Unlock()
 	// check that file exists, or already opened
@@ -53,7 +53,7 @@ func (f FileStorage) Load() error {
 		if err != nil {
 			return err
 		}
-		f.Storage.UpdateMetric(metric)
+		f.Storage.UpdateMetric(ctx, metric)
 
 		metric = nil
 	}
@@ -63,7 +63,7 @@ func (f FileStorage) Load() error {
 	return nil
 }
 
-func (f FileStorage) SaveAll() error {
+func (f FileStorage) SaveAll(ctx context.Context) error {
 	f.mutex.Lock()
 	defer f.mutex.Unlock()
 	// check that file exists, or already opened
@@ -79,7 +79,7 @@ func (f FileStorage) SaveAll() error {
 	}
 	f.file.Truncate(0)
 	f.file.Seek(0, 0)
-	mSlice, _ := f.Storage.GetAllMetrics()
+	mSlice, _ := f.Storage.GetAllMetrics(ctx)
 	for _, metric := range mSlice {
 		encoder := json.NewEncoder(f.file)
 		err := encoder.Encode(metric)
