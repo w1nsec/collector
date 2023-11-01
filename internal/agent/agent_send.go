@@ -148,10 +148,17 @@ func (agent Agent) SendData(data []byte, headers map[string]string, relURL strin
 	if err != nil {
 		return err
 	}
-	log.Info().
-		Str("url", relURL).
-		RawJSON("body", body).
-		Msg("Receive: ")
+	if compressionStatus {
+		log.Info().
+			Str("url", relURL).
+			Str("body", "gzip").
+			Msg("Response:")
+	} else {
+		log.Info().
+			Str("url", relURL).
+			RawJSON("body", body).
+			Msg("Response:")
+	}
 
 	return nil
 }

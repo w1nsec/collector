@@ -33,25 +33,27 @@ func (s signingMidl) Signing(next http.Handler) http.Handler {
 		// if request doesn't contain need header
 		headerVal := r.Header.Get(s.hmacHeader)
 		if headerVal == "" {
-			w.WriteHeader(http.StatusInternalServerError)
+			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 
 		// check signing
-		data := make([]byte, 0)
-		buf := bytes.NewBuffer(data)
+		buf := bytes.NewBuffer(nil)
 		_, err := io.Copy(buf, r.Body)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			log.Error().Err(err).Send()
 			return
 		}
+
 		if !signing.CheckSigning(buf.Bytes(), []byte(headerVal), []byte(s.secret)) {
 			w.WriteHeader(http.StatusBadRequest)
 			log.Error().Err(errWrongSigning).Send()
 			return
 		}
 
+		newBody := io.NopCloser(buf)
+		r.Body = newBody
 		next.ServeHTTP(w, r)
 
 	})

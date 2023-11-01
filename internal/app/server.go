@@ -84,7 +84,7 @@ func (app appServer) Run(ctx context.Context) error {
 	<-ctx.Done()
 
 	log.Info().Str("signal", "Ctlr+C").Send()
-	shutdownCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	shutdownCtx, cancel := context.WithTimeout(ctx, 15*time.Second)
 	defer cancel()
 
 	longShutdown := make(chan struct{}, 1)

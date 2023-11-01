@@ -8,6 +8,9 @@ DB_USER=user
 DB_PASS=password
 DB=mydb
 
+KEY=supersecret
+
+
 all: clean server agent
 
 
@@ -106,4 +109,15 @@ check13:
                 -file-storage-path=${FSPATH} \
                 -source-path=. \
                 -database-dsn="postgres://${DB_USER}:${DB_PASS}@${DB_ADDR}/${DB}"
+
+check14:
+	metricstest -test.v -test.run=^TestIteration14$$ \
+                -agent-binary-path=${AGENT} \
+                -binary-path=${SERVER} \
+                -server-port=${PORT} \
+                -file-storage-path=${FSPATH} \
+                -source-path=. \
+                -database-dsn="postgres://${DB_USER}:${DB_PASS}@${DB_ADDR}/${DB}" \
+                -key="${KEY}"
+
 
