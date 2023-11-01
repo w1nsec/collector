@@ -12,9 +12,35 @@ const (
 	defaultReportInterval = 10 * time.Second
 )
 
-func AgentSelectArgs(addr *string, pollInterval, reportInterval *int) {
+type Args struct {
+	Addr           string
+	PollInterval   int
+	ReportInterval int
+	Key            string
+
+	LogLevel string
+}
+
+func AgentSelectArgs(args *Args) {
+	// set log level
+	args.LogLevel = "info"
+
+	// get OS Environment variables
+	args.Addr = os.Getenv("ADDRESS")
+	envPoll, err := strconv.Atoi(os.Getenv("POLL_INTERVAL"))
+	if err == nil {
+		args.PollInterval = envPoll
+	}
+	envRep, err := strconv.Atoi(os.Getenv("REPORT_INTERVAL"))
+	if err == nil {
+		args.ReportInterval = envRep
+	}
+
+	args.Key = os.Getenv("KEY")
+
+	// check flags
 	var (
-		flagAddr          string
+		flagAddr, flagKey string
 		flagPoll, flagRep int
 	)
 	flag.StringVar(&flagAddr, "a", "localhost:8080",
@@ -23,23 +49,24 @@ func AgentSelectArgs(addr *string, pollInterval, reportInterval *int) {
 		"frequency of gathering metrics")
 	flag.IntVar(&flagRep, "r", int(defaultReportInterval.Seconds()),
 		"frequency of sending metrics")
+	flag.StringVar(&flagKey, "k", "",
+		"salt for hash")
+
 	flag.Parse()
 
-	if *addr = os.Getenv("ADDRESS"); *addr == "" {
-		*addr = flagAddr
+	if args.Addr == "" {
+		args.Addr = flagAddr
 	}
 
-	envPoll, err := strconv.Atoi(os.Getenv("POLL_INTERVAL"))
-	if err == nil {
-		*pollInterval = envPoll
-	} else {
-		*pollInterval = flagPoll
+	if args.PollInterval == 0 {
+		args.PollInterval = flagPoll
+	}
+	if args.ReportInterval == 0 {
+		args.ReportInterval = flagRep
 	}
 
-	envRep, err := strconv.Atoi(os.Getenv("REPORT_INTERVAL"))
-	if err == nil {
-		*reportInterval = envRep
-	} else {
-		*reportInterval = flagRep
+	if args.Key == "" {
+		args.Key = flagKey
 	}
+
 }

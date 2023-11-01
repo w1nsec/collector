@@ -10,18 +10,16 @@ import (
 func main() {
 
 	var (
-		addr                         string
-		pollInterval, reportInterval int
-		loggerLevel                  = "info"
+		args config.Args
 	)
 
-	config.AgentSelectArgs(&addr, &pollInterval, &reportInterval)
-	err := logger.Initialize(loggerLevel)
+	config.AgentSelectArgs(&args)
+	err := logger.Initialize(args.LogLevel)
 	if err != nil {
 		log.Error().Err(err).Send()
 		return
 	}
-	mAgent, err := agent.NewAgent(addr, pollInterval, reportInterval)
+	mAgent, err := agent.NewAgent(args)
 	if err != nil {
 		log.Error().Err(err).Send()
 		return

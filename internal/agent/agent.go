@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/rs/zerolog/log"
+	config "github.com/w1nsec/collector/internal/config/agent"
 	"github.com/w1nsec/collector/internal/metrics"
 	"github.com/w1nsec/collector/internal/storage"
 	"github.com/w1nsec/collector/internal/storage/memstorage"
@@ -62,10 +63,13 @@ type Agent struct {
 	// increment 13
 	retryCount uint
 	retryStep  uint
+
+	// increment 14
+	secret string
 }
 
-func NewAgent(addr string, pollInterval, reportInterval int) (*Agent, error) {
-	netAddr, err := net.ResolveTCPAddr("tcp", addr)
+func NewAgent(args config.Args) (*Agent, error) {
+	netAddr, err := net.ResolveTCPAddr("tcp", args.Addr)
 	if err != nil {
 		return nil, err
 	}
@@ -74,8 +78,8 @@ func NewAgent(addr string, pollInterval, reportInterval int) (*Agent, error) {
 		addr:           netAddr,
 		metricsPoint:   "update",
 		metrics:        make(map[string]metrics.MyMetrics),
-		pollInterval:   time.Duration(pollInterval) * time.Second,
-		reportInterval: time.Duration(reportInterval) * time.Second,
+		pollInterval:   time.Duration(args.PollInterval) * time.Second,
+		reportInterval: time.Duration(args.ReportInterval) * time.Second,
 
 		store:      memstorage.NewMemStorage(),
 		httpClient: &http.Client{Timeout: timeout},
@@ -83,6 +87,9 @@ func NewAgent(addr string, pollInterval, reportInterval int) (*Agent, error) {
 		// increment 13
 		retryCount: maxRetryCount,
 		retryStep:  retryStep,
+
+		// increment 14
+		secret: args.Key,
 	}
 
 	return agent, nil
