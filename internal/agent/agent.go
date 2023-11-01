@@ -92,6 +92,7 @@ func NewAgent(args config.Args) (*Agent, error) {
 		secret: args.Key,
 	}
 
+	agent.compression = true
 	return agent, nil
 }
 

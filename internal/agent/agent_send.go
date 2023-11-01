@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"github.com/rs/zerolog/log"
 	"github.com/w1nsec/collector/internal/metrics"
-	"github.com/w1nsec/collector/internal/utils/compression/gzip"
+	locgzip "github.com/w1nsec/collector/internal/utils/compression/gzip"
 	"io"
 	"net/http"
 )
@@ -106,7 +106,7 @@ func (agent Agent) SendData(data []byte, headers map[string]string, relURL strin
 	var buffer = bytes.NewBuffer(data)
 	compressionStatus := false
 	if agent.compression {
-		compressed, err := gzip.Compress(data)
+		compressed, err := locgzip.Compress(data)
 		if err == nil {
 			buffer = bytes.NewBuffer(compressed)
 			compressionStatus = true
