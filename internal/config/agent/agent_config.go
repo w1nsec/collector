@@ -50,7 +50,7 @@ func AgentSelectArgs(args *Args) {
 	flag.IntVar(&flagRep, "r", int(defaultReportInterval.Seconds()),
 		"frequency of sending metrics")
 	flag.StringVar(&flagKey, "k", "",
-		"salt for hash")
+		"salt for hmac")
 
 	flag.Parse()
 

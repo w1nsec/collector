@@ -20,6 +20,9 @@ type MetricService struct {
 
 	StoreInterval time.Duration
 	Restore       bool
+
+	// iter14, hmac signing
+	Secret string
 }
 
 func (service *MetricService) CheckStorage() error {
@@ -53,6 +56,7 @@ func NewService(args server.Args, store storage.Storage,
 		FileStorageInterface: fstore,
 		Restore:              args.Restore,
 		StoreInterval:        time.Duration(args.StoreInterval) * time.Second,
+		Secret:               args.Key,
 	}
 	err := service.SetupLogger(args.LogLevel)
 	if err != nil {
