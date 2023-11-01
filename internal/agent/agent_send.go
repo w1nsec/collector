@@ -8,6 +8,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/w1nsec/collector/internal/metrics"
 	locgzip "github.com/w1nsec/collector/internal/utils/compression/gzip"
+	"github.com/w1nsec/collector/internal/utils/signing"
 	"io"
 	"net/http"
 )
@@ -75,6 +76,7 @@ func (agent Agent) SendMetricsJSON() error {
 	return nil
 }
 
+// actual (iter14)
 func (agent Agent) SendAllMetricsJSON() error {
 	var (
 		URL = "updates"
@@ -113,6 +115,9 @@ func (agent Agent) SendData(data []byte, headers map[string]string, relURL strin
 		}
 	}
 
+	// iter 14: add signing for body request
+	agent.AddSigning(buffer.Bytes(), headers)
+
 	// construct new request
 	address := fmt.Sprintf("http://%s/%s/", agent.addr.String(), relURL)
 	request, err := http.NewRequest(http.MethodPost, address, buffer)
@@ -149,4 +154,13 @@ func (agent Agent) SendData(data []byte, headers map[string]string, relURL strin
 		Msg("Receive: ")
 
 	return nil
+}
+
+func (agent Agent) AddSigning(data []byte, headers map[string]string) {
+	if agent.secret == "" {
+		return
+	}
+	sign := signing.CreateSigning(data, []byte(agent.secret))
+	headers["HashSHA256"] = string(sign)
+
 }
