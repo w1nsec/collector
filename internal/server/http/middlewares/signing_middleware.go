@@ -33,7 +33,7 @@ func (s signingMidl) Signing(next http.Handler) http.Handler {
 		// if request doesn't contain need header
 		headerVal := r.Header.Get(s.hmacHeader)
 		if headerVal == "" {
-			w.WriteHeader(http.StatusBadRequest)
+			next.ServeHTTP(w, r)
 			return
 		}
 
