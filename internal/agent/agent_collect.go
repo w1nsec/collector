@@ -14,9 +14,7 @@ import (
 )
 
 // using storage in collection
-func (agent Agent) CollectMetrics() {
-	ctx := context.TODO()
-
+func (agent Agent) CollectMetrics(ctx context.Context) {
 	m := runtime.MemStats{}
 	runtime.ReadMemStats(&m)
 	values := reflect.ValueOf(m)
@@ -74,7 +72,11 @@ func (agent Agent) CollectMetrics() {
 			Err(err).Send()
 	}
 
-	// increment15 / iter15 gopsutil
+}
+
+// increment15 / iter15 gopsutil
+func (agent Agent) CollectGopsutilMetrics(ctx context.Context) {
+
 	// gather memory metrics
 	v, err := mem.VirtualMemory()
 	if err != nil {
@@ -126,5 +128,4 @@ func (agent Agent) CollectMetrics() {
 				Err(err).Send()
 		}
 	}
-
 }

@@ -1,6 +1,7 @@
 package agent
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"github.com/rs/zerolog/log"
@@ -118,8 +119,8 @@ func (agent Agent) Start() error {
 		select {
 		case t1 := <-pollTicker.C:
 			fmt.Println("Receiving:", t1.Format(time.TimeOnly))
-			//agent.GetMetrics()
-			agent.CollectMetrics()
+			ctx := context.TODO()
+			agent.CollectMetrics(ctx)
 		case t2 := <-reportTicker.C:
 			fmt.Println("- Sending:", t2.Format(time.TimeOnly))
 
