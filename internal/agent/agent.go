@@ -148,6 +148,10 @@ func (agent Agent) Start(ctx context.Context) error {
 				}
 			}
 			curErrCount = 0
+		case <-ctx.Done():
+			shutdownCtx, cancel := context.WithTimeout(ctx, 15*time.Second)
+			defer cancel()
+			return agent.store.Close(shutdownCtx)
 		}
 	}
 }

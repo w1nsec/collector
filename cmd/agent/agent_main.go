@@ -33,6 +33,9 @@ func main() {
 		return
 	}
 	err = mAgent.Start(ctx)
-	log.Fatal().Err(err).Send()
-
+	if err != nil {
+		log.Fatal().Err(err).Send()
+		return
+	}
+	log.Info().Msg("Closing agent app: successful")
 }
