@@ -97,7 +97,7 @@ func NewAgent(args config.Args) (*Agent, error) {
 	return agent, nil
 }
 
-func (agent Agent) Start() error {
+func (agent Agent) Start(ctx context.Context) error {
 
 	var (
 		curErrCount = uint(0)
@@ -119,7 +119,6 @@ func (agent Agent) Start() error {
 		select {
 		case t1 := <-pollTicker.C:
 			fmt.Println("Receiving:", t1.Format(time.TimeOnly))
-			ctx := context.TODO()
 			agent.CollectMetrics(ctx)
 		case t2 := <-reportTicker.C:
 			fmt.Println("- Sending:", t2.Format(time.TimeOnly))
