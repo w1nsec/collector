@@ -172,4 +172,25 @@ func (agent Agent) AddSigning(data []byte, headers map[string]string) {
 
 }
 
-// iter15
+// SendBatch | iter15 (such as SendAllMetricsJSON from iter14, but with args)
+func (agent Agent) SendBatch(job []*metrics.Metrics) error {
+	var (
+		URL = "updates"
+	)
+
+	// encode metrics to json
+	data := make([]byte, 0)
+	buf := bytes.NewBuffer(data)
+	encoder := json.NewEncoder(buf)
+	err := encoder.Encode(job)
+	if err != nil {
+		return err
+	}
+
+	// add http header
+	headers := map[string]string{
+		"content-type": "application/json",
+	}
+
+	return agent.SendData(buf.Bytes(), headers, URL)
+}

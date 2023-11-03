@@ -229,8 +229,8 @@ func (agent Agent) worker(id int, jobs <-chan []*metrics.Metrics, c *sync.Cond) 
 		// each worker should send ONLY ONE request to server
 		c.Wait()
 		// job == one metric batch
-		//job, ok := <-jobs
-		_, ok := <-jobs
+		job, ok := <-jobs
+		//_, ok := <-jobs
 		if !ok {
 			// close worker, if jobs channel already closed
 			return
@@ -241,6 +241,16 @@ func (agent Agent) worker(id int, jobs <-chan []*metrics.Metrics, c *sync.Cond) 
 			Int("worker", id).
 			Msg("Sending")
 
-		//agent.SendBatch(job)
+		err := agent.SendBatch(job)
+		if err != nil {
+			log.Error().
+				Int("worker", id).
+				Err(err).Send()
+			continue
+		}
+		log.Error().
+			Int("worker", id).
+			Msg("Done")
+
 	}
 }
