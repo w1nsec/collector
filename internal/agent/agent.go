@@ -67,6 +67,9 @@ type Agent struct {
 
 	// increment 14
 	secret string
+
+	// increment 15
+	rateLimit int
 }
 
 func NewAgent(args config.Args) (*Agent, error) {
@@ -91,6 +94,9 @@ func NewAgent(args config.Args) (*Agent, error) {
 
 		// increment 14
 		secret: args.Key,
+
+		// increment 15
+		rateLimit: args.Rate,
 	}
 
 	agent.compression = true
@@ -102,16 +108,6 @@ func (agent Agent) Start(ctx context.Context) error {
 	var (
 		curErrCount = uint(0)
 	)
-
-	// Receive and send for the first time
-	//fmt.Println("Receiving:", time.Now().Format(time.TimeOnly))
-	//agent.GetMetrics()
-	//fmt.Println("- Sending:", time.Now().Format(time.TimeOnly))
-	//agent.SendMetrics()
-	//err := agent.SendMetricsJSON()
-	//if err != nil {
-	//	return err
-	//}
 
 	pollTicker := time.NewTicker(agent.pollInterval)
 	reportTicker := time.NewTicker(agent.reportInterval)
