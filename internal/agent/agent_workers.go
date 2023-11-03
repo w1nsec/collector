@@ -69,16 +69,18 @@ func (agent Agent) limiter(ctx context.Context,
 	var m sync.Mutex
 	cond := sync.NewCond(&m)
 
+	// create workers
 	for i := 0; i < agent.rateLimit; i++ {
 		go agent.worker(i, metricsChannel, cond)
 	}
 
-	// create workers
+	// waiting for report time
 	for {
 		select {
 		case t2 := <-reportTicker.C:
 			fmt.Println("Sending:", t2.Format(time.TimeOnly))
 			fmt.Printf("Len: %d\n", len(metricsChannel))
+			// start workers
 			cond.Broadcast()
 
 		case <-ctx.Done():
