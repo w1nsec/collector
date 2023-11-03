@@ -2,7 +2,10 @@ package agent
 
 import (
 	"context"
+	"fmt"
 	"github.com/rs/zerolog/log"
+	"github.com/shirou/gopsutil/v3/cpu"
+	"github.com/shirou/gopsutil/v3/mem"
 	"github.com/w1nsec/collector/internal/metrics"
 	"math/rand"
 	"reflect"
@@ -70,4 +73,58 @@ func (agent Agent) CollectMetrics() {
 		log.Error().
 			Err(err).Send()
 	}
+
+	// increment15 / iter15 gopsutil
+	// gather memory metrics
+	v, err := mem.VirtualMemory()
+	if err != nil {
+		log.Error().
+			Err(err).Send()
+		return
+	}
+
+	// TotalMemory
+	totalMem := float64(v.Total)
+	err = agent.store.UpdateMetric(ctx, &metrics.Metrics{
+		ID:    "TotalMemory",
+		Value: &totalMem,
+		MType: metrics.Gauge,
+	})
+	if err != nil {
+		log.Error().
+			Err(err).Send()
+	}
+
+	// FreeMemory
+	freeMem := float64(v.Free)
+	err = agent.store.UpdateMetric(ctx, &metrics.Metrics{
+		ID:    "TotalMemory",
+		Value: &freeMem,
+		MType: metrics.Gauge,
+	})
+	if err != nil {
+		log.Error().
+			Err(err).Send()
+	}
+
+	// CPU utilization
+	utilizations, err := cpu.Percent(time.Millisecond, true)
+	if err != nil {
+		fmt.Println(err)
+		log.Error().
+			Err(err).Send()
+	}
+	metricName := "CPUutilization"
+	for ind, utiliz := range utilizations {
+		err = agent.store.UpdateMetric(ctx, &metrics.Metrics{
+			ID:    fmt.Sprintf("%s%d", metricName, ind),
+			Value: &utiliz,
+			MType: metrics.Gauge,
+		})
+		if err != nil {
+			log.Error().
+				Err(err).Send()
+		}
+	}
+
 }
