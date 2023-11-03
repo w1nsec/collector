@@ -108,7 +108,7 @@ func NewAgent(args config.Args) (*Agent, error) {
 	return agent, nil
 }
 
-func (agent Agent) Start(ctx context.Context) error {
+func (agent Agent) StartOLD(ctx context.Context) error {
 
 	var (
 		curErrCount = uint(0)
@@ -157,100 +157,28 @@ func (agent Agent) Start(ctx context.Context) error {
 	}
 }
 
-func (agent Agent) generator(ctx context.Context, metricsChannel chan []*metrics.Metrics) {
-	pollTicker := time.NewTicker(agent.pollInterval)
-	for {
-		select {
-		case t1 := <-pollTicker.C:
-			log.Info().
-				Str("time", t1.Format(time.TimeOnly)).
-				Msgf("Receiving started")
+func (agent Agent) Start(ctx context.Context) error {
 
-			wg := &sync.WaitGroup{}
-			wg.Add(2)
-			go func() {
-				agent.CollectMetrics(ctx)
-				wg.Done()
-			}()
-			go func() {
-				agent.CollectGopsutilMetrics(ctx)
-				wg.Done()
-			}()
-			wg.Wait()
-			log.Info().
-				Str("time", t1.Format(time.TimeOnly)).
-				Msgf("Receiving done")
+	// TODO maybe, metricsChannel capacity should be agent.rateLimit ??
+	metricsChannel := make(chan []*metrics.Metrics, 100)
 
-			allMetrics, err := agent.store.GetAllMetrics(ctx)
-			if err != nil {
-				log.Error().Err(err).Send()
-				continue
-			}
+	wg := &sync.WaitGroup{}
+	wg.Add(2)
 
-			// add gathered metrics to channel
-			go func() {
-				metricsChannel <- allMetrics
-			}()
-		case <-ctx.Done():
-			close(metricsChannel)
-			return
-		}
-	}
-}
+	// fill agent store
+	go func() {
+		defer wg.Done() // close goroutine
+		agent.generator(ctx, metricsChannel)
+	}()
 
-func (agent Agent) limiter(ctx context.Context, metricsChannel chan []*metrics.Metrics) {
-	reportTicker := time.NewTicker(agent.reportInterval)
-	var m sync.Mutex
-	cond := sync.NewCond(&m)
+	// create workers pull
+	go func() {
+		defer wg.Done() // close goroutine
+		agent.limiter(ctx, metricsChannel)
+	}()
 
-	for i := 0; i < agent.rateLimit; i++ {
-		go agent.worker(i, metricsChannel, cond)
-	}
+	// waiting, until goroutines not done
+	wg.Wait()
 
-	// create workers
-	for {
-		select {
-		case t2 := <-reportTicker.C:
-			fmt.Println("Sending:", t2.Format(time.TimeOnly))
-			fmt.Printf("Len: %d\n", len(metricsChannel))
-			cond.Broadcast()
-
-		case <-ctx.Done():
-			return
-		}
-	}
-}
-
-func (agent Agent) worker(id int, jobs <-chan []*metrics.Metrics, c *sync.Cond) {
-	// lock current worker
-	c.L.Lock()
-	for {
-		// worker must sleep until report time
-		// each worker should send ONLY ONE request to server
-		c.Wait()
-		// job == one metric batch
-		job, ok := <-jobs
-		//_, ok := <-jobs
-		if !ok {
-			// close worker, if jobs channel already closed
-			return
-		}
-
-		// worker work
-		log.Info().
-			Int("worker", id).
-			Msg("Sending")
-
-		err := agent.SendBatch(job)
-		if err != nil {
-			log.Error().
-				Int("worker", id).
-				Err(err).Send()
-			continue
-		}
-		log.Error().
-			Int("worker", id).
-			Msg("Done")
-
-	}
+	return nil
 }
