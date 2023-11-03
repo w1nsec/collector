@@ -59,7 +59,7 @@ func (agent Agent) generator(ctx context.Context,
 
 func (agent Agent) limiter(ctx context.Context,
 	metricsChannel chan []*metrics.Metrics) {
-
+	
 	reportTicker := time.NewTicker(agent.reportInterval)
 	var m sync.Mutex
 	cond := sync.NewCond(&m)
@@ -109,7 +109,7 @@ func (agent Agent) worker(id int, jobs <-chan []*metrics.Metrics, c *sync.Cond) 
 				Err(err).Send()
 			continue
 		}
-		log.Error().
+		log.Info().
 			Int("worker", id).
 			Msg("Done")
 
