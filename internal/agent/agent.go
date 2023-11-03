@@ -74,7 +74,9 @@ type Agent struct {
 	secret string
 
 	// increment 15
-	rateLimit int
+	rateLimit     int
+	errorsCh      chan error
+	successReport chan struct{}
 }
 
 func NewAgent(args config.Args) (*Agent, error) {
@@ -101,7 +103,9 @@ func NewAgent(args config.Args) (*Agent, error) {
 		secret: args.Key,
 
 		// increment 15
-		rateLimit: args.Rate,
+		rateLimit:     args.Rate,
+		errorsCh:      make(chan error, args.Rate),
+		successReport: make(chan struct{}, args.Rate),
 	}
 
 	agent.compression = true
@@ -159,6 +163,9 @@ func (agent Agent) StartOLD(ctx context.Context) error {
 
 func (agent Agent) Start(ctx context.Context) error {
 
+	newCtx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
 	// TODO maybe, metricsChannel capacity should be agent.rateLimit ??
 	metricsChannel := make(chan []*metrics.Metrics, 100)
 
@@ -168,17 +175,37 @@ func (agent Agent) Start(ctx context.Context) error {
 	// fill agent store
 	go func() {
 		defer wg.Done() // close goroutine
-		agent.generator(ctx, metricsChannel)
+		agent.generator(newCtx, metricsChannel)
 	}()
 
 	// create workers pull
 	go func() {
 		defer wg.Done() // close goroutine
-		agent.limiter(ctx, metricsChannel)
+		agent.limiter(newCtx, metricsChannel)
+	}()
+
+	wg.Add(1)
+	// validate errors count
+	go func() {
+		// second exec: cancel current context
+		defer cancel()
+		// first exec:  close current goroutine, decrease wg Counter
+		defer wg.Done()
+		agent.validateErrors(newCtx)
+
 	}()
 
 	// waiting, until goroutines not done
 	wg.Wait()
 
+	// TODO maybe, using context for handling agent exit is better ??
+	//<-ctx.Done()
+
 	return nil
+}
+
+func (agent Agent) Close() {
+	close(agent.errorsCh)
+	close(agent.successReport)
+	agent.store.Close(context.TODO())
 }

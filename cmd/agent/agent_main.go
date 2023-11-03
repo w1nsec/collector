@@ -37,5 +37,6 @@ func main() {
 		log.Fatal().Err(err).Send()
 		return
 	}
+	defer mAgent.Close()
 	log.Info().Msg("Closing agent app: successful")
 }

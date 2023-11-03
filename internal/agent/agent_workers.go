@@ -2,10 +2,12 @@ package agent
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/rs/zerolog/log"
 	"github.com/w1nsec/collector/internal/metrics"
 	"sync"
+	"syscall"
 	"time"
 )
 
@@ -52,6 +54,9 @@ func (agent Agent) generator(ctx context.Context,
 		case <-ctx.Done():
 			// writer should close channel
 			close(metricsChannel)
+			log.Info().
+				Str("func", "generator").
+				Msg("Closing")
 			return
 		}
 	}
@@ -59,7 +64,7 @@ func (agent Agent) generator(ctx context.Context,
 
 func (agent Agent) limiter(ctx context.Context,
 	metricsChannel chan []*metrics.Metrics) {
-	
+
 	reportTicker := time.NewTicker(agent.reportInterval)
 	var m sync.Mutex
 	cond := sync.NewCond(&m)
@@ -77,6 +82,9 @@ func (agent Agent) limiter(ctx context.Context,
 			cond.Broadcast()
 
 		case <-ctx.Done():
+			log.Info().
+				Str("func", "limiter").
+				Msg("Closing")
 			return
 		}
 	}
@@ -107,11 +115,43 @@ func (agent Agent) worker(id int, jobs <-chan []*metrics.Metrics, c *sync.Cond) 
 			log.Error().
 				Int("worker", id).
 				Err(err).Send()
+			agent.errorsCh <- err
 			continue
 		}
 		log.Info().
 			Int("worker", id).
 			Msg("Done")
+		agent.successReport <- struct{}{}
 
+	}
+}
+
+func (agent Agent) validateErrors(ctx context.Context) {
+	var (
+		curErrCount = 0
+		maxErrCount = int(agent.retryCount) * agent.rateLimit
+	)
+
+	for {
+		select {
+		// check connection
+		case err := <-agent.errorsCh:
+			if errors.Is(err, syscall.ECONNREFUSED) {
+				curErrCount++
+			}
+			log.Info().Msgf("Errors count: %d/%d", curErrCount, maxErrCount)
+			// errors should be more, as frequency sending increase
+			if curErrCount == maxErrCount {
+				return
+			}
+		case <-agent.successReport:
+			// reset count of errors
+			curErrCount = 0
+		case <-ctx.Done():
+			log.Info().
+				Str("func", "error-validator").
+				Msg("Closing")
+			return
+		}
 	}
 }
