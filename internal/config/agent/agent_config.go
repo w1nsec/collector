@@ -17,6 +17,7 @@ type Args struct {
 	PollInterval   int
 	ReportInterval int
 	Key            string
+	Rate           int
 
 	LogLevel string
 }
@@ -38,10 +39,16 @@ func AgentSelectArgs(args *Args) {
 
 	args.Key = os.Getenv("KEY")
 
+	// increment15
+	envRate, err := strconv.Atoi(os.Getenv("RATE_LIMIT"))
+	if err != nil {
+		args.Rate = envRate
+	}
+
 	// check flags
 	var (
-		flagAddr, flagKey string
-		flagPoll, flagRep int
+		flagAddr, flagKey           string
+		flagPoll, flagRep, flagRate int
 	)
 	flag.StringVar(&flagAddr, "a", "localhost:8080",
 		"address for metric server")
@@ -51,6 +58,8 @@ func AgentSelectArgs(args *Args) {
 		"frequency of sending metrics")
 	flag.StringVar(&flagKey, "k", "",
 		"salt for hmac")
+	flag.IntVar(&flagRate, "l", 2,
+		"max goroutines count")
 
 	flag.Parse()
 
@@ -67,6 +76,10 @@ func AgentSelectArgs(args *Args) {
 
 	if args.Key == "" {
 		args.Key = flagKey
+	}
+
+	if args.Rate == 0 {
+		args.Rate = flagRate
 	}
 
 }
