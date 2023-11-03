@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/w1nsec/collector/internal/metrics"
 	"strconv"
+	"sync"
 )
 
 var (
@@ -15,6 +16,7 @@ var (
 type MemStorage struct {
 	dataCounters map[string]int64
 	dataGauges   map[string]float64
+	mutex        *sync.RWMutex
 }
 
 func (ms *MemStorage) Close(context.Context) error {
@@ -24,12 +26,14 @@ func (ms *MemStorage) Close(context.Context) error {
 }
 
 func (ms *MemStorage) Init(ctx context.Context) error {
+	ms.mutex.Lock()
 	if ms.dataGauges == nil {
 		ms.dataGauges = make(map[string]float64)
 	}
 	if ms.dataCounters == nil {
 		ms.dataCounters = make(map[string]int64)
 	}
+	ms.mutex.Unlock()
 	return nil
 }
 
@@ -38,6 +42,7 @@ func (ms *MemStorage) CheckStorage(ctx context.Context) error {
 }
 
 func (ms *MemStorage) String(ctx context.Context) string {
+	ms.mutex.RLock()
 	var s1 = "[counters]\n"
 	var s2 = "[gauges]\n"
 	count := 0
@@ -60,13 +65,15 @@ func (ms *MemStorage) String(ctx context.Context) string {
 			s2 += "\n"
 		}
 	}
+	ms.mutex.RUnlock()
 	s2 += "\n\n"
-
 	return s1 + s2
 
 }
 
 func (ms *MemStorage) UpdateMetric(ctx context.Context, newMetric *metrics.Metrics) error {
+	ms.mutex.Lock()
+	defer ms.mutex.Unlock()
 	switch newMetric.MType {
 	case metrics.Gauge:
 		ms.dataGauges[newMetric.ID] = *newMetric.Value
@@ -75,6 +82,7 @@ func (ms *MemStorage) UpdateMetric(ctx context.Context, newMetric *metrics.Metri
 		ms.dataCounters[newMetric.ID] += *newMetric.Delta
 		return nil
 	}
+
 	return nil
 }
 
@@ -84,6 +92,8 @@ func (ms *MemStorage) AddMetric(ctx context.Context, newMetric *metrics.Metrics)
 }
 
 func (ms MemStorage) GetMetricString(ctx context.Context, mType, mName string) string {
+	ms.mutex.RLock()
+	defer ms.mutex.RUnlock()
 	switch mType {
 	case metrics.Gauge:
 		val, ok := ms.dataGauges[mName]
@@ -102,6 +112,8 @@ func (ms MemStorage) GetMetricString(ctx context.Context, mType, mName string) s
 }
 
 func (ms MemStorage) GetMetric(ctx context.Context, mName string, mType string) (*metrics.Metrics, error) {
+	ms.mutex.Lock()
+	defer ms.mutex.Unlock()
 	switch mType {
 	case metrics.Gauge:
 		// for gauges
@@ -132,48 +144,20 @@ func (ms MemStorage) GetMetric(ctx context.Context, mName string, mType string) 
 	return nil, errNotFound
 }
 
-func (ms MemStorage) GetOneMetric(ctx context.Context, mName string) *metrics.Metrics {
-	//for i, metric := range ms.metrics {
-	//	if metric.MType == mName {
-	//		return ms.metrics[i]
-	//	}
-	//}
-	//return nil
-
-	// for gauges
-	for key, value := range ms.dataGauges {
-		if key == mName {
-			return &metrics.Metrics{
-				ID:    key,
-				MType: metrics.Gauge,
-				Delta: nil,
-				Value: &value,
-			}
-		}
-	}
-
-	// for counters
-	for key, value := range ms.dataCounters {
-		if key == mName {
-			return &metrics.Metrics{
-				ID:    key,
-				MType: metrics.Counter,
-				Delta: &value,
-				Value: nil,
-			}
-		}
-	}
-	return nil
-}
-
 func NewMemStorage() *MemStorage {
-	ms := new(MemStorage)
-	ms.dataCounters = make(map[string]int64)
-	ms.dataGauges = make(map[string]float64)
+	ms := &MemStorage{
+		dataCounters: make(map[string]int64),
+		dataGauges:   make(map[string]float64),
+		mutex:        &sync.RWMutex{},
+	}
+
 	return ms
 }
 
 func (ms *MemStorage) GetAllMetrics(ctx context.Context) ([]*metrics.Metrics, error) {
+
+	ms.mutex.RLock()
+	defer ms.mutex.RUnlock()
 
 	metricsSlice := make([]*metrics.Metrics, 0)
 

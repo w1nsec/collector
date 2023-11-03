@@ -8,19 +8,23 @@ import (
 )
 
 func (ms *MemStorage) UpdateCounters(ctx context.Context, name string, value int64) error {
+	ms.mutex.Lock()
+	defer ms.mutex.Unlock()
 	ms.dataCounters[name] += value
 	return nil
 }
 
 func (ms *MemStorage) UpdateGauges(ctx context.Context, name string, value float64) error {
+	ms.mutex.Lock()
+	defer ms.mutex.Unlock()
 	ms.dataGauges[name] = value
 	return nil
 }
 
 func (ms *MemStorage) UpdateMetrics(ctx context.Context, newMetrics []*metrics.Metrics) error {
+
 	errors := make([]string, 0)
 	for _, metric := range newMetrics {
-
 		err := ms.updateMetric(ctx, metric)
 		if err != nil {
 			//log.Debug().Err(err)
@@ -31,6 +35,7 @@ func (ms *MemStorage) UpdateMetrics(ctx context.Context, newMetrics []*metrics.M
 }
 
 func (ms *MemStorage) updateMetric(ctx context.Context, metric *metrics.Metrics) error {
+
 	val, err := reverseConvertOneMetric(metric)
 	if err != nil {
 		return err
