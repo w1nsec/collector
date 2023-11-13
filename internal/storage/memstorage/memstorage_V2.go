@@ -34,7 +34,7 @@ func (m *MetricStorage) UpdateGauges(name string, value float64) error {
 	return nil
 }
 
-func (m MetricStorage) String() string {
+func (m *MetricStorage) String() string {
 	buf, err := json.Marshal(m.metrics)
 	if err != nil {
 		return ""
@@ -42,7 +42,7 @@ func (m MetricStorage) String() string {
 	return string(buf)
 }
 
-func (m MetricStorage) GetMetricString(mType, mName string) string {
+func (m *MetricStorage) GetMetricString(mType, mName string) string {
 	for id, metric := range m.metrics {
 		if metric.ID == mName && metric.MType == mType {
 			buf, err := json.Marshal(m.metrics[id])
@@ -55,7 +55,7 @@ func (m MetricStorage) GetMetricString(mType, mName string) string {
 	return ""
 }
 
-func (m MetricStorage) GetOneMetric(mName string) *metrics.Metrics {
+func (m *MetricStorage) GetOneMetric(mName string) *metrics.Metrics {
 	for id, metric := range m.metrics {
 		if metric.ID == mName {
 			return m.metrics[id]

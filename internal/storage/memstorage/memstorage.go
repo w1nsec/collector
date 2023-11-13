@@ -91,7 +91,7 @@ func (ms *MemStorage) AddMetric(ctx context.Context, newMetric *metrics.Metrics)
 	return nil
 }
 
-func (ms MemStorage) GetMetricString(ctx context.Context, mType, mName string) string {
+func (ms *MemStorage) GetMetricString(ctx context.Context, mType, mName string) string {
 	ms.mutex.RLock()
 	defer ms.mutex.RUnlock()
 	switch mType {
@@ -111,7 +111,7 @@ func (ms MemStorage) GetMetricString(ctx context.Context, mType, mName string) s
 	return ""
 }
 
-func (ms MemStorage) GetMetric(ctx context.Context, mName string, mType string) (*metrics.Metrics, error) {
+func (ms *MemStorage) GetMetric(ctx context.Context, mName string, mType string) (*metrics.Metrics, error) {
 	ms.mutex.Lock()
 	defer ms.mutex.Unlock()
 	switch mType {
