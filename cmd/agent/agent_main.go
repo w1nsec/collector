@@ -6,7 +6,6 @@ import (
 	"github.com/w1nsec/collector/internal/agent"
 	config "github.com/w1nsec/collector/internal/config/agent"
 	"github.com/w1nsec/collector/internal/logger"
-	"os"
 	"os/signal"
 	"syscall"
 )
@@ -18,7 +17,7 @@ func main() {
 	)
 
 	ctx, cancel := signal.NotifyContext(context.Background(),
-		syscall.SIGINT, syscall.SIGTERM, syscall.SIGKILL, os.Interrupt)
+		syscall.SIGINT, syscall.SIGTERM)
 	defer cancel()
 
 	config.AgentSelectArgs(&args)
