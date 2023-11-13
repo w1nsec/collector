@@ -163,7 +163,7 @@ func (agent Agent) StartOLD(ctx context.Context) error {
 
 func (agent Agent) Start(ctx context.Context) error {
 
-	newCtx, cancel := context.WithCancel(ctx)
+	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
 	// TODO maybe, metricsChannel capacity should be agent.rateLimit ??
@@ -175,13 +175,13 @@ func (agent Agent) Start(ctx context.Context) error {
 	// fill agent store
 	go func() {
 		defer wg.Done() // close goroutine
-		agent.generator(newCtx, metricsChannel)
+		agent.generator(ctx, metricsChannel)
 	}()
 
 	// create workers pull
 	go func() {
 		defer wg.Done() // close goroutine
-		agent.limiter(newCtx, metricsChannel)
+		agent.limiter(ctx, metricsChannel)
 	}()
 
 	wg.Add(1)
@@ -191,7 +191,7 @@ func (agent Agent) Start(ctx context.Context) error {
 		defer cancel()
 		// first exec:  close current goroutine, decrease wg Counter
 		defer wg.Done()
-		agent.validateErrors(newCtx)
+		agent.validateErrors(ctx)
 
 	}()
 
