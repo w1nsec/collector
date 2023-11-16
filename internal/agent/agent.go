@@ -173,7 +173,7 @@ func (agent Agent) Start(ctx context.Context) error {
 	defer cancel()
 
 	// TODO maybe, metricsChannel capacity should be agent.rateLimit ??
-	metricsChannel := make(chan []*metrics.Metrics, 100)
+	metricsChannel := make(chan []*metrics.Metrics)
 
 	// fill agent store
 	go func() {

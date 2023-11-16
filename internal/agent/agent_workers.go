@@ -13,6 +13,8 @@ import (
 
 func (agent Agent) generator(ctx context.Context,
 	metricsChannel chan []*metrics.Metrics) {
+	// writer should close channel
+	defer close(metricsChannel)
 
 	pollTicker := time.NewTicker(agent.pollInterval)
 	for {
@@ -52,8 +54,6 @@ func (agent Agent) generator(ctx context.Context,
 			}()
 
 		case <-ctx.Done():
-			// writer should close channel
-			close(metricsChannel)
 			log.Info().
 				Str("func", "generator").
 				Msg("Closing")
