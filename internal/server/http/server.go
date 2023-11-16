@@ -56,7 +56,7 @@ func (srv *MetricServer) Stop() error {
 }
 
 func (srv *MetricServer) Start() error {
-	// Start server
+	// Start transport
 	log.Info().Msgf("[+] Started on: %s", srv.Addr)
 	return srv.ListenAndServe()
 }

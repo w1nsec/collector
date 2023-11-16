@@ -11,7 +11,6 @@ import (
 	"github.com/w1nsec/collector/internal/storage/memstorage"
 	"net"
 	"net/http"
-	"sync"
 	"syscall"
 	"time"
 )
@@ -47,9 +46,9 @@ var usedMemStats = []string{
 }
 
 var (
-	timeout       = 10 * time.Second
-	retryStep     = uint(2) // 2 seconds
-	maxRetryCount = uint(3)
+	timeout = 10 * time.Second
+	//retryStep     = uint(2) // 2 seconds
+	maxRetryCount = uint(5)
 )
 
 type Agent struct {
@@ -68,7 +67,8 @@ type Agent struct {
 
 	// increment 13
 	retryCount uint
-	retryStep  uint
+	sleepCount uint
+	sleepCh    []chan struct{}
 
 	// increment 14
 	secret string
@@ -85,6 +85,11 @@ func NewAgent(args config.Args) (*Agent, error) {
 		return nil, err
 	}
 
+	sleepCh := make([]chan struct{}, args.Rate)
+	for id := range sleepCh {
+		sleepCh[id] = make(chan struct{})
+	}
+
 	agent := &Agent{
 		addr:           netAddr,
 		metricsPoint:   "update",
@@ -97,7 +102,8 @@ func NewAgent(args config.Args) (*Agent, error) {
 
 		// increment 13
 		retryCount: maxRetryCount,
-		retryStep:  retryStep,
+		sleepCount: 0,
+		sleepCh:    sleepCh,
 
 		// increment 14
 		secret: args.Key,
@@ -135,7 +141,7 @@ func (agent Agent) StartOLD(ctx context.Context) error {
 					Msgf("%v error, while send all metrics together", err)
 				curErrCount += 1
 				if errors.Is(err, syscall.ECONNREFUSED) {
-					// agent can't connect to server, let's try again
+					// agent can't connect to transport, let's try again
 					sleep := 1 * time.Second
 					for i := uint(0); i < agent.retryCount; i++ {
 						time.Sleep(sleep)
@@ -145,7 +151,7 @@ func (agent Agent) StartOLD(ctx context.Context) error {
 							break
 						}
 						// update sleep time
-						sleep = time.Duration(sleep.Seconds() + float64(agent.retryStep))
+						sleep = time.Duration(sleep.Seconds() + float64(agent.sleepCount))
 					}
 				}
 				if curErrCount > agent.retryCount {
@@ -169,37 +175,23 @@ func (agent Agent) Start(ctx context.Context) error {
 	// TODO maybe, metricsChannel capacity should be agent.rateLimit ??
 	metricsChannel := make(chan []*metrics.Metrics, 100)
 
-	wg := &sync.WaitGroup{}
-	wg.Add(2)
-
 	// fill agent store
 	go func() {
-		defer wg.Done() // close goroutine
 		agent.generator(ctx, metricsChannel)
 	}()
 
 	// create workers pull
 	go func() {
-		defer wg.Done() // close goroutine
 		agent.limiter(ctx, metricsChannel)
 	}()
 
-	wg.Add(1)
 	// validate errors count
 	go func() {
-		// second exec: cancel current context
-		defer cancel()
-		// first exec:  close current goroutine, decrease wg Counter
-		defer wg.Done()
 		agent.validateErrors(ctx)
-
 	}()
 
 	// waiting, until goroutines not done
-	wg.Wait()
-
-	// TODO maybe, using context for handling agent exit is better ??
-	//<-ctx.Done()
+	<-ctx.Done()
 
 	return nil
 }

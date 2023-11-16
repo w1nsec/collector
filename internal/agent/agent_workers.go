@@ -65,65 +65,50 @@ func (agent Agent) generator(ctx context.Context,
 func (agent Agent) limiter(ctx context.Context,
 	metricsChannel chan []*metrics.Metrics) {
 
-	reportTicker := time.NewTicker(agent.reportInterval)
-	var m sync.Mutex
-	cond := sync.NewCond(&m)
-
-	// create workers
-	for i := 0; i < agent.rateLimit; i++ {
-		go agent.worker(i, metricsChannel, cond)
-	}
+	reportTimer := time.NewTimer(agent.reportInterval)
 
 	// waiting for report time
-	for {
-		select {
-		case t2 := <-reportTicker.C:
-			fmt.Println("Sending:", t2.Format(time.TimeOnly))
-			fmt.Printf("Len: %d\n", len(metricsChannel))
-			// start workers
-			cond.Broadcast()
-
-		case <-ctx.Done():
-			log.Info().
-				Str("func", "limiter").
-				Msg("Closing")
-			return
+	for t2 := range reportTimer.C {
+		fmt.Println("Sending:", t2.Format(time.TimeOnly))
+		// create workers
+		for i := 0; i < agent.rateLimit; i++ {
+			go agent.worker(i, metricsChannel)
 		}
 	}
+
+	<-ctx.Done()
+	log.Info().
+		Str("func", "limiter").
+		Msg("Closing")
+
 }
 
-func (agent Agent) worker(id int, jobs <-chan []*metrics.Metrics, c *sync.Cond) {
-	// lock current worker
-	c.L.Lock()
+func (agent Agent) worker(id int, jobs <-chan []*metrics.Metrics) {
 	for {
-		// worker must sleep until report time
-		// each worker should send ONLY ONE request to server
-		c.Wait()
-		// job == one metric batch
-		job, ok := <-jobs
-		//_, ok := <-jobs
-		if !ok {
-			// close worker, if jobs channel already closed
-			return
-		}
-
-		// worker work
-		log.Info().
-			Int("worker", id).
-			Msg("Sending")
-
-		err := agent.SendBatch(job)
-		if err != nil {
-			log.Error().
+		select {
+		case job := <-jobs:
+			// worker work
+			log.Info().
 				Int("worker", id).
-				Err(err).Send()
-			agent.errorsCh <- err
-			continue
+				Msg("Sending")
+
+			err := agent.SendBatch(job)
+			if err != nil {
+				log.Error().
+					Int("worker", id).
+					Err(err).Send()
+				agent.errorsCh <- err
+				continue
+			}
+			log.Info().
+				Int("worker", id).
+				Msg("Done")
+			agent.successReport <- struct{}{}
+
+		// if errors too many, go to sleep,
+		case <-agent.sleepCh[id]:
+			time.Sleep(time.Second * time.Duration(10*agent.sleepCount))
 		}
-		log.Info().
-			Int("worker", id).
-			Msg("Done")
-		agent.successReport <- struct{}{}
 
 	}
 }
@@ -144,11 +129,32 @@ func (agent Agent) validateErrors(ctx context.Context) {
 			log.Info().Msgf("Errors count: %d/%d", curErrCount, maxErrCount)
 			// errors should be more, as frequency sending increase
 			if curErrCount == maxErrCount {
-				return
+				/*
+					increase sleepCount (for sleep time in workers)
+					but not to infinity
+				*/
+				if agent.sleepCount < agent.retryCount {
+					agent.sleepCount++
+				}
+
+				// send sleep signal to all workers
+				wg := sync.WaitGroup{}
+				wg.Add(1)
+				// deadlock bypass
+				go func() {
+					defer wg.Done()
+					for _, ch := range agent.sleepCh {
+						ch <- struct{}{}
+					}
+				}()
+				wg.Wait()
 			}
 		case <-agent.successReport:
 			// reset count of errors
 			curErrCount = 0
+
+			// reset count of sleep times
+			agent.sleepCount = 0
 		case <-ctx.Done():
 			log.Info().
 				Str("func", "error-validator").

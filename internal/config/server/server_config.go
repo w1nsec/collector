@@ -53,7 +53,7 @@ func ServerArgsParse(args *Args) {
 		flagKey string
 	)
 
-	flag.StringVar(&flagAddr, "a", "localhost:8080", "address for server")
+	flag.StringVar(&flagAddr, "a", "localhost:8080", "address for transport")
 	flag.StringVar(&flagLogLevel, "l", "info", "log level")
 
 	// increment 9, FILE_STORAGE

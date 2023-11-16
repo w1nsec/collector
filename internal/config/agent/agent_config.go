@@ -32,7 +32,7 @@ func AgentSelectArgs(args *Args) {
 		flagPoll, flagRep, flagRate int
 	)
 	flag.StringVar(&flagAddr, "a", "localhost:8080",
-		"address for metric server")
+		"address for metric transport")
 	flag.IntVar(&flagPoll, "p", int(defaultPollInterval.Seconds()),
 		"frequency of gathering metrics")
 	flag.IntVar(&flagRep, "r", int(defaultReportInterval.Seconds()),
