@@ -1,9 +1,11 @@
 package agent
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"github.com/rs/zerolog/log"
+	config "github.com/w1nsec/collector/internal/config/agent"
 	"github.com/w1nsec/collector/internal/metrics"
 	"github.com/w1nsec/collector/internal/storage"
 	"github.com/w1nsec/collector/internal/storage/memstorage"
@@ -44,15 +46,19 @@ var usedMemStats = []string{
 }
 
 var (
-	timeout       = 10 * time.Second
-	retryStep     = uint(2) // 2 seconds
-	maxRetryCount = uint(3)
+	timeout = 10 * time.Second
+	//retryStep     = uint(2) // 2 seconds
+	maxRetryCount = uint(5)
 )
 
 type Agent struct {
-	addr           net.Addr
-	metricsPoint   string
-	metrics        map[string]metrics.MyMetrics
+	addr         net.Addr
+	metricsPoint string
+
+	// unused field
+	metrics map[string]metrics.MyMetrics
+	////
+
 	store          storage.Storage
 	pollInterval   time.Duration
 	reportInterval time.Duration
@@ -61,48 +67,62 @@ type Agent struct {
 
 	// increment 13
 	retryCount uint
-	retryStep  uint
+	sleepCount uint
+	sleepCh    []chan struct{}
+
+	// increment 14
+	secret string
+
+	// increment 15
+	rateLimit     int
+	errorsCh      chan error
+	successReport chan struct{}
 }
 
-func NewAgent(addr string, pollInterval, reportInterval int) (*Agent, error) {
-	netAddr, err := net.ResolveTCPAddr("tcp", addr)
+func NewAgent(args config.Args) (*Agent, error) {
+	netAddr, err := net.ResolveTCPAddr("tcp", args.Addr)
 	if err != nil {
 		return nil, err
+	}
+
+	sleepCh := make([]chan struct{}, args.Rate)
+	for id := range sleepCh {
+		sleepCh[id] = make(chan struct{})
 	}
 
 	agent := &Agent{
 		addr:           netAddr,
 		metricsPoint:   "update",
 		metrics:        make(map[string]metrics.MyMetrics),
-		pollInterval:   time.Duration(pollInterval) * time.Second,
-		reportInterval: time.Duration(reportInterval) * time.Second,
+		pollInterval:   time.Duration(args.PollInterval) * time.Second,
+		reportInterval: time.Duration(args.ReportInterval) * time.Second,
 
 		store:      memstorage.NewMemStorage(),
 		httpClient: &http.Client{Timeout: timeout},
 
 		// increment 13
 		retryCount: maxRetryCount,
-		retryStep:  retryStep,
+		sleepCount: 0,
+		sleepCh:    sleepCh,
+
+		// increment 14
+		secret: args.Key,
+
+		// increment 15
+		rateLimit:     args.Rate,
+		errorsCh:      make(chan error, args.Rate),
+		successReport: make(chan struct{}, args.Rate),
 	}
 
+	agent.compression = true
 	return agent, nil
 }
 
-func (agent Agent) Start() error {
+func (agent Agent) StartOLD(ctx context.Context) error {
 
 	var (
 		curErrCount = uint(0)
 	)
-
-	// Receive and send for the first time
-	//fmt.Println("Receiving:", time.Now().Format(time.TimeOnly))
-	//agent.GetMetrics()
-	//fmt.Println("- Sending:", time.Now().Format(time.TimeOnly))
-	//agent.SendMetrics()
-	//err := agent.SendMetricsJSON()
-	//if err != nil {
-	//	return err
-	//}
 
 	pollTicker := time.NewTicker(agent.pollInterval)
 	reportTicker := time.NewTicker(agent.reportInterval)
@@ -110,8 +130,7 @@ func (agent Agent) Start() error {
 		select {
 		case t1 := <-pollTicker.C:
 			fmt.Println("Receiving:", t1.Format(time.TimeOnly))
-			//agent.GetMetrics()
-			agent.CollectMetrics()
+			agent.CollectMetrics(ctx)
 		case t2 := <-reportTicker.C:
 			fmt.Println("- Sending:", t2.Format(time.TimeOnly))
 
@@ -122,7 +141,7 @@ func (agent Agent) Start() error {
 					Msgf("%v error, while send all metrics together", err)
 				curErrCount += 1
 				if errors.Is(err, syscall.ECONNREFUSED) {
-					// agent can't connect to server, let's try again
+					// agent can't connect to transport, let's try again
 					sleep := 1 * time.Second
 					for i := uint(0); i < agent.retryCount; i++ {
 						time.Sleep(sleep)
@@ -132,7 +151,7 @@ func (agent Agent) Start() error {
 							break
 						}
 						// update sleep time
-						sleep = time.Duration(sleep.Seconds() + float64(agent.retryStep))
+						sleep = time.Duration(sleep.Seconds() + float64(agent.sleepCount))
 					}
 				}
 				if curErrCount > agent.retryCount {
@@ -140,6 +159,45 @@ func (agent Agent) Start() error {
 				}
 			}
 			curErrCount = 0
+		case <-ctx.Done():
+			shutdownCtx, cancel := context.WithTimeout(ctx, 15*time.Second)
+			defer cancel()
+			return agent.store.Close(shutdownCtx)
 		}
 	}
+}
+
+func (agent Agent) Start(ctx context.Context) error {
+
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
+	// TODO maybe, metricsChannel capacity should be agent.rateLimit ??
+	metricsChannel := make(chan []*metrics.Metrics)
+
+	// fill agent store
+	go func() {
+		agent.generator(ctx, metricsChannel)
+	}()
+
+	// create workers pull
+	go func() {
+		agent.limiter(ctx, metricsChannel)
+	}()
+
+	// validate errors count
+	go func() {
+		agent.validateErrors(ctx)
+	}()
+
+	// waiting, until goroutines not done
+	<-ctx.Done()
+
+	return nil
+}
+
+func (agent Agent) Close() {
+	close(agent.errorsCh)
+	close(agent.successReport)
+	agent.store.Close(context.TODO())
 }

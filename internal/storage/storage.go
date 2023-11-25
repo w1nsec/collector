@@ -6,26 +6,26 @@ import (
 )
 
 type Storage interface {
-	UpdateCounters(name string, value int64) error
-	UpdateGauges(name string, value float64) error
-	String() string
-	GetMetricString(mType, mName string) string
+	UpdateCounters(ctx context.Context, name string, value int64) error
+	UpdateGauges(ctx context.Context, name string, value float64) error
+	String(ctx context.Context) string
+	GetMetricString(ctx context.Context, mType, mName string) string
 
 	// valid
-	GetMetric(mName string, mType string) (*metrics.Metrics, error)
+	GetMetric(ctx context.Context, mName string, mType string) (*metrics.Metrics, error)
 
-	UpdateMetric(newMetric *metrics.Metrics) error
-	AddMetric(newMetric *metrics.Metrics) error
+	UpdateMetric(ctx context.Context, newMetric *metrics.Metrics) error
+	AddMetric(ctx context.Context, newMetric *metrics.Metrics) error
 
 	// increment 12 many insert in DB
 	UpdateMetrics(ctx context.Context, newMetrics []*metrics.Metrics) error
 
 	// add for increment9 / increment3
-	GetAllMetrics() ([]*metrics.Metrics, error)
+	GetAllMetrics(ctx context.Context) ([]*metrics.Metrics, error)
 
 	// for merging DBStorage and MemStorage
-	Init() error
-	CheckStorage() error
+	Init(ctx context.Context) error
+	CheckStorage(ctx context.Context) error
 
 	// for shutdown
 	Close(ctx context.Context) error

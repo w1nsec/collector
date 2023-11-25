@@ -12,6 +12,8 @@ func NewRouter(service *service.MetricService) http.Handler {
 	r := chi.NewRouter()
 
 	// middlewares
+	signMidl := middlewares.NewSigningMidl(service.Secret)
+	r.Use(signMidl.Signing)
 	r.Use(middlewares.LoggingMiddleware)
 	r.Use(middlewares.GzipMiddleware)
 

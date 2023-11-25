@@ -17,7 +17,7 @@ import (
 type appServer struct {
 	service *service.MetricService
 
-	// now it is internal/server/http
+	// now it is internal/transport/http
 	server http.Server // interfaces
 
 }
@@ -51,7 +51,7 @@ func NewAppServer() (*appServer, error) {
 		return nil, err
 	}
 
-	// initialise transport server
+	// initialise transport transport
 	server, err := http.NewServerForService(args, service)
 	if err != nil {
 		return nil, err
@@ -71,12 +71,12 @@ func (app appServer) Run(ctx context.Context) error {
 	// restore DB
 	go app.service.Setup(ctx)
 
-	// start server
+	// start transport
 	go func() {
 		err := app.server.Start()
 		if err != nil {
 			log.Error().Err(err).
-				Msg("Error starting server")
+				Msg("Error starting transport")
 		}
 	}()
 
@@ -84,7 +84,7 @@ func (app appServer) Run(ctx context.Context) error {
 	<-ctx.Done()
 
 	log.Info().Str("signal", "Ctlr+C").Send()
-	shutdownCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	shutdownCtx, cancel := context.WithTimeout(ctx, 15*time.Second)
 	defer cancel()
 
 	longShutdown := make(chan struct{}, 1)
@@ -96,7 +96,7 @@ func (app appServer) Run(ctx context.Context) error {
 	// if shutdown too long
 	select {
 	case <-shutdownCtx.Done():
-		err := fmt.Errorf("server shutdown: %v", ctx.Err())
+		err := fmt.Errorf("transport shutdown: %v", ctx.Err())
 		log.Error().Err(err).Send()
 		err = app.Stop(ctx)
 		return err
@@ -110,7 +110,7 @@ func (app appServer) Run(ctx context.Context) error {
 func (app *appServer) Stop(ctx context.Context) error {
 	if app.service.FileStorageInterface != nil {
 		log.Error().
-			Err(app.service.FileStorageInterface.SaveAll()).
+			Err(app.service.FileStorageInterface.SaveAll(ctx)).
 			Msg("fs-storage saving status")
 		log.Error().
 			Err(app.service.FileStorageInterface.Close(ctx)).

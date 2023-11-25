@@ -20,10 +20,13 @@ type MetricService struct {
 
 	StoreInterval time.Duration
 	Restore       bool
+
+	// iter14, hmac signing
+	Secret string
 }
 
-func (service *MetricService) CheckStorage() error {
-	return service.Storage.CheckStorage()
+func (service *MetricService) CheckStorage(ctx context.Context) error {
+	return service.Storage.CheckStorage(ctx)
 }
 
 func (service *MetricService) Close(ctx context.Context) error {
@@ -53,6 +56,7 @@ func NewService(args server.Args, store storage.Storage,
 		FileStorageInterface: fstore,
 		Restore:              args.Restore,
 		StoreInterval:        time.Duration(args.StoreInterval) * time.Second,
+		Secret:               args.Key,
 	}
 	err := service.SetupLogger(args.LogLevel)
 	if err != nil {
@@ -66,7 +70,7 @@ func (service *MetricService) BackupLoop(ctx context.Context, storeInterval time
 	for {
 		select {
 		case t := <-timer.C:
-			err := service.FileStorageInterface.SaveAll()
+			err := service.FileStorageInterface.SaveAll(ctx)
 			if err != nil {
 				log.Info().
 					Str("time", t.Format(time.DateTime)).
@@ -82,10 +86,10 @@ func (service *MetricService) BackupLoop(ctx context.Context, storeInterval time
 func (service *MetricService) Setup(ctx context.Context) error {
 	if service.Restore {
 		if service.FileStorageInterface != nil {
-			service.FileStorageInterface.Load()
+			service.FileStorageInterface.Load(ctx)
 			go service.BackupLoop(ctx, service.StoreInterval)
 		}
-		return service.Storage.Init()
+		return service.Storage.Init(ctx)
 	}
 	return nil
 }

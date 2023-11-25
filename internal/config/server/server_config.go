@@ -17,6 +17,9 @@ type Args struct {
 
 	// increment 10 DB
 	DatabaseURL string
+
+	// increment 14
+	Key string
 }
 
 func ServerArgsParse(args *Args) {
@@ -31,6 +34,9 @@ func ServerArgsParse(args *Args) {
 	// increment 10
 	args.DatabaseURL = os.Getenv("DATABASE_DSN")
 
+	// increment 14
+	args.Key = os.Getenv("KEY")
+
 	var (
 		flagAddr     string
 		flagLogLevel string
@@ -42,9 +48,12 @@ func ServerArgsParse(args *Args) {
 
 		// increment 10
 		flagDatabaseStr string
+
+		// increment 14
+		flagKey string
 	)
 
-	flag.StringVar(&flagAddr, "a", "localhost:8080", "address for server")
+	flag.StringVar(&flagAddr, "a", "localhost:8080", "address for transport")
 	flag.StringVar(&flagLogLevel, "l", "info", "log level")
 
 	// increment 9, FILE_STORAGE
@@ -54,6 +63,9 @@ func ServerArgsParse(args *Args) {
 
 	// increment 10, connect to DB
 	flag.StringVar(&flagDatabaseStr, "d", "", "DB connect string")
+
+	// increment 14, generate hash for requests body
+	flag.StringVar(&flagKey, "k", "", "salt for hmac")
 
 	flag.Parse()
 
@@ -76,6 +88,10 @@ func ServerArgsParse(args *Args) {
 
 	if args.DatabaseURL == "" {
 		args.DatabaseURL = flagDatabaseStr
+	}
+
+	if args.Key == "" {
+		args.Key = flagKey
 	}
 
 }

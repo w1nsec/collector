@@ -39,7 +39,7 @@ func UpdateMetricsHandle(store storage.Storage) http.HandlerFunc {
 				rw.WriteHeader(http.StatusBadRequest)
 				return
 			}
-			store.UpdateGauges(mName, val)
+			store.UpdateGauges(r.Context(), mName, val)
 			//fmt.Println(store)
 		case "counter":
 			val, err := strconv.ParseInt(mValue, 10, 64)
@@ -47,7 +47,7 @@ func UpdateMetricsHandle(store storage.Storage) http.HandlerFunc {
 				rw.WriteHeader(http.StatusBadRequest)
 				return
 			}
-			store.UpdateCounters(mName, val)
+			store.UpdateCounters(r.Context(), mName, val)
 			//fmt.Println(store)
 		default:
 			rw.WriteHeader(http.StatusBadRequest)
@@ -67,7 +67,7 @@ func UpdateGaugeHandle(store storage.Storage) http.HandlerFunc {
 			wr.WriteHeader(http.StatusBadRequest)
 			return
 		}
-		err = store.UpdateGauges(name, val)
+		err = store.UpdateGauges(r.Context(), name, val)
 		if err != nil {
 			wr.WriteHeader(http.StatusInternalServerError)
 			log.Error().
@@ -87,7 +87,7 @@ func UpdateCounterHandle(store storage.Storage) http.HandlerFunc {
 			rw.WriteHeader(http.StatusBadRequest)
 			return
 		}
-		store.UpdateCounters(name, val)
+		store.UpdateCounters(r.Context(), name, val)
 		fmt.Println(store)
 		rw.WriteHeader(http.StatusOK)
 	}

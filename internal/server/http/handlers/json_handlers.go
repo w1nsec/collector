@@ -76,7 +76,7 @@ func JSONUpdateOneMetricHandler(store *service.MetricService) func(w http.Respon
 			return
 		}
 
-		err = store.UpdateMetric(metric)
+		err = store.UpdateMetric(r.Context(), metric)
 		if err != nil {
 			log.Error().
 				Err(err).
@@ -88,7 +88,7 @@ func JSONUpdateOneMetricHandler(store *service.MetricService) func(w http.Respon
 		// Debug version
 		// TODO change request metrics by name to:  body-request -> body-response resent (when debug done)
 
-		retMetric, _ := store.GetMetric(metric.ID, metric.MType)
+		retMetric, _ := store.GetMetric(r.Context(), metric.ID, metric.MType)
 		if retMetric == nil {
 			log.Error().
 				Err(fmt.Errorf("metric \"%s\" not found in store",
@@ -199,7 +199,7 @@ func JSONGetMetricHandler(service *service.MetricService) func(w http.ResponseWr
 			return
 		}
 
-		retMetric, _ := service.GetMetric(metric.ID, metric.MType)
+		retMetric, _ := service.GetMetric(r.Context(), metric.ID, metric.MType)
 		if retMetric == nil {
 			log.Error().
 				Err(fmt.Errorf("metric \"%s\" not found in service",
@@ -318,7 +318,7 @@ func JSONUpdateMetricsHandler(service *service.MetricService) func(w http.Respon
 		// Get updated metrics
 		updatedMetrics := make([]*metrics.Metrics, 0)
 		for mName, mType := range mNames {
-			metric, err := service.GetMetric(mName, mType)
+			metric, err := service.GetMetric(r.Context(), mName, mType)
 			if err != nil {
 				log.Error().Err(err).Send()
 				continue

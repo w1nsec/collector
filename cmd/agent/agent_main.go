@@ -1,32 +1,41 @@
 package main
 
 import (
+	"context"
 	"github.com/rs/zerolog/log"
 	"github.com/w1nsec/collector/internal/agent"
 	config "github.com/w1nsec/collector/internal/config/agent"
 	"github.com/w1nsec/collector/internal/logger"
+	"os/signal"
+	"syscall"
 )
 
 func main() {
 
 	var (
-		addr                         string
-		pollInterval, reportInterval int
-		loggerLevel                  = "info"
+		args config.Args
 	)
 
-	config.AgentSelectArgs(&addr, &pollInterval, &reportInterval)
-	err := logger.Initialize(loggerLevel)
-	if err != nil {
-		log.Error().Err(err).Send()
-		return
-	}
-	mAgent, err := agent.NewAgent(addr, pollInterval, reportInterval)
-	if err != nil {
-		log.Error().Err(err).Send()
-		return
-	}
-	err = mAgent.Start()
-	log.Fatal().Err(err).Send()
+	ctx, cancel := signal.NotifyContext(context.Background(),
+		syscall.SIGINT, syscall.SIGTERM)
+	defer cancel()
 
+	config.AgentSelectArgs(&args)
+	err := logger.Initialize(args.LogLevel)
+	if err != nil {
+		log.Error().Err(err).Send()
+		return
+	}
+	mAgent, err := agent.NewAgent(args)
+	if err != nil {
+		log.Error().Err(err).Send()
+		return
+	}
+	err = mAgent.Start(ctx)
+	if err != nil {
+		log.Fatal().Err(err).Send()
+		return
+	}
+	defer mAgent.Close()
+	log.Info().Msg("Closing agent app: successful")
 }
