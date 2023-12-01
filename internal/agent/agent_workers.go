@@ -105,7 +105,7 @@ func (agent Agent) worker(id int, jobs <-chan []*metrics.Metrics) {
 				Msg("Done")
 			agent.successReport <- struct{}{}
 
-		// if errors too many, go to sleep,
+		// if localerrors too many, go to sleep,
 		case <-agent.sleepCh[id]:
 			time.Sleep(time.Second * time.Duration(10*agent.sleepCount))
 		}
@@ -127,7 +127,7 @@ func (agent Agent) validateErrors(ctx context.Context) {
 				curErrCount++
 			}
 			log.Info().Msgf("Errors count: %d/%d", curErrCount, maxErrCount)
-			// errors should be more, as frequency sending increase
+			// localerrors should be more, as frequency sending increase
 			if curErrCount == maxErrCount {
 				/*
 					increase sleepCount (for sleep time in workers)
@@ -150,7 +150,7 @@ func (agent Agent) validateErrors(ctx context.Context) {
 				wg.Wait()
 			}
 		case <-agent.successReport:
-			// reset count of errors
+			// reset count of localerrors
 			curErrCount = 0
 
 			// reset count of sleep times

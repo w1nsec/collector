@@ -24,8 +24,8 @@ type Storage interface {
 	GetAllMetrics(ctx context.Context) ([]*metrics.Metrics, error)
 
 	// for merging DBStorage and MemStorage
-	Init(ctx context.Context) error
-	CheckStorage(ctx context.Context) error
+	Init() error
+	CheckStorage() error
 
 	// for shutdown
 	Close(ctx context.Context) error
