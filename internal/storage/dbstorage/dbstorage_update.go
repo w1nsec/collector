@@ -10,7 +10,7 @@ import (
 
 func (pgStorage postgresStorage) UpdateCounters(ctx context.Context, name string, value int64) error {
 	query := fmt.Sprintf("update %s set value = value + $1 where id = $2", Counters)
-	result, err := pgStorage.db.ExecContext(pgStorage.dbCtx, query, value, name)
+	result, err := pgStorage.db.ExecContext(ctx, query, value, name)
 	if err != nil {
 		return err
 	}
@@ -28,7 +28,7 @@ func (pgStorage postgresStorage) UpdateCounters(ctx context.Context, name string
 
 func (pgStorage postgresStorage) UpdateGauges(ctx context.Context, name string, value float64) error {
 	query := fmt.Sprintf("update %s set value = $1 where id = $2", Gauges)
-	result, err := pgStorage.db.ExecContext(pgStorage.dbCtx, query, value, name)
+	result, err := pgStorage.db.ExecContext(ctx, query, value, name)
 	if err != nil {
 		return err
 	}
@@ -51,10 +51,10 @@ func (pgStorage postgresStorage) UpdateMetric(ctx context.Context, newMetric *me
 	switch newMetric.MType {
 	case metrics.Gauge:
 		query := fmt.Sprintf("update %s set value = $1 where id = $2", Gauges)
-		result, err = pgStorage.db.ExecContext(pgStorage.dbCtx, query, newMetric.Value, newMetric.ID)
+		result, err = pgStorage.db.ExecContext(ctx, query, newMetric.Value, newMetric.ID)
 	case metrics.Counter:
 		query := fmt.Sprintf("update %s set value = value + $1 where id = $2", Counters)
-		result, err = pgStorage.db.ExecContext(pgStorage.dbCtx, query, newMetric.Delta, newMetric.ID)
+		result, err = pgStorage.db.ExecContext(ctx, query, newMetric.Delta, newMetric.ID)
 	}
 	if err != nil {
 		return err
@@ -113,10 +113,10 @@ func (pgStorage postgresStorage) AddMetric(ctx context.Context, newMetric *metri
 	switch newMetric.MType {
 	case metrics.Gauge:
 		query = fmt.Sprintf(query, Gauges)
-		result, err = pgStorage.db.ExecContext(pgStorage.dbCtx, query, newMetric.ID, newMetric.Value)
+		result, err = pgStorage.db.ExecContext(ctx, query, newMetric.ID, newMetric.Value)
 	case metrics.Counter:
 		query = fmt.Sprintf(query, Counters)
-		result, err = pgStorage.db.ExecContext(pgStorage.dbCtx, query, newMetric.ID, newMetric.Delta)
+		result, err = pgStorage.db.ExecContext(ctx, query, newMetric.ID, newMetric.Delta)
 	}
 	log.Info().Msgf(query)
 	if err != nil {

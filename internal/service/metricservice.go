@@ -25,8 +25,8 @@ type MetricService struct {
 	Secret string
 }
 
-func (service *MetricService) CheckStorage(ctx context.Context) error {
-	return service.Storage.CheckStorage(ctx)
+func (service *MetricService) CheckStorage() error {
+	return service.Storage.CheckStorage()
 }
 
 func (service *MetricService) Close(ctx context.Context) error {
@@ -89,7 +89,7 @@ func (service *MetricService) Setup(ctx context.Context) error {
 			service.FileStorageInterface.Load(ctx)
 			go service.BackupLoop(ctx, service.StoreInterval)
 		}
-		return service.Storage.Init(ctx)
+		return service.Storage.Init()
 	}
 	return nil
 }

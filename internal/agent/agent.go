@@ -185,7 +185,7 @@ func (agent Agent) Start(ctx context.Context) error {
 		agent.limiter(ctx, metricsChannel)
 	}()
 
-	// validate errors count
+	// validate localerrors count
 	go func() {
 		agent.validateErrors(ctx)
 	}()

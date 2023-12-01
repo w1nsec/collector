@@ -298,7 +298,7 @@ func JSONUpdateMetricsHandler(service *service.MetricService) func(w http.Respon
 
 		}
 
-		// log errors
+		// log localerrors
 		if len(errors) != 0 {
 			log.Error().
 				Err(fmt.Errorf(strings.Join(errors, " | "))).

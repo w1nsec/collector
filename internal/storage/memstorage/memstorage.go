@@ -25,7 +25,7 @@ func (ms *MemStorage) Close(context.Context) error {
 	return nil
 }
 
-func (ms *MemStorage) Init(ctx context.Context) error {
+func (ms *MemStorage) Init() error {
 	ms.mutex.Lock()
 	if ms.dataGauges == nil {
 		ms.dataGauges = make(map[string]float64)
@@ -37,8 +37,8 @@ func (ms *MemStorage) Init(ctx context.Context) error {
 	return nil
 }
 
-func (ms *MemStorage) CheckStorage(ctx context.Context) error {
-	return ms.Init(ctx)
+func (ms *MemStorage) CheckStorage() error {
+	return ms.Init()
 }
 
 func (ms *MemStorage) String(ctx context.Context) string {
