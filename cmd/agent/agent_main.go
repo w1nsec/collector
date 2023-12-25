@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 	"github.com/rs/zerolog/log"
-	"github.com/w1nsec/collector/internal/agent"
+	"github.com/w1nsec/collector/internal/app/agent"
 	config "github.com/w1nsec/collector/internal/config/agent"
 	"github.com/w1nsec/collector/internal/logger"
 	"os/signal"

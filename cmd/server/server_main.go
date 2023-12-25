@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 	"github.com/rs/zerolog/log"
-	"github.com/w1nsec/collector/internal/app"
+	"github.com/w1nsec/collector/internal/app/server"
 	"os"
 	"os/signal"
 	"syscall"
@@ -15,7 +15,7 @@ func main() {
 		syscall.SIGINT, syscall.SIGTERM, syscall.SIGKILL, os.Interrupt)
 	defer stop()
 
-	serverApp, err := app.NewAppServer()
+	serverApp, err := server.NewAppServer()
 	if err != nil {
 		log.Fatal().Err(err).Send()
 	}
