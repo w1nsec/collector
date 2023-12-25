@@ -17,28 +17,36 @@ func NewRouter(service *service.MetricService) http.Handler {
 	r.Use(middlewares.LoggingMiddleware)
 	r.Use(middlewares.GzipMiddleware)
 
+	// handlers
+	getAllMetrics := handlers.NewGetMetricsHandler(service)
+	getOneMetric := handlers.NewGetMetricHandler(service)
+	updateCounters := handlers.NewUpdateCountersHandler(service)
+	updateGauges := handlers.NewUpdateGaugeHandler(service)
+	jsonUpdateOne := handlers.NewJSONUpdateOneMetricHandler(service)
+	jsonUpdateAll := handlers.NewJSONUpdateMetricsHandler(service)
+	jsonGetMetric := handlers.NewJSONGetMetricHandler(service)
+	dbCheck := handlers.NewCheckDBConnectionHandler(service)
+
 	// routing
 	r.Route("/", func(r chi.Router) {
-		r.Get("/", handlers.GetAllMetrics(service))
+		r.Get("/", getAllMetrics.ServeHTTP)
 	})
 
 	r.Route("/update/", func(r chi.Router) {
-		//r.Use(printMidl)
-		//r.Post("/", UpdateMetricsHandle(store))
-		r.Post("/counter/{name}/{value}", handlers.UpdateCounterHandle(service))
-		r.Post("/gauge/{name}/{value}", handlers.UpdateGaugeHandle(service))
+		r.Post("/counter/{name}/{value}", updateCounters.ServeHTTP)
+		r.Post("/gauge/{name}/{value}", updateGauges.ServeHTTP)
 
 		// Update via JSON (only one metric by yandex TASK)
-		//r.Post("/", JSONUpdateHandler(store))
-		r.Post("/", handlers.JSONUpdateOneMetricHandler(service))
+		r.Post("/", jsonUpdateOne.ServeHTTP)
 
 		// Not Found
-		r.Post("/gauge/", handlers.NotFoundHandle)
-		r.Post("/counter/", handlers.NotFoundHandle)
-		r.Post("/gauge/{name}", handlers.NotFoundHandle)
-		r.Post("/counter/{name}", handlers.NotFoundHandle)
-		//r.Post("/gauge/{name}/", NotFoundHandle)
-		//r.Post("/counter/{name}/", NotFoundHandle)
+		r.Group(func(r chi.Router) {
+			r.Post("/gauge/", handlers.NotFoundHandle)
+			r.Post("/gauge/", handlers.NotFoundHandle)
+			r.Post("/counter/", handlers.NotFoundHandle)
+			r.Post("/gauge/{name}", handlers.NotFoundHandle)
+			r.Post("/counter/{name}", handlers.NotFoundHandle)
+		})
 
 		// Bad Request (other paths)
 		// TODO CHANGE other paths to BadRequest
@@ -49,34 +57,24 @@ func NewRouter(service *service.MetricService) http.Handler {
 		r.NotFound(handlers.BadRequest)
 	})
 
-	r.Post("/updates/", handlers.JSONUpdateMetricsHandler(service))
+	r.Post("/updates/", jsonUpdateAll.ServeHTTP)
 
 	r.Route("/value/", func(r chi.Router) {
-		//r.Use(middlewares.LoggingMiddleware)
-
 		// Get metric value
-		r.Post("/", handlers.JSONGetMetricHandler(service))
-		r.Get("/{mType}/{mName}", handlers.GetMetric(service))
+		r.Post("/", jsonGetMetric.ServeHTTP)
+		r.Get("/{mType}/{mName}", getOneMetric.ServeHTTP)
 	})
 
 	/// increment 6 testing
 	r.Route("/echoping", func(r chi.Router) {
-		//r.Use(middlewares.LoggingMiddleware)
 		r.Get("/", handlers.Pong)
 	})
 
 	/// increment 10
 	r.Route("/ping", func(r chi.Router) {
 		//r.Use(middlewares.LoggingMiddleware)
-		r.Get("/", handlers.CheckDBConnectionHandler(service))
+		r.Get("/", dbCheck.ServeHTTP)
 	})
 
 	return r
-}
-
-func printMidl(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		//fmt.Println(r.URL.Path)
-		next.ServeHTTP(w, r)
-	})
 }
