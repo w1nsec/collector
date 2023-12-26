@@ -3,6 +3,8 @@ package server
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"github.com/rs/zerolog/log"
 	"github.com/w1nsec/collector/internal/config/server"
 	"github.com/w1nsec/collector/internal/service"
@@ -11,7 +13,6 @@ import (
 	"github.com/w1nsec/collector/internal/storage/filestorage"
 	"github.com/w1nsec/collector/internal/storage/memstorage"
 	"github.com/w1nsec/collector/internal/transport/http"
-	"time"
 )
 
 type appServer struct {

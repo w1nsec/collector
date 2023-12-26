@@ -2,12 +2,13 @@ package main
 
 import (
 	"context"
+	"os/signal"
+	"syscall"
+
 	"github.com/rs/zerolog/log"
 	"github.com/w1nsec/collector/internal/app/agent"
 	config "github.com/w1nsec/collector/internal/config/agent"
 	"github.com/w1nsec/collector/internal/logger"
-	"os/signal"
-	"syscall"
 )
 
 func main() {

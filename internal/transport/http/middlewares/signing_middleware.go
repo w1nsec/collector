@@ -3,10 +3,11 @@ package middlewares
 import (
 	"bytes"
 	"fmt"
-	"github.com/rs/zerolog/log"
-	"github.com/w1nsec/collector/internal/utils/signing"
 	"io"
 	"net/http"
+
+	"github.com/rs/zerolog/log"
+	"github.com/w1nsec/collector/internal/utils/signing"
 )
 
 var (

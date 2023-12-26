@@ -2,9 +2,10 @@ package metrics
 
 import (
 	"fmt"
-	"github.com/stretchr/testify/require"
 	"reflect"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 func Test_ConvertMymetric2Metric(t *testing.T) {

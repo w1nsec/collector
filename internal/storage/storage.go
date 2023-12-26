@@ -2,6 +2,7 @@ package storage
 
 import (
 	"context"
+
 	"github.com/w1nsec/collector/internal/metrics"
 )
 

@@ -4,15 +4,16 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net"
+	"net/http"
+	"syscall"
+	"time"
+
 	"github.com/rs/zerolog/log"
 	config "github.com/w1nsec/collector/internal/config/agent"
 	"github.com/w1nsec/collector/internal/metrics"
 	"github.com/w1nsec/collector/internal/storage"
 	"github.com/w1nsec/collector/internal/storage/memstorage"
-	"net"
-	"net/http"
-	"syscall"
-	"time"
 )
 
 var usedMemStats = []string{

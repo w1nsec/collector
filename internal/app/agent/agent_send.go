@@ -5,12 +5,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
+
 	"github.com/rs/zerolog/log"
 	"github.com/w1nsec/collector/internal/metrics"
 	locgzip "github.com/w1nsec/collector/internal/utils/compression/gzip"
 	"github.com/w1nsec/collector/internal/utils/signing"
-	"io"
-	"net/http"
 )
 
 func (agent Agent) SendMetrics() {

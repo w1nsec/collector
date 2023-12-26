@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"compress/gzip"
+
 	"github.com/rs/zerolog/log"
 )
 

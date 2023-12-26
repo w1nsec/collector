@@ -3,8 +3,9 @@ package middlewares
 import (
 	"compress/gzip"
 	"fmt"
-	"github.com/rs/zerolog/log"
 	"net/http"
+
+	"github.com/rs/zerolog/log"
 )
 
 func GzipDecompressMiddleware(next http.Handler) http.Handler {
@@ -32,6 +33,5 @@ func GzipDecompressMiddleware(next http.Handler) http.Handler {
 
 		r.Body = reader
 		next.ServeHTTP(w, r)
-		return
 	})
 }

@@ -3,9 +3,10 @@ package memstorage
 import (
 	"context"
 	"fmt"
-	"github.com/w1nsec/collector/internal/metrics"
 	"strconv"
 	"sync"
+
+	"github.com/w1nsec/collector/internal/metrics"
 )
 
 var (

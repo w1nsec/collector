@@ -3,14 +3,15 @@ package agent
 import (
 	"context"
 	"fmt"
-	"github.com/rs/zerolog/log"
-	"github.com/shirou/gopsutil/v3/cpu"
-	"github.com/shirou/gopsutil/v3/mem"
-	"github.com/w1nsec/collector/internal/metrics"
 	"math/rand"
 	"reflect"
 	"runtime"
 	"time"
+
+	"github.com/rs/zerolog/log"
+	"github.com/shirou/gopsutil/v3/cpu"
+	"github.com/shirou/gopsutil/v3/mem"
+	"github.com/w1nsec/collector/internal/metrics"
 )
 
 // using storage in collection

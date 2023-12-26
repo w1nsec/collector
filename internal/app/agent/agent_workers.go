@@ -4,11 +4,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/rs/zerolog/log"
-	"github.com/w1nsec/collector/internal/metrics"
 	"sync"
 	"syscall"
 	"time"
+
+	"github.com/rs/zerolog/log"
+	"github.com/w1nsec/collector/internal/metrics"
 )
 
 func (agent Agent) generator(ctx context.Context,

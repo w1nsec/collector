@@ -1,9 +1,10 @@
 package middlewares
 
 import (
-	"github.com/rs/zerolog/log"
 	"net/http"
 	"time"
+
+	"github.com/rs/zerolog/log"
 )
 
 type responseData struct {

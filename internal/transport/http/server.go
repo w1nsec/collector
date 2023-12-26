@@ -1,11 +1,12 @@
 package http
 
 import (
+	"net"
+	"net/http"
+
 	"github.com/rs/zerolog/log"
 	"github.com/w1nsec/collector/internal/config/server"
 	"github.com/w1nsec/collector/internal/service"
-	"net"
-	"net/http"
 )
 
 type Server interface {

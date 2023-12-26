@@ -4,11 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/rs/zerolog/log"
-	"github.com/w1nsec/collector/internal/metrics"
 	"io"
 	"net/http"
 	"strings"
+
+	"github.com/rs/zerolog/log"
+	"github.com/w1nsec/collector/internal/metrics"
 )
 
 type updateOneMetricUsecase interface {

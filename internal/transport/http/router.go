@@ -1,12 +1,13 @@
 package http
 
 import (
+	"net/http"
+
 	"github.com/go-chi/chi/v5"
 	chimidl "github.com/go-chi/chi/v5/middleware"
 	"github.com/w1nsec/collector/internal/service"
 	"github.com/w1nsec/collector/internal/transport/http/handlers"
 	"github.com/w1nsec/collector/internal/transport/http/middlewares"
-	"net/http"
 )
 
 var defaultCompressibleContentTypes = []string{
