@@ -8,7 +8,8 @@ import (
 
 func Compress(data []byte) ([]byte, error) {
 	var writer bytes.Buffer
-	gzipWr, err := gzip.NewWriterLevel(&writer, gzip.BestSpeed)
+	//gzipWr, err := gzip.NewWriterLevel(&writer, gzip.BestSpeed)
+	gzipWr, err := gzip.NewWriterLevel(&writer, gzip.DefaultCompression)
 	if err != nil {
 		return nil, err
 	}

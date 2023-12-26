@@ -107,6 +107,7 @@ func (agent Agent) SendData(data []byte, headers map[string]string, relURL strin
 	// setup compression
 	var buffer = bytes.NewBuffer(data)
 	compressionStatus := false
+	//c := middleware.NewCompressor(5)
 	if agent.compression {
 		compressed, err := locgzip.Compress(data)
 		if err == nil {
@@ -122,7 +123,7 @@ func (agent Agent) SendData(data []byte, headers map[string]string, relURL strin
 	address := fmt.Sprintf("http://%s/%s/", agent.addr.String(), relURL)
 	request, err := http.NewRequest(http.MethodPost, address, buffer)
 	if err != nil {
-		return err
+		return fmt.Errorf("can't send request %v", err)
 	}
 
 	// add headers for request

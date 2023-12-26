@@ -2,20 +2,30 @@ package http
 
 import (
 	"github.com/go-chi/chi/v5"
+	chimidl "github.com/go-chi/chi/v5/middleware"
 	"github.com/w1nsec/collector/internal/service"
 	"github.com/w1nsec/collector/internal/transport/http/handlers"
 	"github.com/w1nsec/collector/internal/transport/http/middlewares"
 	"net/http"
 )
 
+var defaultCompressibleContentTypes = []string{
+	"text/html",
+	"text/plain",
+	"application/json",
+}
+
 func NewRouter(service *service.MetricService) http.Handler {
 	r := chi.NewRouter()
 
 	// middlewares
+
 	signMidl := middlewares.NewSigningMidl(service.Secret)
 	r.Use(signMidl.Signing)
 	r.Use(middlewares.LoggingMiddleware)
-	r.Use(middlewares.GzipMiddleware)
+	//r.Use(middlewares.GzipMiddleware)
+	r.Use(middlewares.GzipDecompressMiddleware)
+	r.Use(chimidl.Compress(5, defaultCompressibleContentTypes...))
 
 	// handlers
 	getAllMetrics := handlers.NewGetMetricsHandler(service)
@@ -76,5 +86,7 @@ func NewRouter(service *service.MetricService) http.Handler {
 		r.Get("/", dbCheck.ServeHTTP)
 	})
 
+	// increment 16
+	r.Mount("/debug", chimidl.Profiler())
 	return r
 }
