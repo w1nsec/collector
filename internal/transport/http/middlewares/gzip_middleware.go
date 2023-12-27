@@ -51,6 +51,9 @@ func (gRW gzipResponseWriter) Write(data []byte) (int, error) {
 	return gzWriter.Write(data)
 }
 
+// GzipMiddleware
+// Deprecated: now use CHI router middleware for compress response
+// 				and GzipDecompressMiddleware for decompress requests
 func GzipMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Reading request
