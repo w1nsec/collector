@@ -14,13 +14,44 @@ import (
 	"github.com/w1nsec/collector/internal/metrics"
 )
 
-// using storage in collection
-func (agent Agent) CollectMetrics(ctx context.Context) {
+// UsedMemStats - params that should collect agent by task
+var UsedMemStats = []string{
+	"Alloc",
+	"BuckHashSys",
+	"Frees",
+	"GCCPUFraction",
+	"GCSys",
+	"HeapAlloc",
+	"HeapIdle",
+	"HeapInuse",
+	"HeapObjects",
+	"HeapReleased",
+	"HeapSys",
+	"LastGC",
+	"Lookups",
+	"MCacheInuse",
+	"MCacheSys",
+	"MSpanInuse",
+	"MSpanSys",
+	"Mallocs",
+	"NextGC",
+	"NumForcedGC",
+	"NumGC",
+	"OtherSys",
+	"PauseTotalNs",
+	"StackInuse",
+	"StackSys",
+	"Sys",
+	"TotalAlloc",
+}
+
+// CollectMainMetrics collect UsedMemStats metrics only
+func (agent Agent) CollectMainMetrics(ctx context.Context) {
 	m := runtime.MemStats{}
 	runtime.ReadMemStats(&m)
 	values := reflect.ValueOf(m)
 
-	for _, name := range usedMemStats {
+	for _, name := range UsedMemStats {
 		structVal := values.FieldByName(name)
 		var (
 			val float64
@@ -75,7 +106,11 @@ func (agent Agent) CollectMetrics(ctx context.Context) {
 
 }
 
-// increment15 / iter15 gopsutil
+// CollectGopsutilMetrics collect addition metrics^
+// - CPUutilization
+// - FreeMemory
+// - TotalMemory
+// added by task in increment15 / iter15 gopsutil
 func (agent Agent) CollectGopsutilMetrics(ctx context.Context) {
 
 	// gather memory metrics
@@ -101,7 +136,7 @@ func (agent Agent) CollectGopsutilMetrics(ctx context.Context) {
 	// FreeMemory
 	freeMem := float64(v.Free)
 	err = agent.store.UpdateMetric(ctx, &metrics.Metrics{
-		ID:    "TotalMemory",
+		ID:    "FreeMemory",
 		Value: &freeMem,
 		MType: metrics.Gauge,
 	})

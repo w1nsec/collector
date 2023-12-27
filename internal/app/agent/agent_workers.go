@@ -29,7 +29,7 @@ func (agent Agent) generator(ctx context.Context,
 			localWG.Add(2)
 			go func() {
 				defer localWG.Done()
-				agent.CollectMetrics(ctx)
+				agent.CollectMainMetrics(ctx)
 			}()
 			go func() {
 				defer localWG.Done()

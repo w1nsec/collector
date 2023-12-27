@@ -15,6 +15,7 @@ import (
 	"github.com/w1nsec/collector/internal/transport/http"
 )
 
+// appServer service designed to save sent metrics
 type appServer struct {
 	service *service.MetricService
 
@@ -66,6 +67,7 @@ func NewAppServer() (*appServer, error) {
 	return app, nil
 }
 
+// Run starting metrics collector server
 func (app appServer) Run(ctx context.Context) error {
 	// initialise storages
 
