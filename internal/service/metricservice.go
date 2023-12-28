@@ -47,7 +47,7 @@ func (service *MetricService) SetupLogger(level string) error {
 	return logger.Initialize(level)
 }
 
-func NewService(args server.Args, store storage.Storage,
+func NewService(args *server.Args, store storage.Storage,
 	fstore filestorage.FileStorageInterface) (*MetricService, error) {
 
 	// create service

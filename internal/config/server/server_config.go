@@ -22,7 +22,10 @@ type Args struct {
 	Key string
 }
 
-func ServerArgsParse(args *Args) {
+// ServerArgsParse return params in Args struct, that need for server successfully run
+func ServerArgsParse() *Args {
+	args := new(Args)
+
 	args.Addr = os.Getenv("ADDRESS")
 	args.LogLevel = os.Getenv("LOGLEVEL")
 
@@ -94,4 +97,5 @@ func ServerArgsParse(args *Args) {
 		args.Key = flagKey
 	}
 
+	return args
 }

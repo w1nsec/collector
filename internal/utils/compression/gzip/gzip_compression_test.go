@@ -98,7 +98,7 @@ func TestDecompress(t *testing.T) {
 	}
 }
 
-func ExampleCompressDecompress() {
+func ExampleCompress() {
 	data := strings.Repeat("test data", 10)
 	fmt.Println("Text len:          ", len(data))
 

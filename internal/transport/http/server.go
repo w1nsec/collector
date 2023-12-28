@@ -23,7 +23,7 @@ type MetricServer struct {
 	http.Server
 }
 
-func NewServerForService(args server.Args, service *service.MetricService) (Server, error) {
+func NewServerForService(args *server.Args, service *service.MetricService) (Server, error) {
 
 	mux := NewRouter(service)
 	return NewMetricServerWithParams(args.Addr, mux)

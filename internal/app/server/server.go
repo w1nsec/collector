@@ -28,10 +28,10 @@ func NewAppServer() (*appServer, error) {
 	var (
 		store  storage.Storage
 		fstore filestorage.FileStorageInterface
-		args   server.Args
+		//args   server.Args
 	)
 
-	server.ServerArgsParse(&args)
+	args := server.ServerArgsParse()
 	log.Info().
 		Str("addr", args.Addr).
 		Str("log", args.LogLevel).Send()

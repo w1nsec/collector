@@ -48,7 +48,7 @@ type Agent struct {
 }
 
 // NewAgent is constructor for Agent struct
-func NewAgent(args config.Args) (*Agent, error) {
+func NewAgent(args *config.Args) (*Agent, error) {
 	netAddr, err := net.ResolveTCPAddr("tcp", args.Addr)
 	if err != nil {
 		return nil, err

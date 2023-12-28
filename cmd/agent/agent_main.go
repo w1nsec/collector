@@ -13,15 +13,11 @@ import (
 
 func main() {
 
-	var (
-		args config.Args
-	)
-
 	ctx, cancel := signal.NotifyContext(context.Background(),
 		syscall.SIGINT, syscall.SIGTERM)
 	defer cancel()
 
-	config.AgentSelectArgs(&args)
+	args := config.AgentSelectArgs()
 	err := logger.Initialize(args.LogLevel)
 	if err != nil {
 		log.Error().Err(err).Send()
