@@ -12,9 +12,7 @@ import (
 )
 
 func TestGzipDecompressMiddleware(t *testing.T) {
-	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		//w.WriteHeader(http.StatusOK)
-	})
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {})
 	text := strings.Repeat("simpletext", 10)
 	validBody, err := gzip.Compress([]byte(text))
 	if err != nil {
