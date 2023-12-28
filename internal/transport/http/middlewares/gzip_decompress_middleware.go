@@ -11,6 +11,13 @@ import (
 func GzipDecompressMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
+		// request doesn't have body
+		if r.Method != http.MethodPost && r.Method != http.MethodPut {
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		// checking encoding header
 		encoding := r.Header.Get("content-encoding")
 		if encoding == "" {
 			next.ServeHTTP(w, r)
