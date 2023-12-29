@@ -24,6 +24,17 @@ func NewJSONGetMetricHandler(usecase jsonGetMetricUsecase) *JSONGetMetricHandler
 	return &JSONGetMetricHandler{usecase: usecase}
 }
 
+// JSONGetMetricHandler godoc
+// @Tags JSON Metrics
+// @Summary Get one metric in json
+// @Description Get one metric in json by it name (in json)
+// @Accept application/json
+// @Produce application/json
+// @Param bodyReq body metrics.Metrics true "MetricID"
+// @Success 200 {object} metrics.Metrics "OK, return metric value"
+// @Success 404 {string} string "Not found, can't found metric by ID"
+// @Failure 500 {string} string "Internal error"
+// @Router /value/ [post]
 func (h *JSONGetMetricHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method != http.MethodPost {

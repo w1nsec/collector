@@ -26,6 +26,16 @@ func NewJSONUpdateMetricsHandler(usecase jsonUpdateUsecase) *JSONUpdateMetricsHa
 }
 
 // increment 12
+// JSONUpdateMetricsHandler godoc
+// @Tags JSON Metrics
+// @Summary Update metrics in json
+// @Description Update metric in json by it name and value (in json)
+// @Accept application/json
+// @Produce application/json
+// @Param bodyReq body metrics.Metrics true "JSON, contains Metric ID,type,value"
+// @Success 200 {object} metrics.Metrics "OK, update/add metric value"
+// @Failure 500 {string} string "Internal error, can't update any metric"
+// @Router /updates/ [post]
 func (h *JSONUpdateMetricsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method != http.MethodPost {

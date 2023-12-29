@@ -21,6 +21,18 @@ func NewUpdateCountersHandler(counterUsecase updateCountersUsecase) *UpdateCount
 	return &UpdateCountersHandler{counterUsecase: counterUsecase}
 }
 
+// UpdateCountersHandler godoc
+// @Tags Update Metrics
+// @Summary Update Counters
+// @Description  Update Counter metric
+// @ID updateCounter
+// @Produce text/plain
+// @Param name path string true "Metric name"
+// @Param value path string true "Metric value"
+// @Success 200 {string} string "OK"
+// @Failure 400 {string} string "Wrong request, can't parse number"
+// @Failure 500 {string} string "Internal error"
+// @Router /update/counter/{name}/{value} [post]
 func (h *UpdateCountersHandler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	name := chi.URLParam(r, "name")
 	value := chi.URLParam(r, "value")

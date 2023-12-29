@@ -22,6 +22,18 @@ func NewUpdateGaugeHandler(gaugeUsecase updateGaugeUsecase) *UpdateGaugeHandler 
 	return &UpdateGaugeHandler{gaugeUsecase: gaugeUsecase}
 }
 
+// UpdateGaugeHandler godoc
+// @Tags Update Metrics
+// @Summary Update Gauges
+// @Description  Update gauge metric
+// @ID updateGauge
+// @Produce text/plain
+// @Param name path string true "Metric name"
+// @Param value path string true "Metric value"
+// @Success 200 {string} string "OK"
+// @Failure 400 {string} string "Wrong request, can't parse number"
+// @Failure 500 {string} string "Internal error"
+// @Router /update/gauge/{name}/{value} [post]
 func (h *UpdateGaugeHandler) ServeHTTP(wr http.ResponseWriter, r *http.Request) {
 	name := chi.URLParam(r, "name")
 	value := chi.URLParam(r, "value")

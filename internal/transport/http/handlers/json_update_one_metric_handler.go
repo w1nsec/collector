@@ -25,6 +25,17 @@ func NewJSONUpdateOneMetricHandler(usecase updateOneMetricUsecase) *JSONUpdateOn
 	return &JSONUpdateOneMetricHandler{usecase: usecase}
 }
 
+// JSONUpdateOneMetricHandler godoc
+// @Tags JSON Metrics
+// @Summary Update one metric in json
+// @Description Update one metric in json by it name and value (in json)
+// @Accept application/json
+// @Produce application/json
+// @Param bodyReq body metrics.Metrics true "JSON, contains Metric ID,type,value"
+// @Success 200 {object} metrics.Metrics "OK, update/add metric value"
+// @Success 404 {string} string "Not found, can't found metric by ID"
+// @Failure 500 {string} string "Internal error"
+// @Router /update/ [post]
 func (h *JSONUpdateOneMetricHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method != http.MethodPost {

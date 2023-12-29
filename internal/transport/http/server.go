@@ -9,6 +9,12 @@ import (
 	"github.com/w1nsec/collector/internal/service"
 )
 
+// @Title MetricServer Endpoints
+// @Description Service for storing metrics.
+// @Version 1.0
+// @BasePath /
+// @Host localhost:8080
+
 type Server interface {
 	Start() error
 	Stop() error

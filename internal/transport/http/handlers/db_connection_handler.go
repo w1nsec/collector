@@ -18,6 +18,16 @@ func NewCheckDBConnectionHandler(checkUsecase checkStorageUsecase) *CheckDBConne
 	return &CheckDBConnectionHandler{checkUsecase: checkUsecase}
 }
 
+// CheckDBConnectionHandler godoc
+// @Tags DB Check
+// @Tags.description "Check connection to DB"
+// @Summary Check DB
+// @Description Check connection to DB
+// @ID checkDB
+// @Produce text/plain
+// @Success 200 {string} string "DB available"
+// @Failure 500 {string} string "Internal error"
+// @Router /ping/ [get]
 func (h *CheckDBConnectionHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	err := h.checkUsecase.CheckStorage()
