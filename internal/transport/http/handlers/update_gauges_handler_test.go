@@ -6,10 +6,13 @@ import (
 	"fmt"
 	"github.com/go-chi/chi/v5"
 	"github.com/stretchr/testify/require"
+	"github.com/w1nsec/collector/internal/metrics"
 	"github.com/w1nsec/collector/internal/storage/memstorage"
 	"net/http"
 	"net/http/httptest"
+	"sync"
 	"testing"
+	"time"
 )
 
 func TestUpdateGaugeHandler_ServeHTTP(t *testing.T) {
@@ -99,4 +102,54 @@ func TestUpdateGaugeHandler_ServeHTTP(t *testing.T) {
 
 		})
 	}
+}
+
+func ExampleUpdateGaugeHandler_ServeHTTP() {
+	// metric params
+	mName := "testmetric"
+	mValue := "123.11"
+
+	addr := "localhost:8000"
+	path := "/update/gauge/{name}/{value}"
+	store := memstorage.NewMemStorage()
+	//defer store.Close(context.Background())
+
+	updateGauges := NewUpdateGaugeHandler(store)
+	router := chi.NewRouter()
+	router.Post(path, updateGauges.ServeHTTP)
+
+	wg := &sync.WaitGroup{}
+	wg.Add(1)
+
+	go http.ListenAndServe(addr, router)
+
+	url := fmt.Sprintf("http://%s/update/gauge/%s/%s", addr, mName, mValue)
+	client := &http.Client{Timeout: time.Second * 5}
+	req, err := http.NewRequest(http.MethodPost, url, nil)
+	if err != nil {
+		fmt.Printf("can't create request: %v\n", err)
+		return
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		fmt.Printf("can't send request: %v\n", err)
+		return
+	}
+	defer resp.Body.Close()
+
+	fmt.Println("Response SC:", resp.StatusCode)
+
+	m, err := store.GetMetric(context.Background(), mName, metrics.Gauge)
+	if err != nil {
+		fmt.Printf("Metric not found")
+		return
+	}
+
+	fmt.Println("Metric:", m)
+	wg.Done()
+}
+
+func TestExampleUpdateGaugeHandler_ServeHTTP(t *testing.T) {
+	ExampleUpdateGaugeHandler_ServeHTTP()
 }

@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"bytes"
+	"fmt"
 	"github.com/stretchr/testify/require"
 	"io"
 	"net/http"
@@ -58,4 +59,35 @@ func TestPong(t *testing.T) {
 
 		})
 	}
+}
+
+func ExamplePong() {
+	srv := httptest.NewServer(http.HandlerFunc(Pong))
+	defer srv.Close()
+
+	client := srv.Client()
+	req, err := http.NewRequest(http.MethodGet, srv.URL, nil)
+	if err != nil {
+		fmt.Printf("can't create request: %v\n", err)
+		return
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		fmt.Printf("can't connect to server: %v\n", err)
+		return
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		fmt.Printf("can't read body: %v\n", err)
+		return
+	}
+
+	fmt.Println("Response:", string(body))
+}
+
+func TestExamplePong(t *testing.T) {
+	ExamplePong()
 }

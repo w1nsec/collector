@@ -1,5 +1,9 @@
 package metrics
 
+import (
+	"fmt"
+)
+
 const (
 	Gauge   = "gauge"
 	Counter = "counter"
@@ -10,6 +14,18 @@ type Metrics struct {
 	MType string   `json:"type"`            // параметр, принимающий значение gauge или counter
 	Delta *int64   `json:"delta,omitempty"` // значение метрики в случае передачи counter
 	Value *float64 `json:"value,omitempty"` // значение метрики в случае передачи gauge
+}
+
+func (m Metrics) String() string {
+	switch m.MType {
+	case Gauge:
+		return fmt.Sprintf("ID: %s | Type: %s | Value: %f", m.ID, m.MType, *m.Value)
+
+	case Counter:
+		return fmt.Sprintf("ID: %s | Type: %s | Value: %d", m.ID, m.MType, *m.Delta)
+
+	}
+	return fmt.Sprintf("ID: %s | Unsupported metric type", m.ID)
 }
 
 func NewCounterMetric(name, mType string, value int64) *Metrics {
