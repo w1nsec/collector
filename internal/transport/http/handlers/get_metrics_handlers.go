@@ -22,6 +22,11 @@ func NewGetMetricHandler(usecase getMetricUsecase) *GetMetricHandler {
 }
 
 func (h *GetMetricHandler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		rw.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
 	mType := chi.URLParam(r, "mType")
 	mName := chi.URLParam(r, "mName")
 
@@ -57,6 +62,10 @@ func NewGetMetricsHandler(usecase getAllMetricsUsecase) *GetMetricsHandler {
 }
 
 func (h *GetMetricsHandler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		rw.WriteHeader(http.StatusBadRequest)
+		return
+	}
 	page := fmt.Sprintf("<html><body>%s</body></html>",
 		h.usecase.String(r.Context()))
 
