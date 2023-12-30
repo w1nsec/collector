@@ -16,16 +16,9 @@ func TestGetMetricHandler_ServeHTTP(t *testing.T) {
 	store := memstorage.NewMemStorage()
 	gauge := float64(6.112)
 	counter := int64(6112)
-	mGauge := &metrics.Metrics{
-		ID:    "validGauge",
-		MType: metrics.Gauge,
-		Value: &gauge,
-	}
-	mCounter := &metrics.Metrics{
-		ID:    "validCounter",
-		MType: metrics.Counter,
-		Delta: &counter,
-	}
+	mGauge := metrics.NewGaugeMetric("validGauge", gauge)
+	mCounter := metrics.NewCounterMetric("validCounter", counter)
+
 	err := store.AddMetric(context.Background(), mGauge)
 	if err != nil {
 		fmt.Println("can't add counter metric to storage")

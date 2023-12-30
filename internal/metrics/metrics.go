@@ -28,26 +28,20 @@ func (m Metrics) String() string {
 	return fmt.Sprintf("ID: %s | Unsupported metric type", m.ID)
 }
 
-func NewCounterMetric(name, mType string, value int64) *Metrics {
-	if mType == Gauge {
-		return nil
-	}
+func NewCounterMetric(name string, value int64) *Metrics {
 	metric := &Metrics{
 		ID:    name,
-		MType: mType,
+		MType: Counter,
 		Delta: &value,
 	}
 	return metric
 }
 
-func NewGaugeMetric(name, mType string, value float64) *Metrics {
-	if mType == Counter {
-		//return nil, fmt.Errorf("wrong metric type, got: \"counter\", need: \"gauge\"")
-		return nil
-	}
+func NewGaugeMetric(name string, value float64) *Metrics {
+
 	metric := &Metrics{
 		ID:    name,
-		MType: mType,
+		MType: Gauge,
 		Value: &value,
 	}
 	//return metric, nil
