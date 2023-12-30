@@ -54,11 +54,11 @@ func Delete(metrics []*Metrics, ind int) []*Metrics {
 		return metrics
 	}
 
-	// delete metric
+	// delete last metric
 	metrics[ind] = metrics[l-1]
 
 	// TODO need this ?
-	//newMetrics[len(newMetrics)-1] = nil
+	metrics[l-1] = nil
 
 	return metrics[:l-1]
 }
