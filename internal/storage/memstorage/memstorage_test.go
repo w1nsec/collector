@@ -647,7 +647,7 @@ func TestMemStorage_GetAllMetrics(t *testing.T) {
 				return
 			}
 			sort.Slice(got, func(i, j int) bool {
-				return got[i].ID < got[i].ID
+				return got[i].ID < got[j].ID
 			})
 			if !reflect.DeepEqual(got, tt.args.slice) {
 				t.Errorf("GetAllMetrics() got:\n%v\nwant:\n%v", got, tt.args.slice)
