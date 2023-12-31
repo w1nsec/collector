@@ -139,7 +139,7 @@ func TestDelete(t *testing.T) {
 				if tt.found == false {
 
 					deletingItem.ID = tt.args.metrics[tt.args.ind].ID
-					deletingItem.MType = tt.args.metrics[tt.args.ind].MType
+					//deletingItem.MType = tt.args.metrics[tt.args.ind].MType
 					d := *tt.args.metrics[tt.args.ind].Delta
 					deletingItem.Delta = &d
 				}
