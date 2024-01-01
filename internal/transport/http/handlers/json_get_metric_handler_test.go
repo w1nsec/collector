@@ -21,17 +21,17 @@ type jsonGetUsecase struct {
 	jsonGetMetricUsecase
 }
 
-func (h jsonGetUsecase) GetMetric(ctx context.Context, mName string, mType string) (*metrics.Metrics, error) {
-	if h.m == nil {
-		h.m = make(map[string]*metrics.Metrics)
+func (u jsonGetUsecase) GetMetric(ctx context.Context, mName string, mType string) (*metrics.Metrics, error) {
+	if u.m == nil {
+		u.m = make(map[string]*metrics.Metrics)
 	}
 	m1 := metrics.NewCounterMetric("test1", 111)
 	m2 := metrics.NewGaugeMetric("test2", 333.1)
 
-	h.m[m1.ID] = m1
-	h.m[m2.ID] = m2
+	u.m[m1.ID] = m1
+	u.m[m2.ID] = m2
 
-	m, ok := h.m[mName]
+	m, ok := u.m[mName]
 	if !ok {
 		return nil, fmt.Errorf("metric with name:%s not found", mName)
 	}
