@@ -14,6 +14,8 @@ jobs:
     steps:
       - name: Create coverprofile for code
         run: |
+          pwd
+          ls -la
           go test -covermode=count -coverprofile=.coverage ./...
 
       - name: Coveralls GitHub Action
