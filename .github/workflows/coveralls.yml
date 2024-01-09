@@ -7,9 +7,9 @@ on:
       - main
 
 jobs:
-  branchtest:
+  coverallstests:
     runs-on: ubuntu-latest
 
     steps:
       - name: Coveralls GitHub Action
-      uses: coverallsapp/github-action@v2.2.3
+        uses: coverallsapp/github-action@v2.2.3
