@@ -9,8 +9,13 @@ on:
 jobs:
   coveralls:
     runs-on: ubuntu-latest
+    container: golang:1.20
 
     steps:
+      - name: Create coverprofile for code
+        run: |
+          go test -covermode=count -coverprofile=.coverage ./...
+
       - name: Coveralls GitHub Action
         uses: coverallsapp/github-action@v2.2.3
         with:
