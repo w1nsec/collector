@@ -1,4 +1,4 @@
-name: autotests
+name: coverage
 
 on:
   pull_request:
@@ -7,7 +7,7 @@ on:
       - main
 
 jobs:
-  coverallstests:
+  coveralls:
     runs-on: ubuntu-latest
 
     steps:
