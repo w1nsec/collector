@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+
 	"github.com/rs/zerolog/log"
 	"github.com/w1nsec/collector/internal/metrics"
 )

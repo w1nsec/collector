@@ -4,12 +4,13 @@ import (
 	"bufio"
 	"context"
 	"encoding/json"
+	"os"
+	"sync"
+
 	"github.com/rs/zerolog/log"
 	"github.com/w1nsec/collector/internal/metrics"
 	"github.com/w1nsec/collector/internal/storage"
 	"github.com/w1nsec/collector/internal/storage/memstorage"
-	"os"
-	"sync"
 )
 
 type FileStorageInterface interface {

@@ -1,32 +1,49 @@
 package metrics
 
+import (
+	"fmt"
+)
+
+const (
+	Gauge   = "gauge"
+	Counter = "counter"
+)
+
+// Metrics is the main struct used for transport data
+// between client and server
 type Metrics struct {
-	ID    string   `json:"id"`              // имя метрики
-	MType string   `json:"type"`            // параметр, принимающий значение gauge или counter
-	Delta *int64   `json:"delta,omitempty"` // значение метрики в случае передачи counter
-	Value *float64 `json:"value,omitempty"` // значение метрики в случае передачи gauge
+	ID    string   `json:"id"`              // metric name
+	MType string   `json:"type"`            // metric type, must be "gauge" or "counter" type
+	Delta *int64   `json:"delta,omitempty"` // "counter" metric value (for "gauge" is nil)
+	Value *float64 `json:"value,omitempty"` // "gauge" metric value (for "counter" is nil)
 }
 
-func NewCounterMetric(name, mType string, value int64) *Metrics {
-	if mType == Gauge {
-		return nil
+func (m Metrics) String() string {
+	switch m.MType {
+	case Gauge:
+		return fmt.Sprintf("ID: %s | Type: %s | Value: %f", m.ID, m.MType, *m.Value)
+
+	case Counter:
+		return fmt.Sprintf("ID: %s | Type: %s | Value: %d", m.ID, m.MType, *m.Delta)
+
 	}
+	return fmt.Sprintf("ID: %s | Unsupported metric type", m.ID)
+}
+
+func NewCounterMetric(name string, value int64) *Metrics {
 	metric := &Metrics{
 		ID:    name,
-		MType: mType,
+		MType: Counter,
 		Delta: &value,
 	}
 	return metric
 }
 
-func NewGaugeMetric(name, mType string, value float64) *Metrics {
-	if mType == Counter {
-		//return nil, fmt.Errorf("wrong metric type, got: \"counter\", need: \"gauge\"")
-		return nil
-	}
+func NewGaugeMetric(name string, value float64) *Metrics {
+
 	metric := &Metrics{
 		ID:    name,
-		MType: mType,
+		MType: Gauge,
 		Value: &value,
 	}
 	//return metric, nil
@@ -39,11 +56,11 @@ func Delete(metrics []*Metrics, ind int) []*Metrics {
 		return metrics
 	}
 
-	// delete metric
+	// delete last metric
 	metrics[ind] = metrics[l-1]
 
 	// TODO need this ?
-	//newMetrics[len(newMetrics)-1] = nil
+	metrics[l-1] = nil
 
 	return metrics[:l-1]
 }

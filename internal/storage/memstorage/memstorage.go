@@ -3,9 +3,12 @@ package memstorage
 import (
 	"context"
 	"fmt"
-	"github.com/w1nsec/collector/internal/metrics"
+	"sort"
 	"strconv"
+	"strings"
 	"sync"
+
+	"github.com/w1nsec/collector/internal/metrics"
 )
 
 var (
@@ -41,33 +44,50 @@ func (ms *MemStorage) CheckStorage() error {
 	return ms.Init()
 }
 
+// Sting now changed to alphabetical order print
 func (ms *MemStorage) String(ctx context.Context) string {
 	ms.mutex.RLock()
-	var s1 = "[counters]\n"
-	var s2 = "[gauges]\n"
-	count := 0
-	numInLine := 5
+
+	if len(ms.dataGauges) == 0 &&
+		len(ms.dataCounters) == 0 {
+		return "empty storage"
+	}
+
+	cSL := make([]string, len(ms.dataCounters))
+	gSL := make([]string, len(ms.dataGauges))
+
+	var s1 = "[counters]"
+	var s2 = "[gauges]"
+	i := 0
 	for key, val := range ms.dataCounters {
-		s1 += fmt.Sprintf("%s:%d ", key, val)
-		count++
-		if count == numInLine {
-			count = 0
-			s1 += "\n"
-		}
+		cSL[i] = fmt.Sprintf("%s:%d", key, val)
+		i += 1
 	}
-	s1 += "\n"
-	count = 0
+
+	i = 0
 	for key, val := range ms.dataGauges {
-		s2 += fmt.Sprintf("%s:%f ", key, val)
-		count++
-		if count == numInLine {
-			count = 0
-			s2 += "\n"
-		}
+		gSL[i] = fmt.Sprintf("%s:%f", key, val)
+		i += 1
 	}
+	sort.Strings(cSL)
+	sort.Strings(gSL)
+
+	s1 = fmt.Sprintf("%s\n%s\n",
+		s1, strings.Join(cSL, " | "))
+	s2 = fmt.Sprintf("%s\n%s\n",
+		s2, strings.Join(gSL, " | "))
+
+	var output string
+	if len(ms.dataCounters) != 0 {
+		output += s1
+	}
+	if len(ms.dataGauges) != 0 {
+		output += s2
+	}
+	output += "\n"
 	ms.mutex.RUnlock()
-	s2 += "\n\n"
-	return s1 + s2
+
+	return output
 
 }
 
@@ -87,8 +107,7 @@ func (ms *MemStorage) UpdateMetric(ctx context.Context, newMetric *metrics.Metri
 }
 
 func (ms *MemStorage) AddMetric(ctx context.Context, newMetric *metrics.Metrics) error {
-	ms.UpdateMetric(ctx, newMetric)
-	return nil
+	return ms.UpdateMetric(ctx, newMetric)
 }
 
 func (ms *MemStorage) GetMetricString(ctx context.Context, mType, mName string) string {

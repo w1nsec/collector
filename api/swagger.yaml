@@ -1,0 +1,266 @@
+basePath: /
+definitions:
+  metrics.Metrics:
+    properties:
+      delta:
+        description: значение метрики в случае передачи counter
+        type: integer
+      id:
+        description: имя метрики
+        type: string
+      type:
+        description: параметр, принимающий значение gauge или counter
+        type: string
+      value:
+        description: значение метрики в случае передачи gauge
+        type: number
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: Service for storing metrics.
+  title: MetricServer Endpoints
+  version: "1.0"
+paths:
+  /:
+    get:
+      description: Get All Metric in html format
+      produces:
+      - text/html
+      responses:
+        "200":
+          description: OK, return metric value
+          schema:
+            type: string
+        "500":
+          description: Internal error, can't write response body
+          schema:
+            type: string
+      summary: Get All Metric
+      tags:
+      - Get Metrics
+  /{mType}/{mName}:
+    get:
+      description: Get one metric by name
+      parameters:
+      - description: Metric type
+        in: path
+        name: mType
+        required: true
+        type: string
+      - description: Metric name
+        in: path
+        name: mName
+        required: true
+        type: string
+      produces:
+      - text/plain
+      responses:
+        "200":
+          description: OK, return metric value
+          schema:
+            type: string
+        "400":
+          description: Wrong request, can't parse number
+          schema:
+            type: string
+        "404":
+          description: Metric not found
+          schema:
+            type: string
+        "500":
+          description: Internal error, can't write response body
+          schema:
+            type: string
+      summary: Get one metric
+      tags:
+      - Get Metrics
+  /echoping:
+    get:
+      description: Request echo reply from server
+      operationId: pongHandler
+      produces:
+      - text/plain
+      responses:
+        "200":
+          description: pong
+          schema:
+            type: string
+        "500":
+          description: Internal error
+          schema:
+            type: string
+      summary: Test handler for service
+      tags:
+      - Ping debug
+  /ping/:
+    get:
+      description: Check connection to DB
+      operationId: checkDB
+      produces:
+      - text/plain
+      responses:
+        "200":
+          description: DB available
+          schema:
+            type: string
+        "500":
+          description: Internal error
+          schema:
+            type: string
+      summary: Check DB
+      tags:
+      - DB Check
+  /update/:
+    post:
+      consumes:
+      - application/json
+      description: Update one metric in json by it name and value (in json)
+      parameters:
+      - description: JSON, contains Metric ID,type,value
+        in: body
+        name: bodyReq
+        required: true
+        schema:
+          $ref: '#/definitions/metrics.Metrics'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK, update/add metric value
+          schema:
+            $ref: '#/definitions/metrics.Metrics'
+        "404":
+          description: Not found, can't found metric by ID
+          schema:
+            type: string
+        "500":
+          description: Internal error
+          schema:
+            type: string
+      summary: Update one metric in json
+      tags:
+      - JSON Metrics
+  /update/counter/{name}/{value}:
+    post:
+      description: Update Counter metric
+      operationId: updateCounter
+      parameters:
+      - description: Metric name
+        in: path
+        name: name
+        required: true
+        type: string
+      - description: Metric value
+        in: path
+        name: value
+        required: true
+        type: string
+      produces:
+      - text/plain
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Wrong request, can't parse number
+          schema:
+            type: string
+        "500":
+          description: Internal error
+          schema:
+            type: string
+      summary: Update Counters
+      tags:
+      - Update Metrics
+  /update/gauge/{name}/{value}:
+    post:
+      description: Update gauge metric
+      operationId: updateGauge
+      parameters:
+      - description: Metric name
+        in: path
+        name: name
+        required: true
+        type: string
+      - description: Metric value
+        in: path
+        name: value
+        required: true
+        type: string
+      produces:
+      - text/plain
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Wrong request, can't parse number
+          schema:
+            type: string
+        "500":
+          description: Internal error
+          schema:
+            type: string
+      summary: Update Gauges
+      tags:
+      - Update Metrics
+  /updates/:
+    post:
+      consumes:
+      - application/json
+      description: Update metric in json by it name and value (in json)
+      parameters:
+      - description: JSON, contains Metric ID,type,value
+        in: body
+        name: bodyReq
+        required: true
+        schema:
+          $ref: '#/definitions/metrics.Metrics'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK, update/add metric value
+          schema:
+            $ref: '#/definitions/metrics.Metrics'
+        "500":
+          description: Internal error, can't update any metric
+          schema:
+            type: string
+      summary: Update metrics in json
+      tags:
+      - JSON Metrics
+  /value/:
+    post:
+      consumes:
+      - application/json
+      description: Get one metric in json by it name (in json)
+      parameters:
+      - description: MetricID
+        in: body
+        name: bodyReq
+        required: true
+        schema:
+          $ref: '#/definitions/metrics.Metrics'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK, return metric value
+          schema:
+            $ref: '#/definitions/metrics.Metrics'
+        "404":
+          description: Not found, can't found metric by ID
+          schema:
+            type: string
+        "500":
+          description: Internal error
+          schema:
+            type: string
+      summary: Get one metric in json
+      tags:
+      - JSON Metrics
+swagger: "2.0"

@@ -3,8 +3,9 @@ package memstorage
 import (
 	"context"
 	"fmt"
-	"github.com/w1nsec/collector/internal/metrics"
 	"strings"
+
+	"github.com/w1nsec/collector/internal/metrics"
 )
 
 func (ms *MemStorage) UpdateCounters(ctx context.Context, name string, value int64) error {

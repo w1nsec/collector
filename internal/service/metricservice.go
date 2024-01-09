@@ -2,12 +2,13 @@ package service
 
 import (
 	"context"
+	"time"
+
 	"github.com/rs/zerolog/log"
 	"github.com/w1nsec/collector/internal/config/server"
 	"github.com/w1nsec/collector/internal/logger"
 	"github.com/w1nsec/collector/internal/storage"
 	"github.com/w1nsec/collector/internal/storage/filestorage"
-	"time"
 )
 
 type MetricService struct {
@@ -46,7 +47,7 @@ func (service *MetricService) SetupLogger(level string) error {
 	return logger.Initialize(level)
 }
 
-func NewService(args server.Args, store storage.Storage,
+func NewService(args *server.Args, store storage.Storage,
 	fstore filestorage.FileStorageInterface) (*MetricService, error) {
 
 	// create service

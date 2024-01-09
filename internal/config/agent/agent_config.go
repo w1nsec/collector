@@ -22,7 +22,10 @@ type Args struct {
 	LogLevel string
 }
 
-func AgentSelectArgs(args *Args) {
+// AgentSelectArgs return params in Args struct, that need for agent successfully run
+func AgentSelectArgs() *Args {
+	args := new(Args)
+
 	// set log level
 	args.LogLevel = "info"
 
@@ -72,4 +75,5 @@ func AgentSelectArgs(args *Args) {
 		args.Rate = flagRate
 	}
 
+	return args
 }

@@ -1,12 +1,13 @@
 package logger
 
 import (
-	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
-	"github.com/rs/zerolog/pkgerrors"
 	"os"
 	"strings"
 	"time"
+
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
+	"github.com/rs/zerolog/pkgerrors"
 )
 
 func Initialize(level string) error {
