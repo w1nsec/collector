@@ -16,6 +16,8 @@ jobs:
         run: |
           pwd
           ls -la
+          ls -al ../
+          ls -al ../../
           go test -covermode=count -coverprofile=.coverage ./...
 
       - name: Coveralls GitHub Action
