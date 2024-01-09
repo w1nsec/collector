@@ -12,12 +12,11 @@ jobs:
     container: golang:1.20
 
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
       - name: Create coverprofile for code
         run: |
-          pwd
-          ls -la
-          ls -al ../
-          ls -al ../../
           go test -covermode=count -coverprofile=.coverage ./...
 
       - name: Coveralls GitHub Action
