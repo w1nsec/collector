@@ -1,6 +1,8 @@
-# go-musthave-metrics-tpl
+[![Coverage Status](https://coveralls.io/repos/github/w1nsec/collector/badge.svg?branch=main)](https://coveralls.io/github/w1nsec/collector?branch=main)
 
-Шаблон репозитория для трека «Сервер сбора метрик и алертинга».
+# Yandex Go course
+
+Репозиторий для трека «Сервер сбора метрик и алертинга».
 
 ## Начало работы
 
