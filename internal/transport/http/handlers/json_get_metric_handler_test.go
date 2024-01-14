@@ -18,7 +18,7 @@ import (
 
 type jsonGetUsecase struct {
 	m map[string]*metrics.Metrics
-	jsonGetMetricUsecase
+	//jsonGetMetricUsecase
 }
 
 func (u jsonGetUsecase) GetMetric(ctx context.Context, mName string, mType string) (*metrics.Metrics, error) {
@@ -65,7 +65,7 @@ func TestJSONGetMetricHandler_ServeHTTP(t *testing.T) {
 	type args struct {
 		method string
 		metric *metrics.Metrics
-		body   []byte
+		//body   []byte
 		status int
 	}
 	tests := []struct {

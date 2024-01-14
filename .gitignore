@@ -39,3 +39,4 @@ Makefile
 # other files
 bfg.jar
 *.jar
+staticcheck.conf
