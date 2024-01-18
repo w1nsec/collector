@@ -112,8 +112,8 @@ func (h *JSONUpdateOneMetricHandler) ServeHTTP(w http.ResponseWriter, r *http.Re
 	// Debug version
 	// TODO change request metrics by name to:  body-request -> body-response resent (when debug done)
 
-	retMetric, _ := h.usecase.GetMetric(r.Context(), metric.ID, metric.MType)
-	if retMetric == nil {
+	retMetric, err := h.usecase.GetMetric(r.Context(), metric.ID, metric.MType)
+	if retMetric == nil || err != nil {
 		log.Error().
 			Err(fmt.Errorf("metric \"%s\" not found in store",
 				metric.ID)).Send()

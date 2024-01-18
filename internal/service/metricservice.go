@@ -87,7 +87,10 @@ func (service *MetricService) BackupLoop(ctx context.Context, storeInterval time
 func (service *MetricService) Setup(ctx context.Context) error {
 	if service.Restore {
 		if service.FileStorageInterface != nil {
-			service.FileStorageInterface.Load(ctx)
+			err := service.FileStorageInterface.Load(ctx)
+			if err != nil {
+				log.Error().Err(err).Send()
+			}
 			go service.BackupLoop(ctx, service.StoreInterval)
 		}
 		return service.Storage.Init()

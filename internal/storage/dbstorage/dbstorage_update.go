@@ -98,7 +98,11 @@ func (pgStorage postgresStorage) UpdateMetrics(ctx context.Context, newMetrics [
 			_, err = tx.ExecContext(ctx, queryCounter, newMetric.ID, newMetric.Delta)
 		}
 		if err != nil {
-			tx.Rollback()
+			err1 := tx.Rollback()
+			if err1 != nil {
+				log.Error().Err(err).
+					Msg("can't rollback changes")
+			}
 			return err
 		}
 	}

@@ -35,8 +35,12 @@ diagrams/*
 tmp/
 requests/
 Makefile
+internal/utils/staticlint/testdata/
 
 # other files
 bfg.jar
 *.jar
+
+# staticcheck
+staticcheck.json
 staticcheck.conf

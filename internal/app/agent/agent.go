@@ -5,6 +5,7 @@ package agent
 
 import (
 	"context"
+	"github.com/rs/zerolog/log"
 	"net"
 	"net/http"
 	"time"
@@ -119,5 +120,8 @@ func (agent Agent) Start(ctx context.Context) error {
 func (agent Agent) Close() {
 	close(agent.errorsCh)
 	close(agent.successReport)
-	agent.store.Close(context.TODO())
+	err := agent.store.Close(context.TODO())
+	if err != nil {
+		log.Error().Err(err).Send()
+	}
 }

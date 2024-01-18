@@ -121,3 +121,5 @@ check14:
                 -key="${KEY}"
 
 
+staticcheck:
+	cmd/staticlint ./...
