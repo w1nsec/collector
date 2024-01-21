@@ -81,6 +81,9 @@ func (f FileStorage) SaveAll(ctx context.Context) error {
 		f.file = file
 	}
 	err := f.file.Truncate(0)
+	if err != nil {
+		return err
+	}
 	_, err = f.file.Seek(0, 0)
 	if err != nil {
 		log.Error().Err(err).
