@@ -226,3 +226,9 @@ func TestJSONUpdateOneMetricHandler_ServeHTTP(t *testing.T) {
 		})
 	}
 }
+
+func TestNewJSONUpdateOneMetricHandler(t *testing.T) {
+	var usecase jsonGetUsecase
+	got := NewJSONUpdateOneMetricHandler(&usecase)
+	require.NotNil(t, got, "got nil value from constructor")
+}

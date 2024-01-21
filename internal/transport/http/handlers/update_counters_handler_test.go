@@ -141,3 +141,16 @@ func ExampleUpdateCountersHandler_ServeHTTP() {
 func TestExampleUpdateCountersHandler_ServeHTTP(t *testing.T) {
 	ExampleUpdateCountersHandler_ServeHTTP()
 }
+
+type mockUpdateCounters struct {
+}
+
+func (m mockUpdateCounters) UpdateCounters(ctx context.Context, name string, value int64) error {
+	return nil
+}
+
+func TestNewUpdateCountersHandler(t *testing.T) {
+	var usecase mockUpdateCounters
+	got := NewUpdateCountersHandler(usecase)
+	require.NotNil(t, got, "got nil value from constructor")
+}

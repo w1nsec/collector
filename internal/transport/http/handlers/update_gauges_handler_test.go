@@ -153,3 +153,16 @@ func ExampleUpdateGaugeHandler_ServeHTTP() {
 func TestExampleUpdateGaugeHandler_ServeHTTP(t *testing.T) {
 	ExampleUpdateGaugeHandler_ServeHTTP()
 }
+
+type mockUpdateGauge struct {
+}
+
+func (m mockUpdateGauge) UpdateGauges(ctx context.Context, name string, value float64) error {
+	return nil
+}
+
+func TestNewUpdateGaugeHandler(t *testing.T) {
+	var usecase mockUpdateGauge
+	got := NewUpdateGaugeHandler(usecase)
+	require.NotNil(t, got, "got nil value from constructor")
+}

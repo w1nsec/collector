@@ -222,3 +222,9 @@ func ExampleJSONGetMetricHandler_ServeHTTP() {
 func TestExampleJSONGetMetricHandler_ServeHTTP(t *testing.T) {
 	ExampleJSONGetMetricHandler_ServeHTTP()
 }
+
+func TestNewJSONGetMetricHandler(t *testing.T) {
+	var usecase jsonGetUsecase
+	got := NewJSONGetMetricHandler(usecase)
+	require.NotNil(t, got, "got nil value from constructor")
+}
