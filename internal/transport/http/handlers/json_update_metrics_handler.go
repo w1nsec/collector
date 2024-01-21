@@ -42,7 +42,7 @@ func (h *JSONUpdateMetricsHandler) ServeHTTP(w http.ResponseWriter, r *http.Requ
 		log.Error().
 			Err(fmt.Errorf("wrong method for %s", r.URL.RawPath)).
 			Send()
-		w.WriteHeader(http.StatusInternalServerError)
+		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
 
