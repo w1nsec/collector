@@ -49,7 +49,7 @@ func selectLevel(level string) zerolog.Level {
 	// Error level
 	case "ERR":
 		return zerolog.ErrorLevel
-	case "EROR":
+	case "ERROR":
 		return zerolog.ErrorLevel
 
 	default:
