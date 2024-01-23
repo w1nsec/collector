@@ -74,3 +74,9 @@ func TestCheckDBConnectionHandler_ServeHTTP(t *testing.T) {
 		})
 	}
 }
+
+func TestNewCheckDBConnectionHandler(t *testing.T) {
+	var usecase checkStorageUsecase
+	gotHdl := NewCheckDBConnectionHandler(usecase)
+	require.NotNil(t, gotHdl, "got nil value from constructor")
+}

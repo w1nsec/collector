@@ -47,7 +47,11 @@ func (h *GetMetricHandler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	// if metric not found
 	if value == "" {
 		rw.WriteHeader(http.StatusNotFound)
-		rw.Write([]byte(NotFound))
+		_, err := rw.Write([]byte(NotFound))
+		if err != nil {
+			log.Error().Err(err).
+				Msg("can't write body to ResponseWriter")
+		}
 		return
 	}
 

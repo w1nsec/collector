@@ -170,3 +170,18 @@ func TestGetMetricsHandler_ServeHTTP(t *testing.T) {
 		})
 	}
 }
+
+type mockGetMetric struct {
+	m map[string]*metrics.Metrics
+	//jsonGetMetricUsecase
+}
+
+func (m mockGetMetric) GetMetricString(ctx context.Context, mType string, mName string) string {
+	return "all is good"
+}
+
+func TestNewGetMetricHandler(t *testing.T) {
+	var usecase mockGetMetric
+	gotHdl := NewGetMetricHandler(usecase)
+	require.NotNil(t, gotHdl, "got nil value from constructor")
+}

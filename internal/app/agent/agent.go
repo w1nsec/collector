@@ -5,6 +5,8 @@ package agent
 
 import (
 	"context"
+	"fmt"
+	"github.com/rs/zerolog/log"
 	"net"
 	"net/http"
 	"time"
@@ -20,6 +22,9 @@ var (
 	timeout = 10 * time.Second
 	//retryStep     = uint(2) // 2 seconds
 	maxRetryCount = uint(5)
+	buildVersion  = "N/A"
+	buildDate     = "N/A"
+	buildCommit   = "N/A"
 )
 
 // Agent struct, that contains Storage and other config options for running agent
@@ -88,6 +93,14 @@ func NewAgent(args *config.Args) (*Agent, error) {
 
 // Start run Agent functionality (collect and send metrics)
 func (agent Agent) Start(ctx context.Context) error {
+	fmt.Printf(
+		"Build version: %s\n"+
+			"Build daate: %s\n"+
+			"Build commit: %s\n",
+		buildVersion,
+		buildDate,
+		buildCommit,
+	)
 
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
@@ -119,5 +132,8 @@ func (agent Agent) Start(ctx context.Context) error {
 func (agent Agent) Close() {
 	close(agent.errorsCh)
 	close(agent.successReport)
-	agent.store.Close(context.TODO())
+	err := agent.store.Close(context.TODO())
+	if err != nil {
+		log.Error().Err(err).Send()
+	}
 }

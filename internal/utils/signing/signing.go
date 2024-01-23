@@ -4,11 +4,16 @@ import (
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/base64"
+	"github.com/rs/zerolog/log"
 )
 
 func CreateSigning(data, key []byte) []byte {
 	h := hmac.New(sha256.New, key)
-	h.Write(data)
+	_, err := h.Write(data)
+	if err != nil {
+		log.Error().Err(err).Send()
+		return nil
+	}
 	sign := h.Sum(nil)
 
 	return []byte(base64.StdEncoding.EncodeToString(sign))

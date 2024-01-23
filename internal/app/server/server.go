@@ -24,6 +24,12 @@ type appServer struct {
 
 }
 
+var (
+	buildVersion = "N/A"
+	buildDate    = "N/A"
+	buildCommit  = "N/A"
+)
+
 func NewAppServer() (*appServer, error) {
 	var (
 		store  storage.Storage
@@ -70,6 +76,14 @@ func NewAppServer() (*appServer, error) {
 // Run starting metrics collector server
 func (app appServer) Run(ctx context.Context) error {
 	// initialise storages
+	fmt.Printf(
+		"Build version: %s\n"+
+			"Build daate: %s\n"+
+			"Build commit: %s\n",
+		buildVersion,
+		buildDate,
+		buildCommit,
+	)
 
 	// restore DB
 	go app.service.Setup(ctx)

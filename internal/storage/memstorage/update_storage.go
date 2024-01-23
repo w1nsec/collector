@@ -43,13 +43,11 @@ func (ms *MemStorage) updateMetric(ctx context.Context, metric *metrics.Metrics)
 	}
 
 	if valInt, ok := val.(int64); ok {
-		ms.UpdateCounters(ctx, metric.ID, valInt)
-		return nil
+		return ms.UpdateCounters(ctx, metric.ID, valInt)
 	}
 
 	if valFloat, ok := val.(float64); ok {
-		ms.UpdateGauges(ctx, metric.ID, valFloat)
-		return nil
+		return ms.UpdateGauges(ctx, metric.ID, valFloat)
 	}
 
 	return fmt.Errorf("can't convert metric to update")

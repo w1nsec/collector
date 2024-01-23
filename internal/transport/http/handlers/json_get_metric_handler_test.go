@@ -16,12 +16,12 @@ import (
 	"time"
 )
 
-type jsonGetUsecase struct {
+type JSONusecase struct {
 	m map[string]*metrics.Metrics
-	jsonGetMetricUsecase
+	//jsonGetMetricUsecase
 }
 
-func (u jsonGetUsecase) GetMetric(ctx context.Context, mName string, mType string) (*metrics.Metrics, error) {
+func (u JSONusecase) GetMetric(ctx context.Context, mName string, mType string) (*metrics.Metrics, error) {
 	if u.m == nil {
 		u.m = make(map[string]*metrics.Metrics)
 	}
@@ -43,7 +43,7 @@ func (u jsonGetUsecase) GetMetric(ctx context.Context, mName string, mType strin
 }
 
 func TestJSONGetMetricHandler_ServeHTTP(t *testing.T) {
-	usecase := &jsonGetUsecase{}
+	usecase := &JSONusecase{}
 	addr := "http://localhost:8000/value/"
 	m1 := metrics.NewCounterMetric("test1", 111)
 	m1Err := metrics.NewCounterMetric("test13", 1111)
@@ -65,7 +65,7 @@ func TestJSONGetMetricHandler_ServeHTTP(t *testing.T) {
 	type args struct {
 		method string
 		metric *metrics.Metrics
-		body   []byte
+		//body   []byte
 		status int
 	}
 	tests := []struct {
@@ -221,4 +221,10 @@ func ExampleJSONGetMetricHandler_ServeHTTP() {
 
 func TestExampleJSONGetMetricHandler_ServeHTTP(t *testing.T) {
 	ExampleJSONGetMetricHandler_ServeHTTP()
+}
+
+func TestNewJSONGetMetricHandler(t *testing.T) {
+	var usecase JSONusecase
+	got := NewJSONGetMetricHandler(usecase)
+	require.NotNil(t, got, "got nil value from constructor")
 }

@@ -12,7 +12,7 @@ import (
 	"testing"
 )
 
-func (u *jsonGetUsecase) UpdateMetric(ctx context.Context, newMetric *metrics.Metrics) error {
+func (u *JSONusecase) UpdateMetric(ctx context.Context, newMetric *metrics.Metrics) error {
 	v, ok := u.m[newMetric.ID]
 	// metric not exist, add it
 	if !ok {
@@ -33,7 +33,7 @@ func (u *jsonGetUsecase) UpdateMetric(ctx context.Context, newMetric *metrics.Me
 }
 
 func TestJSONUpdateOneMetricHandler_ServeHTTP(t *testing.T) {
-	usecase := &jsonGetUsecase{
+	usecase := &JSONusecase{
 		m: make(map[string]*metrics.Metrics),
 	}
 
@@ -225,4 +225,10 @@ func TestJSONUpdateOneMetricHandler_ServeHTTP(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestNewJSONUpdateOneMetricHandler(t *testing.T) {
+	var usecase JSONusecase
+	got := NewJSONUpdateOneMetricHandler(&usecase)
+	require.NotNil(t, got, "got nil value from constructor")
 }

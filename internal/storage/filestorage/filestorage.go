@@ -54,8 +54,10 @@ func (f FileStorage) Load(ctx context.Context) error {
 		if err != nil {
 			return err
 		}
-		f.Storage.UpdateMetric(ctx, metric)
-
+		err = f.Storage.UpdateMetric(ctx, metric)
+		if err != nil {
+			log.Error().Err(err)
+		}
 		metric = nil
 	}
 	if err := sc.Err(); err != nil {
@@ -78,9 +80,22 @@ func (f FileStorage) SaveAll(ctx context.Context) error {
 		}
 		f.file = file
 	}
-	f.file.Truncate(0)
-	f.file.Seek(0, 0)
-	mSlice, _ := f.Storage.GetAllMetrics(ctx)
+	err := f.file.Truncate(0)
+	if err != nil {
+		return err
+	}
+	_, err = f.file.Seek(0, 0)
+	if err != nil {
+		log.Error().Err(err).
+			Msg("can't move to the beginning of file")
+		return err
+	}
+	mSlice, err := f.Storage.GetAllMetrics(ctx)
+	if err != nil {
+		log.Error().Err(err).
+			Msg("can't get all metrics value")
+		return err
+	}
 	for _, metric := range mSlice {
 		encoder := json.NewEncoder(f.file)
 		err := encoder.Encode(metric)

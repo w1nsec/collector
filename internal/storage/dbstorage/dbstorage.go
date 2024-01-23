@@ -31,11 +31,6 @@ const (
 type postgresStorage struct {
 	db  *sql.DB
 	url string
-
-	addr     string
-	username string
-	password string
-	dbName   string
 }
 
 func (pgStorage postgresStorage) Init() error {

@@ -42,7 +42,7 @@ func (h *JSONUpdateMetricsHandler) ServeHTTP(w http.ResponseWriter, r *http.Requ
 		log.Error().
 			Err(fmt.Errorf("wrong method for %s", r.URL.RawPath)).
 			Send()
-		w.WriteHeader(http.StatusInternalServerError)
+		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
 
@@ -85,7 +85,7 @@ func (h *JSONUpdateMetricsHandler) ServeHTTP(w http.ResponseWriter, r *http.Requ
 	for ind, m := range newMetrics {
 		if (m.Delta == nil && m.Value == nil) ||
 			m.ID == "" {
-			err := fmt.Errorf("metric \"%s\"doesn't contain any value", m.ID)
+			err = fmt.Errorf("metric \"%s\"doesn't contain any value", m.ID)
 			log.Error().
 				Err(err).Send()
 
@@ -111,7 +111,12 @@ func (h *JSONUpdateMetricsHandler) ServeHTTP(w http.ResponseWriter, r *http.Requ
 		log.Error().
 			Err(err).
 			Send()
-		io.WriteString(w, "Don't save any metric")
+		_, err = io.WriteString(w, "Don't save any metric")
+		if err != nil {
+			log.Error().
+				Err(err).
+				Msg("can't write err message to response writer")
+		}
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -119,7 +124,8 @@ func (h *JSONUpdateMetricsHandler) ServeHTTP(w http.ResponseWriter, r *http.Requ
 	// Get updated metrics
 	updatedMetrics := make([]*metrics.Metrics, 0)
 	for mName, mType := range mNames {
-		metric, err := h.usecase.GetMetric(r.Context(), mName, mType)
+		var metric *metrics.Metrics
+		metric, err = h.usecase.GetMetric(r.Context(), mName, mType)
 		if err != nil {
 			log.Error().Err(err).Send()
 			continue

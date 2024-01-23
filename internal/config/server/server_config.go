@@ -2,6 +2,7 @@ package server
 
 import (
 	"flag"
+	"github.com/rs/zerolog/log"
 	"os"
 	"strconv"
 )
@@ -30,9 +31,17 @@ func ServerArgsParse() *Args {
 	args.LogLevel = os.Getenv("LOGLEVEL")
 
 	// increment 9
-	args.StoreInterval, _ = strconv.ParseUint(os.Getenv("STORE_INTERVAL"), 10, 64)
+	var err error
+	args.StoreInterval, err = strconv.ParseUint(
+		os.Getenv("STORE_INTERVAL"), 10, 64)
+	if err != nil {
+		log.Error().Err(err).Send()
+	}
 	args.StoragePath = os.Getenv("FILE_STORAGE_PATH")
-	args.Restore, _ = strconv.ParseBool(os.Getenv("RESTORE"))
+	args.Restore, err = strconv.ParseBool(os.Getenv("RESTORE"))
+	if err != nil {
+		log.Error().Err(err).Send()
+	}
 
 	// increment 10
 	args.DatabaseURL = os.Getenv("DATABASE_DSN")

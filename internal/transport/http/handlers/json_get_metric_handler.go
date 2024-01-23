@@ -111,8 +111,8 @@ func (h *JSONGetMetricHandler) ServeHTTP(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	retMetric, _ := h.usecase.GetMetric(r.Context(), metric.ID, metric.MType)
-	if retMetric == nil {
+	retMetric, err := h.usecase.GetMetric(r.Context(), metric.ID, metric.MType)
+	if retMetric == nil || err != nil {
 		log.Error().
 			Err(fmt.Errorf("metric \"%s\" not found in service",
 				metric.ID)).Send()

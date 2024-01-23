@@ -214,9 +214,6 @@ func TestMemStorage_UpdateMetric(t *testing.T) {
 
 	empty := NewMemStorage()
 
-	type args struct {
-		ctx context.Context
-	}
 	tests := []struct {
 		name      string
 		store     *MemStorage
@@ -290,9 +287,6 @@ func TestMemStorage_AddMetric(t *testing.T) {
 
 	empty := NewMemStorage()
 
-	type args struct {
-		ctx context.Context
-	}
 	tests := []struct {
 		name      string
 		store     *MemStorage
