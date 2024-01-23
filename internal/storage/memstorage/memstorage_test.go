@@ -579,31 +579,42 @@ func TestMemStorage_GetAllMetrics(t *testing.T) {
 	err := store.AddMetric(ctx, m1)
 	if err != nil {
 		fmt.Printf("can't add metric to storage: %v", err)
+
 		return
 	}
+
 	err = store.AddMetric(ctx, m2)
 	if err != nil {
 		fmt.Printf("can't add metric to storage: %v", err)
+
 		return
 	}
+
 	err = store.AddMetric(ctx, m3)
 	if err != nil {
 		fmt.Printf("can't add metric to storage: %v", err)
+
 		return
 	}
+
 	err = store.AddMetric(ctx, m4)
 	if err != nil {
 		fmt.Printf("can't add metric to storage: %v", err)
+
 		return
 	}
+
 	err = store.AddMetric(ctx, m5)
 	if err != nil {
 		fmt.Printf("can't add metric to storage: %v", err)
+
 		return
 	}
+
 	err = store.AddMetric(ctx, m6)
 	if err != nil {
 		fmt.Printf("can't add metric to storage: %v", err)
+
 		return
 	}
 
@@ -638,9 +649,12 @@ func TestMemStorage_GetAllMetrics(t *testing.T) {
 			got, err := tt.args.store.GetAllMetrics(ctx)
 			if err != nil {
 				t.Errorf("GetAllMetrics() got error = %v", err)
+
 				return
 			}
+
 			sort.Slice(got, func(i, j int) bool {
+
 				return got[i].ID < got[j].ID
 			})
 			if !reflect.DeepEqual(got, tt.args.slice) {

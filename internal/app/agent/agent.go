@@ -6,11 +6,11 @@ package agent
 import (
 	"context"
 	"fmt"
-	"github.com/rs/zerolog/log"
 	"net"
 	"net/http"
 	"time"
 
+	"github.com/rs/zerolog/log"
 	config "github.com/w1nsec/collector/internal/config/agent"
 	"github.com/w1nsec/collector/internal/metrics"
 	"github.com/w1nsec/collector/internal/storage"
