@@ -162,6 +162,10 @@ func TestDelete(t *testing.T) {
 					require.Equal(t, len(tt.args.metrics)-1, len(newSl))
 				}
 			}
+			if len(tt.args.metrics) <= tt.args.ind {
+				newSl := Delete(tt.args.metrics, tt.args.ind)
+				require.Equal(t, tt.args.metrics, newSl)
+			}
 		})
 	}
 }
