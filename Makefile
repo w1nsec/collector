@@ -1,5 +1,7 @@
 AGENT=cmd/agent/agent
 SERVER=cmd/server/server
+LINTER=cmd/staticlint/staticlint
+
 PORT=16738
 FSPATH=/tmp/temp.db
 
@@ -23,6 +25,10 @@ server:
 agent:
 	go build -o ${AGENT} cmd/agent/agent_main.go
 
+linter:
+	go build -o ${LINTER} cmd/staticlint/staticlint.go
+
+# Checks
 check1:
 	metricstest -test.v -test.run=^TestIteration1$$ -binary-path=${SERVER}
 

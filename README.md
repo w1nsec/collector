@@ -1,4 +1,4 @@
-[![Coverage Status](https://coveralls.io/repos/github/w1nsec/collector/badge.svg?branch=main)](https://coveralls.io/github/w1nsec/collector?branch=main)
+[![Coverage Status](https://coveralls.io/repos/github/w1nsec/collector/badge.svg)](https://coveralls.io/github/w1nsec/collector)
 
 # Yandex Go course
 

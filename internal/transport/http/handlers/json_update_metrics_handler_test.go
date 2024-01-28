@@ -212,7 +212,9 @@ func TestJSONUpdateMetricsHandler_ServeHTTP(t *testing.T) {
 
 			require.Equal(t, res.StatusCode, tt.args.resStatus, "status code not valid")
 			if res.StatusCode == http.StatusOK {
-				body, _ := io.ReadAll(res.Body)
+				body, err := io.ReadAll(res.Body)
+				require.NoError(t, err, "can't read body response")
+
 				sBody := strings.TrimSpace(string(body))
 				require.Equal(t, sBody, strings.TrimSpace(tt.args.respBody))
 			}
