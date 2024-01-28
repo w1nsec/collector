@@ -1,6 +1,7 @@
 package metrics
 
 import (
+	"fmt"
 	"github.com/stretchr/testify/require"
 	"math"
 	"testing"
@@ -160,6 +161,64 @@ func TestDelete(t *testing.T) {
 				if found == false {
 					require.Equal(t, len(tt.args.metrics)-1, len(newSl))
 				}
+			}
+		})
+	}
+}
+
+func TestMetrics_String(t *testing.T) {
+	type fields struct {
+		ID    string
+		MType string
+		Delta int64
+		Value float64
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		want   string
+	}{
+		{
+			name: "Test Counter metric",
+			fields: fields{
+				ID:    "supermetric",
+				MType: Counter,
+				Delta: 3112,
+			},
+			want: fmt.Sprintf("ID: %s | Type: %s | Value: %d",
+				"supermetric", Counter, 3112),
+		},
+		{
+			name: "Test Gauge metric",
+			fields: fields{
+				ID:    "superGaugemetric",
+				MType: Gauge,
+				Value: 2132.67,
+			},
+			want: fmt.Sprintf("ID: %s | Type: %s | Value: %f",
+				"superGaugemetric", Gauge, 2132.67),
+		},
+		{
+			name: "Test Wrong metric",
+			fields: fields{
+				ID:    "wrongmetric",
+				MType: "Wrong metric type",
+				Value: 3112,
+			},
+			want: fmt.Sprintf("ID: %s | Unsupported metric type",
+				"wrongmetric"),
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			m := Metrics{
+				ID:    tt.fields.ID,
+				MType: tt.fields.MType,
+				Delta: &tt.fields.Delta,
+				Value: &tt.fields.Value,
+			}
+			if got := m.String(); got != tt.want {
+				t.Errorf("String() = %v, want %v", got, tt.want)
 			}
 		})
 	}
