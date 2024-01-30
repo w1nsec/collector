@@ -5,9 +5,11 @@ package agent
 
 import (
 	"context"
+	"crypto/rsa"
 	"fmt"
 	"net"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/rs/zerolog/log"
@@ -15,6 +17,7 @@ import (
 	"github.com/w1nsec/collector/internal/metrics"
 	"github.com/w1nsec/collector/internal/storage"
 	"github.com/w1nsec/collector/internal/storage/memstorage"
+	"github.com/w1nsec/go-examples/crypto"
 )
 
 // Params for sleeping agent if it receives too many errors
@@ -50,6 +53,9 @@ type Agent struct {
 	rateLimit     int
 	errorsCh      chan error
 	successReport chan struct{}
+
+	// increment 21
+	pubKey *rsa.PublicKey
 }
 
 // NewAgent is constructor for Agent struct
@@ -85,6 +91,19 @@ func NewAgent(args *config.Args) (*Agent, error) {
 		rateLimit:     args.Rate,
 		errorsCh:      make(chan error, args.Rate),
 		successReport: make(chan struct{}, args.Rate),
+	}
+
+	// increment 21
+	if args.CryptoKey != "" {
+		key, err := os.ReadFile(args.CryptoKey)
+		if err != nil {
+			return nil, err
+		}
+
+		agent.pubKey, err = crypto.ReadPubKey(key)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	agent.compression = true

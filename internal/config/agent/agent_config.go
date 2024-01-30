@@ -18,6 +18,7 @@ type Args struct {
 	ReportInterval int
 	Key            string
 	Rate           int
+	CryptoKey      string
 
 	LogLevel string
 }
@@ -31,8 +32,8 @@ func AgentSelectArgs() *Args {
 
 	// check flags
 	var (
-		flagAddr, flagKey           string
-		flagPoll, flagRep, flagRate int
+		flagAddr, flagKey, flagCryptoKey string
+		flagPoll, flagRep, flagRate      int
 	)
 	flag.StringVar(&flagAddr, "a", "localhost:8080",
 		"address for metric transport")
@@ -44,6 +45,8 @@ func AgentSelectArgs() *Args {
 		"salt for hmac")
 	flag.IntVar(&flagRate, "l", 2,
 		"max goroutines count")
+	flag.StringVar(&flagCryptoKey, "crypto-key", "",
+		"rsa public key path (in pem format), used for encrypt messages")
 
 	flag.Parse()
 
@@ -73,6 +76,12 @@ func AgentSelectArgs() *Args {
 	args.Rate, err = strconv.Atoi(os.Getenv("RATE_LIMIT"))
 	if err != nil {
 		args.Rate = flagRate
+	}
+
+	// increment 21
+	args.CryptoKey = os.Getenv("CRYPTO_KEY")
+	if args.CryptoKey == "" {
+		args.CryptoKey = flagCryptoKey
 	}
 
 	return args

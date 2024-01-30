@@ -2,6 +2,9 @@ package service
 
 import (
 	"context"
+	"crypto/rsa"
+	"fmt"
+	"os"
 	"time"
 
 	"github.com/rs/zerolog/log"
@@ -9,6 +12,7 @@ import (
 	"github.com/w1nsec/collector/internal/logger"
 	"github.com/w1nsec/collector/internal/storage"
 	"github.com/w1nsec/collector/internal/storage/filestorage"
+	"github.com/w1nsec/go-examples/crypto"
 )
 
 type MetricService struct {
@@ -24,6 +28,9 @@ type MetricService struct {
 
 	// iter14, hmac signing
 	Secret string
+
+	// iter21, decryption messages
+	CryptoKey *rsa.PrivateKey
 }
 
 func (service *MetricService) CheckStorage() error {
@@ -59,6 +66,19 @@ func NewService(args *server.Args, store storage.Storage,
 		StoreInterval:        time.Duration(args.StoreInterval) * time.Second,
 		Secret:               args.Key,
 	}
+
+	if args.CryptoKey != "" {
+		key, err := os.ReadFile(args.CryptoKey)
+		if err != nil {
+			return nil, fmt.Errorf("can't read file with private key: %v", err)
+		}
+
+		service.CryptoKey, err = crypto.ReadPrivateKey(key)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	err := service.SetupLogger(args.LogLevel)
 	if err != nil {
 		return nil, err

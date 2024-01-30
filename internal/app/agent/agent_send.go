@@ -2,20 +2,35 @@ package agent
 
 import (
 	"bytes"
+	"crypto/rand"
+	"crypto/rsa"
+	"crypto/sha256"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 
 	"github.com/rs/zerolog/log"
+	"github.com/w1nsec/collector/internal/config"
 	"github.com/w1nsec/collector/internal/metrics"
 	locgzip "github.com/w1nsec/collector/internal/utils/compression/gzip"
 	"github.com/w1nsec/collector/internal/utils/signing"
+	mycrypto "github.com/w1nsec/go-examples/crypto"
 )
 
 // SendData send data to server
 // compress data before sending, add signing for body
 func (agent Agent) SendData(data []byte, headers map[string]string, relURL string) error {
+	// iter21: encrypt data
+	if agent.pubKey != nil {
+		var err error
+		data, err = agent.Encrypt(data, headers)
+		if err != nil {
+			return err
+		}
+	}
+
 	// setup compression
 	var buffer = bytes.NewBuffer(data)
 	compressionStatus := false
@@ -78,7 +93,7 @@ func (agent Agent) AddSigning(data []byte, headers map[string]string) {
 		return
 	}
 	sign := signing.CreateSigning(data, []byte(agent.secret))
-	headers["HashSHA256"] = string(sign)
+	headers[config.SIGN_HEADER] = string(sign)
 
 }
 
@@ -105,6 +120,35 @@ func (agent Agent) SendBatch(job []*metrics.Metrics) error {
 	}
 
 	return agent.SendData(buf.Bytes(), headers, URL)
+}
+
+// Encrypt - this func encrypt body of message
+// 1. generate AES key
+// 2. encrypt AES key with RSA PublicKey
+// 3. add encrypted AES key to headers value
+// 4. encrypt message body with AES and return it
+func (agent Agent) Encrypt(data []byte, headers map[string]string) (cData []byte, err error) {
+
+	// generate random KEY for AES encryption
+	secret, err := mycrypto.GenRandSlice(10)
+	if err != nil {
+		return nil, err
+	}
+
+	tmp := sha256.Sum256(secret)
+	key := tmp[:]
+
+	// encrypt AES key for sending with message
+	keyEnc, err := rsa.EncryptPKCS1v15(rand.Reader, agent.pubKey, key)
+	if err != nil {
+		return nil, err
+	}
+
+	// add encrypted AES to header
+	headers[config.CRYPTO_HEADER] = base64.StdEncoding.EncodeToString(keyEnc)
+
+	// encrypt message body
+	return mycrypto.EncryptAES(data, key)
 }
 
 // Legacy Code

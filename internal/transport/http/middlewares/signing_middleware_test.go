@@ -2,12 +2,14 @@ package middlewares
 
 import (
 	"bytes"
-	"github.com/stretchr/testify/require"
-	"github.com/w1nsec/collector/internal/utils/signing"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/require"
+	"github.com/w1nsec/collector/internal/config"
+	"github.com/w1nsec/collector/internal/utils/signing"
 )
 
 func Test_signingMidl_Signing(t *testing.T) {
@@ -15,7 +17,7 @@ func Test_signingMidl_Signing(t *testing.T) {
 
 	body := strings.Repeat("new body", 20)
 	secret := "supersecret"
-	hmacHeader := "HashSHA256"
+	hmacHeader := config.SIGN_HEADER
 	signing := signing.CreateSigning([]byte(body), []byte(secret))
 
 	type args struct {

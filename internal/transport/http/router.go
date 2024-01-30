@@ -20,13 +20,15 @@ func NewRouter(service *service.MetricService) http.Handler {
 	r := chi.NewRouter()
 
 	// middlewares
-
+	decryptMidl := middlewares.NewDecryptHandler(service.CryptoKey)
 	signMidl := middlewares.NewSigningMidl(service.Secret)
+
 	r.Use(signMidl.Signing)
 	r.Use(middlewares.LoggingMiddleware)
 	//r.Use(middlewares.GzipMiddleware)
 	r.Use(middlewares.GzipDecompressMiddleware)
 	r.Use(chimidl.Compress(5, defaultCompressibleContentTypes...))
+	r.Use(decryptMidl.Handle)
 
 	// handlers
 	getAllMetrics := handlers.NewGetMetricsHandler(service)

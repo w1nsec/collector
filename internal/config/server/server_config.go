@@ -2,9 +2,10 @@ package server
 
 import (
 	"flag"
-	"github.com/rs/zerolog/log"
 	"os"
 	"strconv"
+
+	"github.com/rs/zerolog/log"
 )
 
 type Args struct {
@@ -21,6 +22,9 @@ type Args struct {
 
 	// increment 14
 	Key string
+
+	// increment 21
+	CryptoKey string
 }
 
 // ServerArgsParse return params in Args struct, that need for server successfully run
@@ -49,6 +53,9 @@ func ServerArgsParse() *Args {
 	// increment 14
 	args.Key = os.Getenv("KEY")
 
+	//
+	args.CryptoKey = os.Getenv("CryptoKey")
+
 	var (
 		flagAddr     string
 		flagLogLevel string
@@ -63,21 +70,33 @@ func ServerArgsParse() *Args {
 
 		// increment 14
 		flagKey string
+
+		// increment 21
+		flagCryptoKey string
 	)
 
-	flag.StringVar(&flagAddr, "a", "localhost:8080", "address for transport")
-	flag.StringVar(&flagLogLevel, "l", "info", "log level")
+	flag.StringVar(&flagAddr, "a", "localhost:8080",
+		"address for transport")
+	flag.StringVar(&flagLogLevel, "l", "info",
+		"log level")
 
 	// increment 9, FILE_STORAGE
-	flag.Uint64Var(&flagStoreInterval, "i", 300, "interval in seconds for write store data to file")
-	flag.StringVar(&flagStoragePath, "f", "/tmp/metrics-db.json", "file for saving metrics")
-	flag.BoolVar(&flagRestore, "r", true, "restore from file-db on startup")
+	flag.Uint64Var(&flagStoreInterval, "i", 300,
+		"interval in seconds for write store data to file")
+	flag.StringVar(&flagStoragePath, "f", "/tmp/metrics-db.json",
+		"file for saving metrics")
+	flag.BoolVar(&flagRestore, "r", true,
+		"restore from file-db on startup")
 
 	// increment 10, connect to DB
 	flag.StringVar(&flagDatabaseStr, "d", "", "DB connect string")
 
 	// increment 14, generate hash for requests body
 	flag.StringVar(&flagKey, "k", "", "salt for hmac")
+
+	// increment 21, decrypt requests
+	flag.StringVar(&flagCryptoKey, "crypto-key", "",
+		"rsa private key path (in pem format), used for encrypt messages")
 
 	flag.Parse()
 
@@ -104,6 +123,10 @@ func ServerArgsParse() *Args {
 
 	if args.Key == "" {
 		args.Key = flagKey
+	}
+
+	if args.CryptoKey == "" {
+		args.CryptoKey = flagCryptoKey
 	}
 
 	return args
