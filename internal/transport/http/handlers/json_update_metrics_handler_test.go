@@ -5,14 +5,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/require"
 	"github.com/w1nsec/collector/internal/metrics"
-	"io"
-	"net/http"
-	"net/http/httptest"
-	"strings"
-	"testing"
 )
 
 func TestNewJSONUpdateMetricsHandler(t *testing.T) {
@@ -212,11 +211,39 @@ func TestJSONUpdateMetricsHandler_ServeHTTP(t *testing.T) {
 
 			require.Equal(t, res.StatusCode, tt.args.resStatus, "status code not valid")
 			if res.StatusCode == http.StatusOK {
-				body, err := io.ReadAll(res.Body)
+				//body, err := io.ReadAll(res.Body)
+				//require.NoError(t, err, "can't read body response")
+
+				//sBody := strings.TrimSpace(string(body))
+				//require.Equal(t, sBody, strings.TrimSpace(tt.args.respBody))
+
+				// Github sometimes changes positions for returned metrics, and then test fails ...
+				resMetrics := make([]*metrics.Metrics, 0)
+				err = json.NewDecoder(res.Body).Decode(&resMetrics)
 				require.NoError(t, err, "can't read body response")
 
-				sBody := strings.TrimSpace(string(body))
-				require.Equal(t, sBody, strings.TrimSpace(tt.args.respBody))
+				resMap := make(map[string]*metrics.Metrics, len(resMetrics))
+				for _, m := range resMetrics {
+					resMap[m.ID] = m
+				}
+
+				wantMetrics := make([]*metrics.Metrics, 0)
+				err = json.Unmarshal([]byte(tt.args.respBody), &wantMetrics)
+				require.NoError(t, err, "can't read body response")
+
+				for _, m := range wantMetrics {
+					require.Equal(t, m.ID, resMap[m.ID].ID)
+					require.Equal(t, m.MType, resMap[m.ID].MType)
+
+					switch resMap[m.ID].MType {
+					case metrics.Counter:
+						require.Equal(t, *(resMap[m.ID].Delta), *(m.Delta))
+					case metrics.Gauge:
+						require.Equal(t, *(resMap[m.ID].Value), *(m.Value))
+					}
+
+				}
+
 			}
 
 		})
