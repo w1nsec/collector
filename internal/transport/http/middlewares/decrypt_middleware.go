@@ -40,8 +40,13 @@ func (h *DecryptMiddleware) Handle(next http.Handler) http.Handler {
 		if r.Body != nil {
 
 			// get encrypted aes from header
-			header := r.Header.Get(config.CRYPTO_HEADER)
+			header := r.Header.Get(config.CryptoHeader)
 			encAES, err := base64.StdEncoding.DecodeString(header)
+			if err != nil {
+				log.Error().Err(err).Send()
+				http.Error(rw, "can't decrypt request", http.StatusInternalServerError)
+				return
+			}
 
 			// decrypt aes key
 			key, err := rsa.DecryptPKCS1v15(rand.Reader, h.privKey, encAES)

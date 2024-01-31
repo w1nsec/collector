@@ -21,7 +21,7 @@ type signingMidl struct {
 }
 
 func NewSigningMidl(secret string) *signingMidl {
-	return &signingMidl{secret: secret, hmacHeader: config.SIGN_HEADER}
+	return &signingMidl{secret: secret, hmacHeader: config.SignHeader}
 }
 
 func (s signingMidl) Signing(next http.Handler) http.Handler {

@@ -17,7 +17,7 @@ func Test_signingMidl_Signing(t *testing.T) {
 
 	body := strings.Repeat("new body", 20)
 	secret := "supersecret"
-	hmacHeader := config.SIGN_HEADER
+	hmacHeader := config.SignHeader
 	signing := signing.CreateSigning([]byte(body), []byte(secret))
 
 	type args struct {

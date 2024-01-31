@@ -93,7 +93,7 @@ func (agent Agent) AddSigning(data []byte, headers map[string]string) {
 		return
 	}
 	sign := signing.CreateSigning(data, []byte(agent.secret))
-	headers[config.SIGN_HEADER] = string(sign)
+	headers[config.SignHeader] = string(sign)
 
 }
 
@@ -145,7 +145,7 @@ func (agent Agent) Encrypt(data []byte, headers map[string]string) (cData []byte
 	}
 
 	// add encrypted AES to header
-	headers[config.CRYPTO_HEADER] = base64.StdEncoding.EncodeToString(keyEnc)
+	headers[config.CryptoHeader] = base64.StdEncoding.EncodeToString(keyEnc)
 
 	// encrypt message body
 	return mycrypto.EncryptAES(data, key)
