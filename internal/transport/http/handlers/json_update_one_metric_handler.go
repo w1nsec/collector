@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"strings"
 
@@ -64,16 +63,28 @@ func (h *JSONUpdateOneMetricHandler) ServeHTTP(w http.ResponseWriter, r *http.Re
 
 	var metric = new(metrics.Metrics)
 
-	body, err := io.ReadAll(r.Body)
-	if err != nil {
-		log.Error().
-			Err(err).Send()
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-	defer r.Body.Close()
+	//body, err := io.ReadAll(r.Body)
+	//if err != nil {
+	//	log.Error().
+	//		Err(err).Send()
+	//	w.WriteHeader(http.StatusInternalServerError)
+	//	return
+	//}
+	//defer r.Body.Close()
+	//
+	//err = json.Unmarshal(body, &metric)
+	//if err != nil {
+	//	log.Error().
+	//		Err(err).Send()
+	//	w.WriteHeader(http.StatusInternalServerError)
+	//	return
+	//}
+	//
+	//log.Info().
+	//	RawJSON("metric", body).
+	//	Msg("Request")
 
-	err = json.Unmarshal(body, &metric)
+	err := json.NewDecoder(r.Body).Decode(&metric)
 	if err != nil {
 		log.Error().
 			Err(err).Send()
@@ -81,15 +92,15 @@ func (h *JSONUpdateOneMetricHandler) ServeHTTP(w http.ResponseWriter, r *http.Re
 		return
 	}
 	log.Info().
-		RawJSON("metric", body).
+		Str("metric", metric.ID).
 		Msg("Request")
 
-	if metric == nil {
-		log.Error().
-			Err(fmt.Errorf("metric is nil")).Send()
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
+	//if metric == nil {
+	//	log.Error().
+	//		Err(fmt.Errorf("metric is nil")).Send()
+	//	w.WriteHeader(http.StatusInternalServerError)
+	//	return
+	//}
 
 	// Check, that metric contains values
 	if (metric.Delta == nil && metric.Value == nil) ||
@@ -121,26 +132,37 @@ func (h *JSONUpdateOneMetricHandler) ServeHTTP(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	body, err = json.Marshal(retMetric)
+	//body, err = json.Marshal(retMetric)
+	//if err != nil {
+	//	log.Error().
+	//		Err(err).Send()
+	//	w.WriteHeader(http.StatusInternalServerError)
+	//	return
+	//}
+	//
+	//log.Info().
+	//	RawJSON("metric", body).
+	//	Msg("Response")
+	//
+	//w.Header().Set("content-type", "application/json")
+	//_, err = w.Write(body)
+	//if err != nil {
+	//	log.Error().
+	//		Err(err).Send()
+	//	w.WriteHeader(http.StatusInternalServerError)
+	//	return
+	//}
+
+	err = json.NewEncoder(w).Encode(retMetric)
 	if err != nil {
 		log.Error().
 			Err(err).Send()
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-
 	log.Info().
-		RawJSON("metric", body).
+		Str("metric", metric.ID).
 		Msg("Response")
-
-	w.Header().Set("content-type", "application/json")
-	_, err = w.Write(body)
-	if err != nil {
-		log.Error().
-			Err(err).Send()
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
 
 	w.WriteHeader(http.StatusOK)
 }
