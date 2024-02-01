@@ -1,10 +1,13 @@
 package agent
 
 import (
+	"encoding/json"
 	"flag"
 	"os"
 	"strconv"
 	"time"
+
+	"github.com/rs/zerolog/log"
 )
 
 const (
@@ -12,28 +15,50 @@ const (
 	defaultReportInterval = 10 * time.Second
 )
 
+// JSON config example
+//{
+//	"address": "localhost:8080", 		// аналог переменной окружения ADDRESS или флага -a
+//	"report_interval": "1s",     		// аналог переменной окружения REPORT_INTERVAL или флага -r
+//	"poll_interval": "1s",           	// аналог переменной окружения POLL_INTERVAL или флага -p
+//	"crypto_key": "/path/to/key.pem" 	// аналог переменной окружения CRYPTO_KEY или флага -crypto-key
+//}
+
 type Args struct {
-	Addr           string
-	PollInterval   int
-	ReportInterval int
+	Addr           string `json:"address"`
+	PollInterval   int    `json:"poll_interval"`
+	ReportInterval int    `json:"report_interval"`
 	Key            string
 	Rate           int
-	CryptoKey      string
+	CryptoKey      string `json:"crypto_key"`
 
 	LogLevel string
 }
 
+// ReadConfig fill Args struct (for client)
+func ReadConfig(path string) (conf *Args, err error) {
+	file, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	conf = new(Args)
+	err = json.NewDecoder(file).Decode(&conf)
+	if err != nil {
+		return nil, err
+	}
+
+	return conf, nil
+}
+
 // AgentSelectArgs return params in Args struct, that need for agent successfully run
 func AgentSelectArgs() *Args {
-	args := new(Args)
-
-	// set log level
-	args.LogLevel = "info"
-
 	// check flags
 	var (
-		flagAddr, flagKey, flagCryptoKey string
-		flagPoll, flagRep, flagRate      int
+		args                        *Args
+		flagAddr, flagKey           string
+		flagCryptoKey, flagConfig   string
+		flagPoll, flagRep, flagRate int
 	)
 	flag.StringVar(&flagAddr, "a", "localhost:8080",
 		"address for metric transport")
@@ -47,41 +72,85 @@ func AgentSelectArgs() *Args {
 		"max goroutines count")
 	flag.StringVar(&flagCryptoKey, "crypto-key", "",
 		"rsa public key path (in pem format), used for encrypt messages")
-
+	flag.StringVar(&flagConfig, "config", "",
+		"path to config file")
 	flag.Parse()
 
+	// Read config file
+	// priority to ENV variable
+	cpath := os.Getenv("CONFIG")
+	if cpath != "" {
+		flagConfig = cpath
+	}
+
+	if flagConfig != "" {
+		var err error
+		args, err = ReadConfig(flagConfig)
+		if err != nil {
+			log.Debug().Err(err).Send()
+		}
+	}
+
+	// If we setup Args early, then they will rewrite later
+	// check that args have been filled
+	if args == nil {
+		args = new(Args)
+	}
+
+	// set log level
+	args.LogLevel = "info"
+
 	// get OS Environment variables
-	args.Addr = os.Getenv("ADDRESS")
-	if args.Addr == "" {
+	if flagAddr != "" {
 		args.Addr = flagAddr
 	}
+	// priority to ENV variables
+	addr := os.Getenv("ADDRESS")
+	if addr != "" {
+		args.Addr = addr
+	}
 
-	var err error
-	args.PollInterval, err = strconv.Atoi(os.Getenv("POLL_INTERVAL"))
-	if err != nil {
+	if flagPoll != 0 {
 		args.PollInterval = flagPoll
 	}
-
-	args.ReportInterval, err = strconv.Atoi(os.Getenv("REPORT_INTERVAL"))
-	if err != nil {
-		args.ReportInterval = flagRep
+	var err error
+	pollInterval, err := strconv.Atoi(os.Getenv("POLL_INTERVAL"))
+	if err == nil {
+		args.PollInterval = pollInterval
 	}
 
-	args.Key = os.Getenv("KEY")
-	if args.Key == "" {
+	if flagRep != 0 {
+		args.ReportInterval = flagRep
+	}
+	reportInterval, err := strconv.Atoi(os.Getenv("REPORT_INTERVAL"))
+	if err == nil {
+		args.ReportInterval = reportInterval
+	}
+
+	if flagKey != "" {
 		args.Key = flagKey
+	}
+	key := os.Getenv("KEY")
+	if key != "" {
+		args.Key = key
 	}
 
 	// increment15
-	args.Rate, err = strconv.Atoi(os.Getenv("RATE_LIMIT"))
-	if err != nil {
+	if flagRate != 0 {
 		args.Rate = flagRate
+	}
+	rate, err := strconv.Atoi(os.Getenv("RATE_LIMIT"))
+	if err == nil {
+		args.Rate = rate
 	}
 
 	// increment 21
-	args.CryptoKey = os.Getenv("CRYPTO_KEY")
-	if args.CryptoKey == "" {
+	if flagCryptoKey != "" {
 		args.CryptoKey = flagCryptoKey
+	}
+	cryptoKey := os.Getenv("CRYPTO_KEY")
+	if cryptoKey != "" {
+		args.CryptoKey = cryptoKey
 	}
 
 	return args

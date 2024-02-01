@@ -1,6 +1,7 @@
 package server
 
 import (
+	"encoding/json"
 	"flag"
 	"os"
 	"strconv"
@@ -8,55 +9,58 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+// JSON config example
+//{
+//	"address": "localhost:8080", 		// аналог переменной окружения ADDRESS или флага -a
+//	"restore": true, 					// аналог переменной окружения RESTORE или флага -r
+//	"store_interval": "1s", 			// аналог переменной окружения STORE_INTERVAL или флага -i
+//	"store_file": "/path/to/file.db", 	// аналог переменной окружения STORE_FILE или -f
+//	"database_dsn": "", 				// аналог переменной окружения DATABASE_DSN или флага -d
+//	"crypto_key": "/path/to/key.pem" 	// аналог переменной окружения CRYPTO_KEY или флага -crypto-key
+//}
+
 type Args struct {
-	Addr     string
+	Addr     string `json:"address"`
 	LogLevel string
 
 	// increment 9, FILE_STORAGE
-	StoreInterval uint64
-	StoragePath   string
-	Restore       bool
+	StoreInterval uint64 `json:"store_interval"`
+	StoragePath   string `json:"store_file"`
+	Restore       bool   `json:"restore"`
 
 	// increment 10 DB
-	DatabaseURL string
+	DatabaseURL string `json:"database_dsn"`
 
 	// increment 14
 	Key string
 
 	// increment 21
-	CryptoKey string
+	CryptoKey string `json:"crypto_key"`
+}
+
+// ReadConfig fill Args struct (for server)
+func ReadConfig(path string) (conf *Args, err error) {
+	file, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	conf = new(Args)
+	err = json.NewDecoder(file).Decode(&conf)
+	if err != nil {
+		return nil, err
+	}
+
+	return conf, nil
 }
 
 // ServerArgsParse return params in Args struct, that need for server successfully run
 func ServerArgsParse() *Args {
-	args := new(Args)
 
-	args.Addr = os.Getenv("ADDRESS")
-	args.LogLevel = os.Getenv("LOGLEVEL")
-
-	// increment 9
-	var err error
-	args.StoreInterval, err = strconv.ParseUint(
-		os.Getenv("STORE_INTERVAL"), 10, 64)
-	if err != nil {
-		log.Error().Err(err).Send()
-	}
-	args.StoragePath = os.Getenv("FILE_STORAGE_PATH")
-	args.Restore, err = strconv.ParseBool(os.Getenv("RESTORE"))
-	if err != nil {
-		log.Error().Err(err).Send()
-	}
-
-	// increment 10
-	args.DatabaseURL = os.Getenv("DATABASE_DSN")
-
-	// increment 14
-	args.Key = os.Getenv("KEY")
-
-	//
-	args.CryptoKey = os.Getenv("CryptoKey")
-
+	// read flags
 	var (
+		args         *Args
 		flagAddr     string
 		flagLogLevel string
 
@@ -73,6 +77,7 @@ func ServerArgsParse() *Args {
 
 		// increment 21
 		flagCryptoKey string
+		flagConfig    string
 	)
 
 	flag.StringVar(&flagAddr, "a", "localhost:8080",
@@ -97,8 +102,72 @@ func ServerArgsParse() *Args {
 	// increment 21, decrypt requests
 	flag.StringVar(&flagCryptoKey, "crypto-key", "",
 		"rsa private key path (in pem format), used for encrypt messages")
+	flag.StringVar(&flagConfig, "config", "",
+		"path to config file")
 
 	flag.Parse()
+
+	// Read config file
+	// priority to ENV variable
+	cpath := os.Getenv("CONFIG")
+	if cpath != "" {
+		flagConfig = cpath
+	}
+
+	if flagConfig != "" {
+		var err error
+		args, err = ReadConfig(flagConfig)
+		if err != nil {
+			log.Debug().Err(err).Send()
+		}
+	}
+
+	// If we setup Args early, then they will rewrite later
+	// check that args have been filled
+	if args == nil {
+		args = new(Args)
+	}
+
+	addr := os.Getenv("ADDRESS")
+	if addr != "" {
+		args.Addr = addr
+	}
+	args.LogLevel = os.Getenv("LOGLEVEL")
+
+	// increment 9
+	storeInterval, err := strconv.ParseUint(
+		os.Getenv("STORE_INTERVAL"), 10, 64)
+	if err == nil {
+		args.StoreInterval = storeInterval
+	}
+
+	storagePath := os.Getenv("FILE_STORAGE_PATH")
+	if storagePath != "" {
+		args.StoragePath = storagePath
+	}
+
+	restore, err := strconv.ParseBool(os.Getenv("RESTORE"))
+	if err == nil {
+		args.Restore = restore
+	}
+
+	// increment 10
+	databaseURL := os.Getenv("DATABASE_DSN")
+	if databaseURL != "" {
+		args.DatabaseURL = databaseURL
+	}
+
+	// increment 14
+	key := os.Getenv("KEY")
+	if key != "" {
+		args.Key = key
+	}
+
+	// increment 21
+	cryptoKey := os.Getenv("CryptoKey")
+	if cryptoKey != "" {
+		args.CryptoKey = cryptoKey
+	}
 
 	if args.Addr == "" {
 		args.Addr = flagAddr
