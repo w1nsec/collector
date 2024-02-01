@@ -86,12 +86,12 @@ func (h *JSONUpdateMetricsHandler) ServeHTTP(w http.ResponseWriter, r *http.Requ
 	for i := 0; i < l; i++ {
 		m := newMetrics[i]
 		if (m.Delta == nil && m.Value == nil) ||
-			m.ID == "" {
+			m.ID == "" || m.MType == "" {
 			var id = "empty"
 			if m.ID != "" {
 				id = m.ID
 			}
-			err = fmt.Errorf("metric \"%s\"doesn't contain any value/ID", id)
+			err = fmt.Errorf("metric \"%s\"doesn't contain enough fields", id)
 			log.Error().
 				Err(err).Send()
 

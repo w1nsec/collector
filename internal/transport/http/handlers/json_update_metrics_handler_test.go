@@ -196,6 +196,28 @@ func TestJSONUpdateMetricsHandler_ServeHTTP(t *testing.T) {
 				resStatus:   http.StatusInternalServerError,
 			},
 		},
+		{
+			name: "Test POST, update Counter + Gauge (without values)",
+			args: args{
+				method: http.MethodPost,
+				contentType: map[string]string{
+					"content-type": "application/json",
+				},
+				requestBody: []byte(`[{"id":"tmp_gauge","type":"gauge"},{"id":"tmp_counter","type":"counter"}]`),
+				resStatus:   http.StatusInternalServerError,
+			},
+		},
+		{
+			name: "Test POST, update Counter + Gauge (without MType)",
+			args: args{
+				method: http.MethodPost,
+				contentType: map[string]string{
+					"content-type": "application/json",
+				},
+				requestBody: []byte(`[{"id":"tmp_gauge","value":10.01},{"id":"tmp_counter","delta":333}]`),
+				resStatus:   http.StatusInternalServerError,
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
