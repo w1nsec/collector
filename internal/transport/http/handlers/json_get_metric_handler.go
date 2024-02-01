@@ -96,6 +96,7 @@ func (h *JSONGetMetricHandler) ServeHTTP(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
+	// Check, that metric contains ID
 	if metric.ID == "" {
 		log.Error().
 			Err(fmt.Errorf("metric doesn't contain ID")).Send()
@@ -104,9 +105,9 @@ func (h *JSONGetMetricHandler) ServeHTTP(w http.ResponseWriter, r *http.Request)
 	}
 
 	// Check, that metric contains values
-	if metric.ID == "" {
+	if metric.Value == nil && metric.Delta == nil {
 		log.Error().
-			Err(fmt.Errorf("metric doesn't contain ID")).Send()
+			Err(fmt.Errorf("metric doesn't contain any data")).Send()
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}

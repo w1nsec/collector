@@ -51,6 +51,12 @@ func TestJSONGetMetricHandler_ServeHTTP(t *testing.T) {
 	m2 := metrics.NewGaugeMetric("test2", 333.1)
 	m2Err := metrics.NewGaugeMetric("test14", 333.1111)
 
+	m3Err := metrics.NewGaugeMetric("", 333.1111)
+	m4Err1 := metrics.NewGaugeMetric("errorValue", 333.1111)
+	m4Err1.Value = nil
+	m4Err2 := metrics.NewCounterMetric("errorValue", 333)
+	m4Err2.Delta = nil
+
 	/*
 		body1, err := json.Marshal(&m1)
 		if err != nil {
@@ -131,9 +137,45 @@ func TestJSONGetMetricHandler_ServeHTTP(t *testing.T) {
 		{
 			name: "Test not application/json content-type",
 			args: args{
-				method: http.MethodGet,
+				method: http.MethodPost,
 				headers: map[string]string{
 					"content-type": "wrong",
+				},
+				status: http.StatusInternalServerError,
+			},
+		},
+		// m3Err
+		{
+			name: "Test empty metric ID",
+			args: args{
+				method: http.MethodPost,
+				metric: m3Err,
+				headers: map[string]string{
+					"content-type": "application/json",
+				},
+				status: http.StatusInternalServerError,
+			},
+		},
+		// m4Err1
+		{
+			name: "Test empty metric Value",
+			args: args{
+				method: http.MethodPost,
+				metric: m4Err1,
+				headers: map[string]string{
+					"content-type": "application/json",
+				},
+				status: http.StatusInternalServerError,
+			},
+		},
+		// m4Err2
+		{
+			name: "Test empty metric Delta",
+			args: args{
+				method: http.MethodPost,
+				metric: m4Err2,
+				headers: map[string]string{
+					"content-type": "application/json",
 				},
 				status: http.StatusInternalServerError,
 			},
