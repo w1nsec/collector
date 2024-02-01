@@ -21,6 +21,9 @@ func TestNewJSONUpdateMetricsHandler(t *testing.T) {
 }
 
 func (u *JSONusecase) UpdateMetrics(ctx context.Context, newMetrics []*metrics.Metrics) error {
+	if len(newMetrics) == 0 {
+		return fmt.Errorf("no any new metrics there")
+	}
 	for _, m := range newMetrics {
 		err := u.UpdateMetric(ctx, m)
 		if err != nil {
@@ -182,6 +185,17 @@ func TestJSONUpdateMetricsHandler_ServeHTTP(t *testing.T) {
 				resStatus:   http.StatusOK,
 			},
 		},
+		{
+			name: "Test POST, update Counter + Gauge (without ID)",
+			args: args{
+				method: http.MethodPost,
+				contentType: map[string]string{
+					"content-type": "application/json",
+				},
+				requestBody: []byte(`[{"id":"","type":"gauge","value":10.01},{"id":"","type":"counter","delta":333}]`),
+				resStatus:   http.StatusInternalServerError,
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -209,7 +223,7 @@ func TestJSONUpdateMetricsHandler_ServeHTTP(t *testing.T) {
 			res := rec.Result()
 			defer res.Body.Close()
 
-			require.Equal(t, res.StatusCode, tt.args.resStatus, "status code not valid")
+			require.Equal(t, tt.args.resStatus, res.StatusCode, "status code not valid")
 			if res.StatusCode == http.StatusOK {
 				//body, err := io.ReadAll(res.Body)
 				//require.NoError(t, err, "can't read body response")
