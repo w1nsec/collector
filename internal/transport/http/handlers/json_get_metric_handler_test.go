@@ -5,15 +5,16 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/go-chi/chi/v5"
-	"github.com/stretchr/testify/require"
-	"github.com/w1nsec/collector/internal/metrics"
-	"github.com/w1nsec/collector/internal/storage/memstorage"
 	"net/http"
 	"net/http/httptest"
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/go-chi/chi/v5"
+	"github.com/stretchr/testify/require"
+	"github.com/w1nsec/collector/internal/metrics"
+	"github.com/w1nsec/collector/internal/storage/memstorage"
 )
 
 type JSONusecase struct {
@@ -66,7 +67,8 @@ func TestJSONGetMetricHandler_ServeHTTP(t *testing.T) {
 		method string
 		metric *metrics.Metrics
 		//body   []byte
-		status int
+		headers map[string]string
+		status  int
 	}
 	tests := []struct {
 		name string
@@ -77,6 +79,9 @@ func TestJSONGetMetricHandler_ServeHTTP(t *testing.T) {
 			args: args{
 				method: http.MethodPost,
 				metric: m1,
+				headers: map[string]string{
+					"content-type": "application/json",
+				},
 				status: http.StatusOK,
 			},
 		},
@@ -85,6 +90,9 @@ func TestJSONGetMetricHandler_ServeHTTP(t *testing.T) {
 			args: args{
 				method: http.MethodPost,
 				metric: m1Err,
+				headers: map[string]string{
+					"content-type": "application/json",
+				},
 				status: http.StatusNotFound,
 			},
 		},
@@ -93,6 +101,9 @@ func TestJSONGetMetricHandler_ServeHTTP(t *testing.T) {
 			args: args{
 				method: http.MethodPost,
 				metric: m2,
+				headers: map[string]string{
+					"content-type": "application/json",
+				},
 				status: http.StatusOK,
 			},
 		},
@@ -101,7 +112,30 @@ func TestJSONGetMetricHandler_ServeHTTP(t *testing.T) {
 			args: args{
 				method: http.MethodPost,
 				metric: m2Err,
+				headers: map[string]string{
+					"content-type": "application/json",
+				},
 				status: http.StatusNotFound,
+			},
+		},
+		{
+			name: "Test GET method",
+			args: args{
+				method: http.MethodGet,
+				headers: map[string]string{
+					"content-type": "application/json",
+				},
+				status: http.StatusInternalServerError,
+			},
+		},
+		{
+			name: "Test not application/json content-type",
+			args: args{
+				method: http.MethodGet,
+				headers: map[string]string{
+					"content-type": "wrong",
+				},
+				status: http.StatusInternalServerError,
 			},
 		},
 	}
@@ -117,7 +151,9 @@ func TestJSONGetMetricHandler_ServeHTTP(t *testing.T) {
 			body := bytes.NewBuffer(data)
 			recorder := httptest.NewRecorder()
 			req := httptest.NewRequest(tt.args.method, addr, body)
-			req.Header.Add("content-type", "application/json")
+			for k, v := range tt.args.headers {
+				req.Header.Add(k, v)
+			}
 			h.ServeHTTP(recorder, req)
 			res := recorder.Result()
 			defer res.Body.Close()
