@@ -41,6 +41,12 @@ func (h *DecryptMiddleware) Handle(next http.Handler) http.Handler {
 
 			// get encrypted aes from header
 			header := r.Header.Get(config.CryptoHeader)
+			// header not set, no encryption, next
+			if header == "" {
+				next.ServeHTTP(rw, r)
+				return
+			}
+
 			encAES, err := base64.StdEncoding.DecodeString(header)
 			if err != nil {
 				log.Error().Err(err).Send()

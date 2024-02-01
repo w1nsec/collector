@@ -15,10 +15,5 @@ import (
 // @Failure 500 {string} string "Internal error"
 // @Router /echoping [get]
 func Pong(w http.ResponseWriter, r *http.Request) {
-	_, err := io.WriteString(w, "pong\n")
-	if err != nil {
-		http.Redirect(w, r, "error", http.StatusInternalServerError)
-		return
-	}
-	w.WriteHeader(http.StatusOK)
+	defer io.WriteString(w, "pong\n")
 }

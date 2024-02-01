@@ -38,16 +38,5 @@ func (h *CheckDBConnectionHandler) ServeHTTP(w http.ResponseWriter, r *http.Requ
 			Msgf("can't connect to DB")
 		return
 	}
-	_, err = w.Write([]byte("DB available"))
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-
-		log.Error().
-			Err(err).
-			Msg("can't connect to DB")
-		return
-	}
-
-	w.WriteHeader(http.StatusOK)
-
+	defer w.Write([]byte("DB available"))
 }
