@@ -36,6 +36,7 @@ tmp/
 requests/
 Makefile
 internal/utils/staticlint/testdata/
+keys/
 
 # other files
 bfg.jar

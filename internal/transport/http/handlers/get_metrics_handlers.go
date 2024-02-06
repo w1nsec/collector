@@ -94,12 +94,5 @@ func (h *GetMetricsHandler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 
 	rw.Header().Set("content-type", "text/html")
 
-	_, err := fmt.Fprint(rw, page)
-	if err != nil {
-		rw.WriteHeader(http.StatusInternalServerError)
-		log.Error().
-			Err(err).Msg("can't output storage in html")
-		return
-	}
-
+	defer fmt.Fprint(rw, page)
 }

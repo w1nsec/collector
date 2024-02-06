@@ -73,30 +73,32 @@ func (h *JSONUpdateMetricsHandler) ServeHTTP(w http.ResponseWriter, r *http.Requ
 	}
 	defer r.Body.Close()
 
-	//log.Info().
-	//	RawJSON("metric", body).
-	//	Msg("Request")
-
 	// check repeats
 	mNames := make(map[string]string, 0)
 
 	// Check, that metric contains values
 	errors := make([]string, 0)
-	for ind, m := range newMetrics {
+	l := len(newMetrics)
+	for i := 0; i < l; i++ {
+		m := newMetrics[i]
 		if (m.Delta == nil && m.Value == nil) ||
-			m.ID == "" {
-			err = fmt.Errorf("metric \"%s\"doesn't contain any value", m.ID)
+			m.ID == "" || m.MType == "" {
+			var id = "empty"
+			if m.ID != "" {
+				id = m.ID
+			}
+			err = fmt.Errorf("metric \"%s\"doesn't contain enough fields", id)
 			log.Error().
 				Err(err).Send()
 
 			// delete wrong metric
-			newMetrics = metrics.Delete(newMetrics, ind)
-
+			newMetrics = metrics.Delete(newMetrics, i)
+			i -= 1
+			l -= 1
 			errors = append(errors, err.Error())
 			continue
 		}
 		mNames[m.ID] = m.MType
-
 	}
 
 	// log localerrors
@@ -111,13 +113,14 @@ func (h *JSONUpdateMetricsHandler) ServeHTTP(w http.ResponseWriter, r *http.Requ
 		log.Error().
 			Err(err).
 			Send()
+
+		w.WriteHeader(http.StatusInternalServerError)
 		_, err = io.WriteString(w, "Don't save any metric")
 		if err != nil {
 			log.Error().
 				Err(err).
 				Msg("can't write err message to response writer")
 		}
-		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 

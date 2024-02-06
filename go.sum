@@ -130,6 +130,12 @@ github.com/tklauser/go-sysconf v0.3.12/go.mod h1:Ho14jnntGE1fpdOqQEEaiKRpvIavV0h
 github.com/tklauser/numcpus v0.6.1 h1:ng9scYS7az0Bk4OZLvrNXNSAO2Pxr1XXRAPyjhIx+Fk=
 github.com/tklauser/numcpus v0.6.1/go.mod h1:1XfjsgE2zo8GVw7POkMbHENHzVg3GzmoZ9fESEdAacY=
 github.com/tpng/gopkgs v0.0.0-20180428091733-81e90e22e204/go.mod h1:MwY6Iwya1EJi2InQFe7g/J3Qr7eik70yycN5+sw03hQ=
+github.com/w1nsec/go-examples v0.0.0-20240130215440-52656a035657 h1:HuziGbaLWScn6YZHEq3xvNfkYFcLJPQ+hSQsxHXAoHg=
+github.com/w1nsec/go-examples v0.0.0-20240130215440-52656a035657/go.mod h1:FgJfz99LcbmX57MbVySIqU901F8SRB/QZsxmjbWM62Y=
+github.com/w1nsec/go-examples v0.0.1 h1:CWqtQAJbPrzn3nhq6/HVaniGhKg+fMZ/uGuQ4qOQ+rQ=
+github.com/w1nsec/go-examples v0.0.1/go.mod h1:FgJfz99LcbmX57MbVySIqU901F8SRB/QZsxmjbWM62Y=
+github.com/w1nsec/go-linters v0.0.1 h1:wW8I3os6d0fGSBrmKvcBkuN4QMTKyM7vKQOQiVuvxPM=
+github.com/w1nsec/go-linters v0.0.1/go.mod h1:lA2J8XuOvZWlO+kDoHo7+2ihlQRj4HnLdC16Wbm1pTk=
 github.com/w1nsec/golinters v0.0.0-20240123185307-9392b803ba2e h1:vPL2MsocwvtNs1Hi2epTdXxWUQ4i0dfLo3XtbIFfhkY=
 github.com/w1nsec/golinters v0.0.0-20240123185307-9392b803ba2e/go.mod h1:oHoWTiUwvH0YshyWlOK9qpsFdBOVT1V4skyVtVeD8SI=
 github.com/yuin/goldmark v1.1.27/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=

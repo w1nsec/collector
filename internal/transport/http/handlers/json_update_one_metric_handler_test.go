@@ -5,11 +5,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/stretchr/testify/require"
-	"github.com/w1nsec/collector/internal/metrics"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/stretchr/testify/require"
+	"github.com/w1nsec/collector/internal/metrics"
 )
 
 func (u *JSONusecase) UpdateMetric(ctx context.Context, newMetric *metrics.Metrics) error {
@@ -160,6 +161,16 @@ func TestJSONUpdateOneMetricHandler_ServeHTTP(t *testing.T) {
 			name: "Test invalid content-type",
 			args: args{
 				method:      http.MethodPost,
+				body:        []byte(`{"id":"validCounter","type":"counter","delta":111}`),
+				contentType: "text/plain",
+				status:      http.StatusInternalServerError,
+			},
+			wantErr: true,
+		},
+		{
+			name: "Test GET request",
+			args: args{
+				method:      http.MethodGet,
 				body:        []byte(`{"id":"validCounter","type":"counter","delta":111}`),
 				contentType: "text/plain",
 				status:      http.StatusInternalServerError,

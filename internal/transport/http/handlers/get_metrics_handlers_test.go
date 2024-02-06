@@ -3,13 +3,14 @@ package handlers
 import (
 	"context"
 	"fmt"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+
 	"github.com/go-chi/chi/v5"
 	"github.com/stretchr/testify/require"
 	"github.com/w1nsec/collector/internal/metrics"
 	"github.com/w1nsec/collector/internal/storage/memstorage"
-	"net/http"
-	"net/http/httptest"
-	"testing"
 )
 
 func TestGetMetricHandler_ServeHTTP(t *testing.T) {
@@ -183,5 +184,11 @@ func (m mockGetMetric) GetMetricString(ctx context.Context, mType string, mName 
 func TestNewGetMetricHandler(t *testing.T) {
 	var usecase mockGetMetric
 	gotHdl := NewGetMetricHandler(usecase)
+	require.NotNil(t, gotHdl, "got nil value from constructor")
+}
+
+func TestNewGetMetricsHandler(t *testing.T) {
+	var usecase getAllMetricsUsecase
+	gotHdl := NewGetMetricsHandler(usecase)
 	require.NotNil(t, gotHdl, "got nil value from constructor")
 }

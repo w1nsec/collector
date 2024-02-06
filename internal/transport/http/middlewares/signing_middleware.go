@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/rs/zerolog/log"
+	"github.com/w1nsec/collector/internal/config"
 	"github.com/w1nsec/collector/internal/utils/signing"
 )
 
@@ -20,7 +21,7 @@ type signingMidl struct {
 }
 
 func NewSigningMidl(secret string) *signingMidl {
-	return &signingMidl{secret: secret, hmacHeader: "HashSHA256"}
+	return &signingMidl{secret: secret, hmacHeader: config.SignHeader}
 }
 
 func (s signingMidl) Signing(next http.Handler) http.Handler {

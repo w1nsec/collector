@@ -13,7 +13,7 @@ import (
 	"github.com/alexkohler/nakedret"
 	"github.com/gnieto/mulint/mulint"
 
-	"github.com/w1nsec/golinters/linters"
+	"github.com/w1nsec/go-linters/linters"
 )
 
 func AddStaticchecks(additionals []string) []*analysis.Analyzer {

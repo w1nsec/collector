@@ -5,14 +5,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/require"
 	"github.com/w1nsec/collector/internal/metrics"
-	"io"
-	"net/http"
-	"net/http/httptest"
-	"strings"
-	"testing"
 )
 
 func TestNewJSONUpdateMetricsHandler(t *testing.T) {
@@ -22,6 +21,9 @@ func TestNewJSONUpdateMetricsHandler(t *testing.T) {
 }
 
 func (u *JSONusecase) UpdateMetrics(ctx context.Context, newMetrics []*metrics.Metrics) error {
+	if len(newMetrics) == 0 {
+		return fmt.Errorf("no any new metrics there")
+	}
 	for _, m := range newMetrics {
 		err := u.UpdateMetric(ctx, m)
 		if err != nil {
@@ -183,6 +185,39 @@ func TestJSONUpdateMetricsHandler_ServeHTTP(t *testing.T) {
 				resStatus:   http.StatusOK,
 			},
 		},
+		{
+			name: "Test POST, update Counter + Gauge (without ID)",
+			args: args{
+				method: http.MethodPost,
+				contentType: map[string]string{
+					"content-type": "application/json",
+				},
+				requestBody: []byte(`[{"id":"","type":"gauge","value":10.01},{"id":"","type":"counter","delta":333}]`),
+				resStatus:   http.StatusInternalServerError,
+			},
+		},
+		{
+			name: "Test POST, update Counter + Gauge (without values)",
+			args: args{
+				method: http.MethodPost,
+				contentType: map[string]string{
+					"content-type": "application/json",
+				},
+				requestBody: []byte(`[{"id":"tmp_gauge","type":"gauge"},{"id":"tmp_counter","type":"counter"}]`),
+				resStatus:   http.StatusInternalServerError,
+			},
+		},
+		{
+			name: "Test POST, update Counter + Gauge (without MType)",
+			args: args{
+				method: http.MethodPost,
+				contentType: map[string]string{
+					"content-type": "application/json",
+				},
+				requestBody: []byte(`[{"id":"tmp_gauge","value":10.01},{"id":"tmp_counter","delta":333}]`),
+				resStatus:   http.StatusInternalServerError,
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -210,13 +245,41 @@ func TestJSONUpdateMetricsHandler_ServeHTTP(t *testing.T) {
 			res := rec.Result()
 			defer res.Body.Close()
 
-			require.Equal(t, res.StatusCode, tt.args.resStatus, "status code not valid")
+			require.Equal(t, tt.args.resStatus, res.StatusCode, "status code not valid")
 			if res.StatusCode == http.StatusOK {
-				body, err := io.ReadAll(res.Body)
+				//body, err := io.ReadAll(res.Body)
+				//require.NoError(t, err, "can't read body response")
+
+				//sBody := strings.TrimSpace(string(body))
+				//require.Equal(t, sBody, strings.TrimSpace(tt.args.respBody))
+
+				// Github sometimes changes positions for returned metrics, and then test fails ...
+				resMetrics := make([]*metrics.Metrics, 0)
+				err = json.NewDecoder(res.Body).Decode(&resMetrics)
 				require.NoError(t, err, "can't read body response")
 
-				sBody := strings.TrimSpace(string(body))
-				require.Equal(t, sBody, strings.TrimSpace(tt.args.respBody))
+				resMap := make(map[string]*metrics.Metrics, len(resMetrics))
+				for _, m := range resMetrics {
+					resMap[m.ID] = m
+				}
+
+				wantMetrics := make([]*metrics.Metrics, 0)
+				err = json.Unmarshal([]byte(tt.args.respBody), &wantMetrics)
+				require.NoError(t, err, "can't read body response")
+
+				for _, m := range wantMetrics {
+					require.Equal(t, m.ID, resMap[m.ID].ID)
+					require.Equal(t, m.MType, resMap[m.ID].MType)
+
+					switch resMap[m.ID].MType {
+					case metrics.Counter:
+						require.Equal(t, *(resMap[m.ID].Delta), *(m.Delta))
+					case metrics.Gauge:
+						require.Equal(t, *(resMap[m.ID].Value), *(m.Value))
+					}
+
+				}
+
 			}
 
 		})
