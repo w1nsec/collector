@@ -63,27 +63,6 @@ func (h *JSONUpdateOneMetricHandler) ServeHTTP(w http.ResponseWriter, r *http.Re
 
 	var metric = new(metrics.Metrics)
 
-	//body, err := io.ReadAll(r.Body)
-	//if err != nil {
-	//	log.Error().
-	//		Err(err).Send()
-	//	w.WriteHeader(http.StatusInternalServerError)
-	//	return
-	//}
-	//defer r.Body.Close()
-	//
-	//err = json.Unmarshal(body, &metric)
-	//if err != nil {
-	//	log.Error().
-	//		Err(err).Send()
-	//	w.WriteHeader(http.StatusInternalServerError)
-	//	return
-	//}
-	//
-	//log.Info().
-	//	RawJSON("metric", body).
-	//	Msg("Request")
-
 	err := json.NewDecoder(r.Body).Decode(&metric)
 	if err != nil {
 		log.Error().
@@ -94,13 +73,6 @@ func (h *JSONUpdateOneMetricHandler) ServeHTTP(w http.ResponseWriter, r *http.Re
 	log.Info().
 		Str("metric", metric.ID).
 		Msg("Request")
-
-	//if metric == nil {
-	//	log.Error().
-	//		Err(fmt.Errorf("metric is nil")).Send()
-	//	w.WriteHeader(http.StatusInternalServerError)
-	//	return
-	//}
 
 	// Check, that metric contains values
 	if (metric.Delta == nil && metric.Value == nil) ||
@@ -120,9 +92,6 @@ func (h *JSONUpdateOneMetricHandler) ServeHTTP(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	// Debug version
-	// TODO change request metrics by name to:  body-request -> body-response resent (when debug done)
-
 	retMetric, err := h.usecase.GetMetric(r.Context(), metric.ID, metric.MType)
 	if retMetric == nil || err != nil {
 		log.Error().
@@ -131,27 +100,6 @@ func (h *JSONUpdateOneMetricHandler) ServeHTTP(w http.ResponseWriter, r *http.Re
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
-
-	//body, err = json.Marshal(retMetric)
-	//if err != nil {
-	//	log.Error().
-	//		Err(err).Send()
-	//	w.WriteHeader(http.StatusInternalServerError)
-	//	return
-	//}
-	//
-	//log.Info().
-	//	RawJSON("metric", body).
-	//	Msg("Response")
-	//
-	//w.Header().Set("content-type", "application/json")
-	//_, err = w.Write(body)
-	//if err != nil {
-	//	log.Error().
-	//		Err(err).Send()
-	//	w.WriteHeader(http.StatusInternalServerError)
-	//	return
-	//}
 
 	err = json.NewEncoder(w).Encode(retMetric)
 	if err != nil {

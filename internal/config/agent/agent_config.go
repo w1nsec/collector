@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/rs/zerolog/log"
+	"github.com/w1nsec/collector/internal/config"
 )
 
 const (
@@ -78,7 +79,7 @@ func AgentSelectArgs() *Args {
 
 	// Read config file
 	// priority to ENV variable
-	cpath := os.Getenv("CONFIG")
+	cpath := os.Getenv(config.ConfFile)
 	if cpath != "" {
 		flagConfig = cpath
 	}
@@ -98,14 +99,14 @@ func AgentSelectArgs() *Args {
 	}
 
 	// set log level
-	args.LogLevel = "info"
+	args.LogLevel = config.DefaultLogLevel
 
 	// get OS Environment variables
 	if flagAddr != "" {
 		args.Addr = flagAddr
 	}
 	// priority to ENV variables
-	addr := os.Getenv("ADDRESS")
+	addr := os.Getenv(config.Address)
 	if addr != "" {
 		args.Addr = addr
 	}
@@ -114,7 +115,7 @@ func AgentSelectArgs() *Args {
 		args.PollInterval = flagPoll
 	}
 	var err error
-	pollInterval, err := strconv.Atoi(os.Getenv("POLL_INTERVAL"))
+	pollInterval, err := strconv.Atoi(os.Getenv(config.PollInterval))
 	if err == nil {
 		args.PollInterval = pollInterval
 	}
@@ -122,7 +123,7 @@ func AgentSelectArgs() *Args {
 	if flagRep != 0 {
 		args.ReportInterval = flagRep
 	}
-	reportInterval, err := strconv.Atoi(os.Getenv("REPORT_INTERVAL"))
+	reportInterval, err := strconv.Atoi(os.Getenv(config.ReportInterval))
 	if err == nil {
 		args.ReportInterval = reportInterval
 	}
@@ -130,7 +131,7 @@ func AgentSelectArgs() *Args {
 	if flagKey != "" {
 		args.Key = flagKey
 	}
-	key := os.Getenv("KEY")
+	key := os.Getenv(config.Key)
 	if key != "" {
 		args.Key = key
 	}
@@ -139,7 +140,7 @@ func AgentSelectArgs() *Args {
 	if flagRate != 0 {
 		args.Rate = flagRate
 	}
-	rate, err := strconv.Atoi(os.Getenv("RATE_LIMIT"))
+	rate, err := strconv.Atoi(os.Getenv(config.RateLimit))
 	if err == nil {
 		args.Rate = rate
 	}
@@ -148,7 +149,7 @@ func AgentSelectArgs() *Args {
 	if flagCryptoKey != "" {
 		args.CryptoKey = flagCryptoKey
 	}
-	cryptoKey := os.Getenv("CRYPTO_KEY")
+	cryptoKey := os.Getenv(config.CryptoKey)
 	if cryptoKey != "" {
 		args.CryptoKey = cryptoKey
 	}

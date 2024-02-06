@@ -60,12 +60,6 @@ func TestDecryptMiddleware_Handle(t *testing.T) {
 		fmt.Println(err)
 		return
 	}
-	//pub2 := key2.Public().(*rsa.PublicKey)
-	//aesEnc2, err := crypto.EncryptRSA(aesKey, pub2)
-	//if err != nil {
-	//	fmt.Println(err)
-	//	return
-	//}
 
 	type args struct {
 		privKey    *rsa.PrivateKey

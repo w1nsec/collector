@@ -73,10 +73,6 @@ func (h *JSONUpdateMetricsHandler) ServeHTTP(w http.ResponseWriter, r *http.Requ
 	}
 	defer r.Body.Close()
 
-	//log.Info().
-	//	RawJSON("metric", body).
-	//	Msg("Request")
-
 	// check repeats
 	mNames := make(map[string]string, 0)
 

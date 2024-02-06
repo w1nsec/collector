@@ -3,4 +3,23 @@ package config
 const (
 	CryptoHeader = "Crypto-Key"
 	SignHeader   = "HashSHA256"
+
+	// OS enviroments
+	ConfFile  = "CONFIG"
+	CryptoKey = "CryptoKey"
+	Address   = "ADDRESS"
+	Key       = "KEY"
+	LogLevel  = "LOGLEVEL"
+
+	// server only constants
+	Restore       = "RESTORE"
+	StoragePath   = "FILE_STORAGE_PATH"
+	DBURL         = "DATABASE_DSN"
+	StoreInterval = "STORE_INTERVAL"
+
+	// agent only constants
+	ReportInterval  = "REPORT_INTERVAL"
+	RateLimit       = "RATE_LIMIT"
+	PollInterval    = "POLL_INTERVAL"
+	DefaultLogLevel = "INFO"
 )

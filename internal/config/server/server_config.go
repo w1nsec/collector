@@ -7,6 +7,7 @@ import (
 	"strconv"
 
 	"github.com/rs/zerolog/log"
+	"github.com/w1nsec/collector/internal/config"
 )
 
 // JSON config example
@@ -109,7 +110,7 @@ func ServerArgsParse() *Args {
 
 	// Read config file
 	// priority to ENV variable
-	cpath := os.Getenv("CONFIG")
+	cpath := os.Getenv(config.ConfFile)
 	if cpath != "" {
 		flagConfig = cpath
 	}
@@ -128,43 +129,43 @@ func ServerArgsParse() *Args {
 		args = new(Args)
 	}
 
-	addr := os.Getenv("ADDRESS")
+	addr := os.Getenv(config.Address)
 	if addr != "" {
 		args.Addr = addr
 	}
-	args.LogLevel = os.Getenv("LOGLEVEL")
+	args.LogLevel = os.Getenv(config.LogLevel)
 
 	// increment 9
 	storeInterval, err := strconv.ParseUint(
-		os.Getenv("STORE_INTERVAL"), 10, 64)
+		os.Getenv(config.StoreInterval), 10, 64)
 	if err == nil {
 		args.StoreInterval = storeInterval
 	}
 
-	storagePath := os.Getenv("FILE_STORAGE_PATH")
+	storagePath := os.Getenv(config.StoragePath)
 	if storagePath != "" {
 		args.StoragePath = storagePath
 	}
 
-	restore, err := strconv.ParseBool(os.Getenv("RESTORE"))
+	restore, err := strconv.ParseBool(os.Getenv(config.Restore))
 	if err == nil {
 		args.Restore = restore
 	}
 
 	// increment 10
-	databaseURL := os.Getenv("DATABASE_DSN")
+	databaseURL := os.Getenv(config.DBURL)
 	if databaseURL != "" {
 		args.DatabaseURL = databaseURL
 	}
 
 	// increment 14
-	key := os.Getenv("KEY")
+	key := os.Getenv(config.Key)
 	if key != "" {
 		args.Key = key
 	}
 
 	// increment 21
-	cryptoKey := os.Getenv("CryptoKey")
+	cryptoKey := os.Getenv(config.CryptoKey)
 	if cryptoKey != "" {
 		args.CryptoKey = cryptoKey
 	}
