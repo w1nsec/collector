@@ -17,6 +17,7 @@ import (
 	"github.com/w1nsec/collector/internal/metrics"
 	"github.com/w1nsec/collector/internal/storage"
 	"github.com/w1nsec/collector/internal/storage/memstorage"
+	"github.com/w1nsec/collector/internal/utils/ip"
 	"github.com/w1nsec/go-examples/crypto"
 )
 
@@ -56,6 +57,9 @@ type Agent struct {
 
 	// increment 21
 	pubKey *rsa.PublicKey
+
+	// increment 24
+	realIP []string
 }
 
 // NewAgent is constructor for Agent struct
@@ -120,6 +124,13 @@ func (agent Agent) Start(ctx context.Context) error {
 		buildDate,
 		buildCommit,
 	)
+
+	// increment24 gel local IP
+	ips, err := ip.GetIPv4()
+	if err != nil {
+		return err
+	}
+	agent.realIP = ips
 
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()

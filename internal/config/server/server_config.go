@@ -12,12 +12,14 @@ import (
 
 // JSON config example
 //{
-//	"address": "localhost:8080", 		// аналог переменной окружения ADDRESS или флага -a
-//	"restore": true, 					// аналог переменной окружения RESTORE или флага -r
-//	"store_interval": "1s", 			// аналог переменной окружения STORE_INTERVAL или флага -i
-//	"store_file": "/path/to/file.db", 	// аналог переменной окружения STORE_FILE или -f
-//	"database_dsn": "", 				// аналог переменной окружения DATABASE_DSN или флага -d
-//	"crypto_key": "/path/to/key.pem" 	// аналог переменной окружения CRYPTO_KEY или флага -crypto-key
+//	"address": "localhost:8080", 			// аналог переменной окружения ADDRESS или флага -a
+//	"restore": true, 						// аналог переменной окружения RESTORE или флага -r
+//	"store_interval": "1s", 				// аналог переменной окружения STORE_INTERVAL или флага -i
+//	"store_file": "/path/to/file.db", 		// аналог переменной окружения STORE_FILE или -f
+//	"database_dsn": "", 					// аналог переменной окружения DATABASE_DSN или флага -d
+//	"crypto_key": "/path/to/key.pem" 		// аналог переменной окружения CRYPTO_KEY или флага -crypto-key
+//  increment24
+//	"trusted_subnet": "/path/to/key.pem" 	// whitelist CIDR
 //}
 
 type Args struct {
@@ -37,6 +39,9 @@ type Args struct {
 
 	// increment 21
 	CryptoKey string `json:"crypto_key"`
+
+	// increment 24
+	CIDR string `json:"trusted_subnet"`
 }
 
 // ReadConfig fill Args struct (for server)
@@ -79,6 +84,9 @@ func ServerArgsParse() *Args {
 		// increment 21
 		flagCryptoKey string
 		flagConfig    string
+
+		// increment 24
+		flagCIDR string
 	)
 
 	flag.StringVar(&flagAddr, "a", "localhost:8080",
@@ -105,6 +113,9 @@ func ServerArgsParse() *Args {
 		"rsa private key path (in pem format), used for encrypt messages")
 	flag.StringVar(&flagConfig, "config", "",
 		"path to config file")
+
+	// increment 24, trusted_subnet (CIDR)
+	flag.StringVar(&flagCIDR, "t", "", "whitelist CIDR for agents")
 
 	flag.Parse()
 
@@ -170,6 +181,12 @@ func ServerArgsParse() *Args {
 		args.CryptoKey = cryptoKey
 	}
 
+	// increment 24
+	cidr := os.Getenv(config.CIDR)
+	if cidr != "" {
+		args.CIDR = cidr
+	}
+
 	if args.Addr == "" {
 		args.Addr = flagAddr
 	}
@@ -197,6 +214,10 @@ func ServerArgsParse() *Args {
 
 	if args.CryptoKey == "" {
 		args.CryptoKey = flagCryptoKey
+	}
+
+	if args.CIDR == "" {
+		args.CIDR = flagCIDR
 	}
 
 	return args

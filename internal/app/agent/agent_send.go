@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 
 	"github.com/rs/zerolog/log"
 	"github.com/w1nsec/collector/internal/config"
@@ -44,6 +45,9 @@ func (agent Agent) SendData(data []byte, headers map[string]string, relURL strin
 
 	// iter 14: add signing for body request
 	agent.AddSigning(buffer.Bytes(), headers)
+
+	// iter24: add X-Real-IP header
+	agent.AddRealIP(headers)
 
 	// construct new request
 	address := fmt.Sprintf("http://%s/%s/", agent.addr.String(), relURL)
@@ -95,6 +99,14 @@ func (agent Agent) AddSigning(data []byte, headers map[string]string) {
 	sign := signing.CreateSigning(data, []byte(agent.secret))
 	headers[config.SignHeader] = string(sign)
 
+}
+
+// AddRealIP func add X-Real-IP header with agent ip addresses
+func (agent Agent) AddRealIP(headers map[string]string) {
+	if agent.realIP == nil {
+		return
+	}
+	headers[config.RealIPHeader] = strings.Join(agent.realIP, ";")
 }
 
 // SendBatch prepare sending collected metrics to server
