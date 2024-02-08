@@ -165,7 +165,7 @@ func TestJSONGetMetricHandler_ServeHTTP(t *testing.T) {
 				headers: map[string]string{
 					"content-type": "application/json",
 				},
-				status: http.StatusInternalServerError,
+				status: http.StatusNotFound,
 			},
 		},
 		// m4Err2
@@ -177,7 +177,7 @@ func TestJSONGetMetricHandler_ServeHTTP(t *testing.T) {
 				headers: map[string]string{
 					"content-type": "application/json",
 				},
-				status: http.StatusInternalServerError,
+				status: http.StatusNotFound,
 			},
 		},
 	}
