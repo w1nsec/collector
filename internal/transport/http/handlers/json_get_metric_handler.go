@@ -105,12 +105,12 @@ func (h *JSONGetMetricHandler) ServeHTTP(w http.ResponseWriter, r *http.Request)
 	}
 
 	// Check, that metric contains values
-	if metric.Value == nil && metric.Delta == nil {
-		log.Error().
-			Err(fmt.Errorf("metric doesn't contain any data")).Send()
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
+	//if metric.Value == nil && metric.Delta == nil {
+	//	log.Error().
+	//		Err(fmt.Errorf("metric doesn't contain any data")).Send()
+	//	w.WriteHeader(http.StatusInternalServerError)
+	//	return
+	//}
 
 	retMetric, err := h.usecase.GetMetric(r.Context(), metric.ID, metric.MType)
 	if retMetric == nil || err != nil {
