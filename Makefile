@@ -12,6 +12,12 @@ DB=mydb
 
 KEY=supersecret
 
+GIT_VERSION=`git log --oneline | head -n1 | cut -f1 -d' '`
+COMMIT_FLAG=github.com/w1nsec/collector/internal/app/agent.buildCommit=${GIT_VERSION}
+DATE=`date -u '+%Y-%m-%d %H:%M:%S'`
+DATE_FLAG=github.com/w1nsec/collector/internal/app/agent.buildDate=${DATE}
+
+
 
 all: clean server agent
 
@@ -23,7 +29,7 @@ server:
 	go build -o ${SERVER} cmd/server/server_main.go
 
 agent:
-	go build -o ${AGENT} cmd/agent/agent_main.go
+	go build -o ${AGENT} -ldflags "-s -w -X \"${COMMIT_FLAG}\" -X \"${DATE_FLAG}\"" cmd/agent/agent_main.go
 
 linter:
 	go build -o ${LINTER} cmd/staticlint/staticlint.go

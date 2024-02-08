@@ -118,8 +118,8 @@ func NewAgent(args *config.Args) (*Agent, error) {
 func (agent Agent) Start(ctx context.Context) error {
 	fmt.Printf(
 		"Build version: %s\n"+
-			"Build daate: %s\n"+
-			"Build commit: %s\n",
+			"Build date:    %s\n"+
+			"Build commit:  %s\n",
 		buildVersion,
 		buildDate,
 		buildCommit,
