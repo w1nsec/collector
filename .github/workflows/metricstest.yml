@@ -48,7 +48,14 @@ jobs:
 
       - name: Setup autotest binary
         run: |
-          chmod -R +x $GITHUB_WORKSPACE/.tools
+          chmod -R +x $GITHUB_WORKSPACE/.toolSERVER_PORT=$(random unused-port)
+  ADDRESS="localhost:${SERVER_PORT}"
+  TEMP_FILE=$(random tempfile)
+  metricstest -test.v -test.run=^TestIteration7$ \
+    -agent-binary-path=cmd/agent/agent \
+    -binary-path=cmd/server/server \
+    -server-port=$SERVER_PORT \
+    -source-path=.s
           mv $GITHUB_WORKSPACE/.tools/metricstest /usr/local/bin/metricstest
           mv $GITHUB_WORKSPACE/.tools/random /usr/local/bin/random
 
