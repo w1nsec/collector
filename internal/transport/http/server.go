@@ -31,12 +31,13 @@ type MetricServer struct {
 
 func NewServerForService(args *server.Args, service *service.MetricService) (Server, error) {
 
-	mux := NewRouter(service)
-	return NewMetricServerWithParams(args.Addr, mux)
+	_, cidr, _ := net.ParseCIDR(args.CIDR)
+	mux := NewRouter(service, cidr)
+
+	return NewMetricServerWithParams(args.Addr, mux, args.CIDR)
 }
 
-func NewMetricServerWithParams(addr string, mux http.Handler) (*MetricServer, error) {
-
+func NewMetricServerWithParams(addr string, mux http.Handler, netArg string) (*MetricServer, error) {
 	netAddr, err := net.ResolveTCPAddr("tcp", addr)
 	if err != nil {
 		return nil, err

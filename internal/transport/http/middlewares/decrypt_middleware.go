@@ -17,7 +17,7 @@ type DecryptMiddleware struct {
 	privKey *rsa.PrivateKey
 }
 
-func NewDecryptHandler(key *rsa.PrivateKey) *DecryptMiddleware {
+func NewDecryptMiddleware(key *rsa.PrivateKey) *DecryptMiddleware {
 	return &DecryptMiddleware{
 		privKey: key,
 	}

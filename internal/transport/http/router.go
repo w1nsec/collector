@@ -1,6 +1,7 @@
 package http
 
 import (
+	"net"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -16,12 +17,13 @@ var defaultCompressibleContentTypes = []string{
 	"application/json",
 }
 
-func NewRouter(service *service.MetricService) http.Handler {
+func NewRouter(service *service.MetricService, net *net.IPNet) http.Handler {
 	r := chi.NewRouter()
 
 	// middlewares
-	decryptMidl := middlewares.NewDecryptHandler(service.CryptoKey)
+	decryptMidl := middlewares.NewDecryptMiddleware(service.CryptoKey)
 	signMidl := middlewares.NewSigningMidl(service.Secret)
+	middlewares.NewCIDRmiddleware(net)
 
 	r.Use(signMidl.Signing)
 	r.Use(middlewares.LoggingMiddleware)
