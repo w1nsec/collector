@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"log"
 	"math/big"
-	"net"
 	"sync"
 	"testing"
 	"time"
@@ -24,9 +23,34 @@ func TestNewMetricsServer(t *testing.T) {
 	mem := memstorage.NewMemStorage()
 	svc, err := service.NewService(&server.Args{}, mem, nil)
 	require.NoError(t, err)
-	srv := NewMetricsServer(svc)
+
+	srv, err := NewMetricsServer(svc)
+	require.NoError(t, err)
 	require.NotNil(t, srv)
 	require.Equal(t, mem, srv.service.Storage)
+
+}
+
+func TestNewMetricsGRPC(t *testing.T) {
+	mem := memstorage.NewMemStorage()
+	svc, err := service.NewService(&server.Args{}, mem, nil)
+	require.NoError(t, err)
+
+	srv, err := NewMetricsServer(svc)
+	require.NoError(t, err)
+	require.NotNil(t, srv)
+	require.Equal(t, mem, srv.service.Storage)
+
+	addr := "127.0.0.1:9999"
+	srvRPC, err := NewMetricsGRPC(addr, srv)
+	require.NoError(t, err)
+	require.NotNil(t, srvRPC)
+	require.Equal(t, srv, srvRPC.srvMet)
+	require.Equal(t, addr, srvRPC.addr.String())
+
+	addrWrong := "127.0.0.1:34773483"
+	_, err = NewMetricsGRPC(addrWrong, srv)
+	require.Error(t, err)
 }
 
 func TestMetricsServer(t *testing.T) {
@@ -51,7 +75,15 @@ func TestMetricsServer(t *testing.T) {
 
 	wg := &sync.WaitGroup{}
 	wg.Add(1)
-	go RunGRCmetricSrv(addr, svc)
+
+	srvM, err := NewMetricsServer(svc)
+	require.NoError(t, err)
+
+	srv, err := NewMetricsGRPC(addr, srvM)
+	require.NoError(t, err)
+
+	go srv.Start()
+	defer srv.Close()
 
 	time.Sleep(time.Second * 1)
 
@@ -99,18 +131,4 @@ func TestMetricsServer(t *testing.T) {
 
 	wg.Done()
 	wg.Wait()
-}
-
-func RunGRCmetricSrv(addr string, svc *service.MetricService) {
-	l, err := net.Listen("tcp", addr)
-	if err != nil {
-		log.Fatal(err)
-	}
-	s := grpc.NewServer()
-	srv := NewMetricsServer(svc)
-	pb.RegisterMetricsSvcServer(s, srv)
-	if err := s.Serve(l); err != nil {
-		log.Fatal(err)
-	}
-
 }

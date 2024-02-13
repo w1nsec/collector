@@ -20,6 +20,17 @@ import (
 	mycrypto "github.com/w1nsec/go-examples/crypto"
 )
 
+func (agent Agent) Send(job []*metrics.Metrics) error {
+	switch agent.proto {
+	case ProtoHTTP:
+		return agent.SendBatch(job)
+	case ProtoGRPC:
+		return agent.SendRPCBatch(job)
+	default:
+		return fmt.Errorf("agent started with unsuported transport: %d", agent.proto)
+	}
+}
+
 // SendData send data to server
 // compress data before sending, add signing for body
 func (agent Agent) SendData(data []byte, headers map[string]string, relURL string) error {

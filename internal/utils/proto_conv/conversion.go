@@ -6,7 +6,6 @@ import (
 )
 
 func ConvertMetrics2Proto(m []*metrics.Metrics) *pb.Metrics {
-
 	mSlice := make([]*pb.Metric, len(m))
 	for i, val := range m {
 		switch val.MType {
@@ -24,6 +23,7 @@ func ConvertMetrics2Proto(m []*metrics.Metrics) *pb.Metrics {
 			}
 		}
 	}
+
 	return &pb.Metrics{
 		Metrics: mSlice,
 	}

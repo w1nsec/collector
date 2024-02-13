@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/rs/zerolog/log"
+	constants "github.com/w1nsec/collector/internal/config"
 	config "github.com/w1nsec/collector/internal/config/agent"
 	"github.com/w1nsec/collector/internal/metrics"
 	"github.com/w1nsec/collector/internal/storage"
@@ -20,6 +21,8 @@ import (
 	"github.com/w1nsec/collector/internal/utils/ip"
 	"github.com/w1nsec/go-examples/crypto"
 )
+
+type Protocol int
 
 // Params for sleeping agent if it receives too many errors
 var (
@@ -29,6 +32,11 @@ var (
 	buildVersion  = "N/A"
 	buildDate     = "N/A"
 	buildCommit   = "N/A"
+)
+
+const (
+	ProtoGRPC Protocol = iota
+	ProtoHTTP
 )
 
 // Agent struct, that contains Storage and other config options for running agent
@@ -60,6 +68,9 @@ type Agent struct {
 
 	// increment 24
 	realIP []string
+
+	// increment 25
+	proto Protocol
 }
 
 // NewAgent is constructor for Agent struct
@@ -108,6 +119,14 @@ func NewAgent(args *config.Args) (*Agent, error) {
 		if err != nil {
 			return nil, err
 		}
+	}
+
+	// increment 25
+	switch args.Protocol {
+	case constants.ProtoHTTP:
+		agent.proto = ProtoHTTP
+	case constants.ProtoGRPC:
+		agent.proto = ProtoGRPC
 	}
 
 	agent.compression = true

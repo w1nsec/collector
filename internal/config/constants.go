@@ -12,6 +12,11 @@ const (
 	Key       = "KEY"
 	LogLevel  = "LOGLEVEL"
 
+	// Protocols
+	Protocol  = "PROTO"
+	ProtoGRPC = "grpc"
+	ProtoHTTP = "http"
+
 	// server only constants
 	Restore       = "RESTORE"
 	StoragePath   = "FILE_STORAGE_PATH"

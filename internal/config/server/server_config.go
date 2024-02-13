@@ -42,6 +42,9 @@ type Args struct {
 
 	// increment 24
 	CIDR string `json:"trusted_subnet"`
+
+	// increment 25
+	Protocol string `json:"protocol"`
 }
 
 // ReadConfig fill Args struct (for server)
@@ -87,6 +90,9 @@ func ServerArgsParse() *Args {
 
 		// increment 24
 		flagCIDR string
+
+		// increment 25
+		flagProto string
 	)
 
 	flag.StringVar(&flagAddr, "a", "localhost:8080",
@@ -116,6 +122,9 @@ func ServerArgsParse() *Args {
 
 	// increment 24, trusted_subnet (CIDR)
 	flag.StringVar(&flagCIDR, "t", "", "whitelist CIDR for agents")
+
+	// increment 25 grpc protocol
+	flag.StringVar(&flagProto, "proto", "http", "transport protocols")
 
 	flag.Parse()
 
@@ -187,6 +196,13 @@ func ServerArgsParse() *Args {
 		args.CIDR = cidr
 	}
 
+	// increment 25
+	proto := os.Getenv(config.Protocol)
+	if proto != "" &&
+		(proto == config.ProtoHTTP || proto == config.ProtoGRPC) {
+		args.Protocol = proto
+	}
+
 	if args.Addr == "" {
 		args.Addr = flagAddr
 	}
@@ -218,6 +234,11 @@ func ServerArgsParse() *Args {
 
 	if args.CIDR == "" {
 		args.CIDR = flagCIDR
+	}
+
+	if args.Protocol == "" &&
+		(flagProto == config.ProtoHTTP || flagProto == config.ProtoGRPC) {
+		args.Protocol = flagProto
 	}
 
 	return args
