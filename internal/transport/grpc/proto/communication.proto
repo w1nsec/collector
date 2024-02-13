@@ -1,0 +1,32 @@
+
+syntax = "proto3";
+option go_package = "github.com/w1nsec/collector/proto";
+
+message Metric {
+  enum MType {
+    GAUGE = 0;
+    COUNTER = 1;
+  }
+  string id = 1;
+  MType mtype = 2;
+  double value = 3;
+  int64 delta = 4;
+}
+
+
+message Metrics {
+  repeated Metric metrics = 1;
+}
+
+message StoreResponse {
+//    string Error = 1;
+}
+
+message ListMetricsReq {
+//  int32 limit = 1;
+}
+
+service MetricsSvc {
+    rpc StoreMetrics(Metrics) returns (StoreResponse);
+    rpc ListMetrics(ListMetricsReq) returns (Metrics);
+}
