@@ -83,7 +83,7 @@ func TestMetricsServer(t *testing.T) {
 	require.NoError(t, err)
 
 	go srv.Start()
-	defer srv.Close()
+	defer srv.Stop()
 
 	time.Sleep(time.Second * 1)
 
