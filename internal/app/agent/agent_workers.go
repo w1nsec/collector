@@ -93,7 +93,7 @@ func (agent Agent) worker(id int, jobs <-chan []*metrics.Metrics) {
 				Int("worker", id).
 				Msg("Sending")
 
-			err := agent.SendBatch(job)
+			err := agent.Send(job)
 			if err != nil {
 				log.Error().
 					Int("worker", id).

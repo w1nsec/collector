@@ -33,6 +33,8 @@ type Args struct {
 	CryptoKey      string `json:"crypto_key"`
 
 	LogLevel string
+
+	Protocol string `json:"protocol"`
 }
 
 // ReadConfig fill Args struct (for client)
@@ -60,6 +62,7 @@ func AgentSelectArgs() *Args {
 		flagAddr, flagKey           string
 		flagCryptoKey, flagConfig   string
 		flagPoll, flagRep, flagRate int
+		flagProto                   string
 	)
 	flag.StringVar(&flagAddr, "a", "localhost:8080",
 		"address for metric transport")
@@ -75,6 +78,8 @@ func AgentSelectArgs() *Args {
 		"rsa public key path (in pem format), used for encrypt messages")
 	flag.StringVar(&flagConfig, "config", "",
 		"path to config file")
+	flag.StringVar(&flagProto, "proto", "http",
+		"default")
 	flag.Parse()
 
 	// Read config file
@@ -152,6 +157,18 @@ func AgentSelectArgs() *Args {
 	cryptoKey := os.Getenv(config.CryptoKey)
 	if cryptoKey != "" {
 		args.CryptoKey = cryptoKey
+	}
+
+	// increment 25
+	if flagProto != "" {
+		args.Protocol = flagProto
+	}
+	proto := os.Getenv(config.Protocol)
+	if proto != "" {
+		args.Protocol = proto
+	}
+	if args.Protocol != config.ProtoGRPC && args.Protocol != config.ProtoHTTP {
+		args.Protocol = config.ProtoHTTP
 	}
 
 	return args

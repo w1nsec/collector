@@ -13,12 +13,16 @@ import (
 	"time"
 
 	"github.com/rs/zerolog/log"
+	constants "github.com/w1nsec/collector/internal/config"
 	config "github.com/w1nsec/collector/internal/config/agent"
 	"github.com/w1nsec/collector/internal/metrics"
 	"github.com/w1nsec/collector/internal/storage"
 	"github.com/w1nsec/collector/internal/storage/memstorage"
+	"github.com/w1nsec/collector/internal/utils/ip"
 	"github.com/w1nsec/go-examples/crypto"
 )
+
+type Protocol int
 
 // Params for sleeping agent if it receives too many errors
 var (
@@ -28,6 +32,11 @@ var (
 	buildVersion  = "N/A"
 	buildDate     = "N/A"
 	buildCommit   = "N/A"
+)
+
+const (
+	ProtoGRPC Protocol = iota
+	ProtoHTTP
 )
 
 // Agent struct, that contains Storage and other config options for running agent
@@ -56,6 +65,12 @@ type Agent struct {
 
 	// increment 21
 	pubKey *rsa.PublicKey
+
+	// increment 24
+	realIP []string
+
+	// increment 25
+	proto Protocol
 }
 
 // NewAgent is constructor for Agent struct
@@ -106,6 +121,14 @@ func NewAgent(args *config.Args) (*Agent, error) {
 		}
 	}
 
+	// increment 25
+	switch args.Protocol {
+	case constants.ProtoHTTP:
+		agent.proto = ProtoHTTP
+	case constants.ProtoGRPC:
+		agent.proto = ProtoGRPC
+	}
+
 	agent.compression = true
 	return agent, nil
 }
@@ -114,12 +137,19 @@ func NewAgent(args *config.Args) (*Agent, error) {
 func (agent Agent) Start(ctx context.Context) error {
 	fmt.Printf(
 		"Build version: %s\n"+
-			"Build daate: %s\n"+
-			"Build commit: %s\n",
+			"Build date:    %s\n"+
+			"Build commit:  %s\n",
 		buildVersion,
 		buildDate,
 		buildCommit,
 	)
+
+	// increment24 gel local IP
+	ips, err := ip.GetIPv4()
+	if err != nil {
+		return err
+	}
+	agent.realIP = ips
 
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()

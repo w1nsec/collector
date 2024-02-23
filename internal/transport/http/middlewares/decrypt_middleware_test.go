@@ -26,7 +26,7 @@ func TestNewDecryptHandler(t *testing.T) {
 		return
 	}
 
-	handler := NewDecryptHandler(key)
+	handler := NewDecryptMiddleware(key)
 	require.NotNil(t, handler, "return nil from constructor")
 	require.Equal(t, *key, *handler.privKey)
 }
